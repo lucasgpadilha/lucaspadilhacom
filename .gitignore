@@ -1,29 +1,5 @@
-# OS/editor
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-.vscode/
-.idea/
-
-# Environment/secrets
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-id_rsa*
-
-# Dependencies/build artifacts
 node_modules/
 dist/
-build/
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-
-# Logs/cache
+.astro/
+.DS_Store
 *.log
-.cache/
-coverage/
