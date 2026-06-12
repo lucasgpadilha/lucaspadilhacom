@@ -1,60 +1,121 @@
+import type { Locale } from '../lib/i18n';
+
 export interface Project {
   title: string;
   description: string;
-  longDescription: string;
-  tags: { label: string; color: string }[];
-  status: 'production' | 'development' | 'live';
+  demonstrates: string[];
+  stack: string[];
+  status: string;
   link: string;
-  architecture: string;
 }
 
-export const projects: Project[] = [
-  {
-    title: 'Floci Cloud Lab',
-    description: 'AWS learning lab local — Terraform, Python, Docker, boto3',
-    longDescription:
-      'Laboratório de cloud engineering que usa Floci (emulador AWS local) para validar arquiteturas sem custo de cloud. Terraform gerencia S3, DynamoDB, Lambda, API Gateway. Testes com pytest. Pipeline local com Makefile. Documentação, runbooks e ADRs.',
-    tags: [
-      { label: 'Terraform', color: '#818cf8' },
-      { label: 'AWS (Floci)', color: '#FF9900' },
-      { label: 'Python', color: '#06b6d4' },
-      { label: 'Docker', color: '#527FFF' },
-      { label: 'boto3', color: '#f59e0b' },
-      { label: 'pytest', color: '#22c55e' },
-    ],
-    status: 'development',
-    link: 'https://github.com/lucasgpadilha/floci-cloud-lab',
-    architecture: 'Floci (localhost:4566) ← Terraform → S3, DynamoDB, Lambda, CloudWatch',
-  },
-  {
-    title: 'Infra AWS + Terraform',
-    description: 'Provisionamento AWS real com Terraform, CI/CD e Ansible',
-    longDescription:
-      'Infraestrutura como código para ambientes AWS reais. Terraform para provisionamento (EC2, S3, IAM). Ansible para configuração de servidores. GitHub Actions para CI/CD com deploy automático via SCP. Certificados SSL automáticos com Let\'s Encrypt.',
-    tags: [
-      { label: 'AWS EC2', color: '#FF9900' },
-      { label: 'Terraform', color: '#818cf8' },
-      { label: 'Ansible', color: '#ef4444' },
-      { label: 'GitHub Actions', color: '#8b5cf6' },
-    ],
-    status: 'production',
-    link: 'https://github.com/lucasgpadilha/terraform',
-    architecture: 'GitHub → Actions → Terraform → AWS EC2 + S3 + IAM → Ansible → Deploy',
-  },
-  {
-    title: 'lucaspadilha.com',
-    description: 'Portfolio DevOps — Astro 5, Framer Motion, animações premium',
-    longDescription:
-      'Site estático com build automatizado. Astro 5 + React 19 + Framer Motion + GSAP + Tailwind. Design system próprio com animações cinematográficas. Deploy automático via GitHub Actions para servidor EC2.',
-    tags: [
-      { label: 'Astro 5', color: '#f59e0b' },
-      { label: 'React 19', color: '#06b6d4' },
-      { label: 'Framer Motion', color: '#8b5cf6' },
-      { label: 'GSAP', color: '#22c55e' },
-      { label: 'Tailwind', color: '#06b6d4' },
-    ],
-    status: 'live',
-    link: 'https://github.com/lucasgpadilha/lucaspadilhacom',
-    architecture: 'Astro → Static HTML → GitHub Actions → SCP → EC2 (Nginx)',
-  },
-];
+export const projectsByLocale: Record<Locale, Project[]> = {
+  en: [
+    {
+      title: 'Floci Cloud Lab',
+      description:
+        'Local cloud lab for validating AWS architecture without real cloud cost, using Floci, Terraform, boto3 and pytest.',
+      demonstrates: [
+        'local validation of AWS services',
+        'infrastructure as code',
+        'automated tests',
+      ],
+      stack: ['Terraform', 'AWS local', 'Python', 'boto3', 'pytest', 'Docker'],
+      status: 'Active lab',
+      link: 'https://github.com/lucasgpadilha/floci-cloud-lab',
+    },
+    {
+      title: 'AWS Infra + Terraform',
+      description:
+        'Infrastructure as code for provisioning AWS resources in a reproducible and documented way.',
+      demonstrates: [
+        'Terraform applied to AWS environments',
+        'organized variables and outputs',
+        'baseline for consistent environments',
+      ],
+      stack: ['AWS', 'Terraform', 'EC2', 'S3', 'IAM', 'GitHub Actions'],
+      status: 'Provisioning',
+      link: 'https://github.com/lucasgpadilha/terraform',
+    },
+    {
+      title: 'AWS Ansible',
+      description:
+        'Server configuration automation with reusable playbooks, reducing manual setup after provisioning.',
+      demonstrates: [
+        'automated configuration',
+        'server standardization',
+        'reusable playbooks',
+      ],
+      stack: ['Ansible', 'Linux', 'AWS EC2', 'SSH', 'Nginx'],
+      status: 'Configuration',
+      link: 'https://github.com/lucasgpadilha/aws-ansible',
+    },
+    {
+      title: 'lucaspadilha.com',
+      description:
+        'Personal portfolio with static build, automated deploy and a DevOps-focused visual narrative.',
+      demonstrates: [
+        'Astro and React',
+        'deploy with GitHub Actions',
+        'EC2 server with Nginx',
+      ],
+      stack: ['Astro', 'React', 'Tailwind', 'GitHub Actions', 'EC2', 'Nginx'],
+      status: 'Live',
+      link: 'https://github.com/lucasgpadilha/lucaspadilhacom',
+    },
+  ],
+  pt: [
+    {
+      title: 'Floci Cloud Lab',
+      description:
+        'Laboratório cloud local para validar arquitetura AWS sem custo real, usando Floci, Terraform, boto3 e pytest.',
+      demonstrates: [
+        'validação local de serviços AWS',
+        'infraestrutura como código',
+        'testes automatizados',
+      ],
+      stack: ['Terraform', 'AWS local', 'Python', 'boto3', 'pytest', 'Docker'],
+      status: 'Lab ativo',
+      link: 'https://github.com/lucasgpadilha/floci-cloud-lab',
+    },
+    {
+      title: 'Infra AWS + Terraform',
+      description:
+        'Infraestrutura como código para provisionar recursos AWS de forma reproduzível e documentada.',
+      demonstrates: [
+        'Terraform aplicado em ambiente AWS',
+        'variáveis e outputs organizados',
+        'base para ambientes consistentes',
+      ],
+      stack: ['AWS', 'Terraform', 'EC2', 'S3', 'IAM', 'GitHub Actions'],
+      status: 'Provisionamento',
+      link: 'https://github.com/lucasgpadilha/terraform',
+    },
+    {
+      title: 'AWS Ansible',
+      description:
+        'Automação de configuração de servidores com playbooks reutilizáveis, reduzindo configuração manual pós-provisionamento.',
+      demonstrates: [
+        'configuração automatizada',
+        'padronização de servidores',
+        'playbooks reutilizáveis',
+      ],
+      stack: ['Ansible', 'Linux', 'AWS EC2', 'SSH', 'Nginx'],
+      status: 'Configuração',
+      link: 'https://github.com/lucasgpadilha/aws-ansible',
+    },
+    {
+      title: 'lucaspadilha.com',
+      description:
+        'Portfólio pessoal com build estático, deploy automatizado e narrativa visual focada em DevOps.',
+      demonstrates: [
+        'Astro e React',
+        'deploy com GitHub Actions',
+        'servidor EC2 com Nginx',
+      ],
+      stack: ['Astro', 'React', 'Tailwind', 'GitHub Actions', 'EC2', 'Nginx'],
+      status: 'Live',
+      link: 'https://github.com/lucasgpadilha/lucaspadilhacom',
+    },
+  ],
+};

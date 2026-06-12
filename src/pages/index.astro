@@ -1,17 +1,23 @@
 ---
 import '../styles/globals.css';
 import Layout from '../layouts/Layout.astro';
-import Hero from '../components/Hero';
-import About from '../components/About';
-import Projects from '../components/Projects';
-import Contact from '../components/Contact';
-import Cursor from '../components/Cursor';
+import Hero from '../components/sections/Hero';
+import Projects from '../components/sections/Projects';
+import StackSection from '../components/sections/StackSection';
+import Timeline from '../components/sections/Timeline';
+import FinalCTA from '../components/sections/FinalCTA';
 ---
 
-<Layout title="Lucas Padilha — Cloud & DevOps Engineer">
-  <Cursor client:only="react" />
+<Layout
+  title="Lucas Padilha — DevOps, Cloud & Infrastructure Automation"
+  description="Lucas Padilha portfolio with practical projects in AWS, Terraform, Ansible, Docker, CI/CD and infrastructure automation."
+  ogImage="/og-image-placeholder.jpg"
+>
   <Hero client:load />
-  <About client:visible />
-  <Projects client:visible />
-  <Contact client:visible />
+  <main>
+    <Projects client:visible />
+    <StackSection client:visible />
+    <Timeline client:visible />
+    <FinalCTA client:visible />
+  </main>
 </Layout>
