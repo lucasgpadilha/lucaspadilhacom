@@ -5,7 +5,19 @@
 @layer base {
   :root {
     color-scheme: dark;
-    background: #05080d;
+    background: #0a0b0d;
+
+    /* Restrained mono palette (Linear/Vercel) + a single amber signal. */
+    --bg: #0a0b0d;
+    --surface: #101113;
+    --ink: #08090a;
+    --hairline: rgba(255, 255, 255, 0.07);
+    --hairline-strong: rgba(255, 255, 255, 0.10);
+    --hairline-hover: rgba(255, 255, 255, 0.14);
+    --text-1: #f4f5f6;
+    --text-2: #9aa0a6;
+    --text-3: #62666d;
+    --signal: #f5a524;
   }
 
   * {
@@ -14,30 +26,22 @@
 
   html {
     scrollbar-width: thin;
-    scrollbar-color: rgba(103, 232, 249, 0.45) #05080d;
+    scrollbar-color: rgba(255, 255, 255, 0.18) #0a0b0d;
   }
 
   body {
     min-height: 100vh;
-    background:
-      linear-gradient(180deg, #05080d 0%, #071018 42%, #05080d 100%);
+    background: linear-gradient(180deg, #0a0b0d 0%, #0c0d10 50%, #08090a 100%);
   }
 
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(circle at 24% 18%, rgba(103, 232, 249, 0.08), transparent 28%),
-      radial-gradient(circle at 78% 52%, rgba(34, 197, 94, 0.045), transparent 30%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 38%);
+  /* Headings: distinctive grotesk with tight tracking, not the Inter default. */
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
   }
 
   ::selection {
-    background: rgba(103, 232, 249, 0.25);
-    color: white;
+    background: rgba(245, 165, 36, 0.26);
+    color: #fff;
   }
 
   ::-webkit-scrollbar {
@@ -45,11 +49,11 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #05080d;
+    background: #0a0b0d;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(103, 232, 249, 0.45);
+    background: rgba(255, 255, 255, 0.16);
     border-radius: 999px;
   }
 
@@ -68,29 +72,14 @@
     --sweep-x: 8%;
     isolation: isolate;
     background:
-      radial-gradient(circle at 72% 46%, rgba(103, 232, 249, 0.16), transparent 36%),
-      radial-gradient(circle at 20% 76%, rgba(34, 197, 94, 0.05), transparent 24%),
-      linear-gradient(145deg, rgba(6, 12, 18, 0.72), rgba(8, 9, 12, 0.52));
-    backdrop-filter: blur(9px);
-    -webkit-backdrop-filter: blur(9px);
-    border: 1px solid rgba(255, 255, 255, 0.13);
+      radial-gradient(circle at 72% 46%, rgba(103, 232, 249, 0.07), transparent 40%),
+      rgba(10, 11, 13, 0.42);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--hairline-strong);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.10),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.04),
-      0 32px 90px rgba(0, 0, 0, 0.36);
-  }
-
-  .deployment-scene-shell::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    background:
-      linear-gradient(120deg, rgba(255, 255, 255, 0.10), transparent 26%),
-      radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.08), transparent 28%);
-    opacity: 0.55;
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 24px 60px rgba(0, 0, 0, 0.34);
   }
 
   .stage-card {
@@ -101,18 +90,14 @@
     gap: 0.3rem;
     min-width: 0;
     padding: 0.5rem 0.2rem 0.45rem;
-    border-radius: 0.9rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(11, 17, 24, 0.42);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 10px 26px rgba(0, 0, 0, 0.22);
+    border-radius: 0.6rem;
+    border: 1px solid var(--hairline);
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     transition:
       border-color 480ms ease,
       background 480ms ease,
-      box-shadow 480ms ease,
       opacity 480ms ease;
   }
 
@@ -121,13 +106,12 @@
     place-items: center;
     width: 1.6rem;
     height: 1.6rem;
-    border-radius: 0.55rem;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.07);
+    border-radius: 0.45rem;
+    border: 1px solid var(--hairline);
+    background: rgba(255, 255, 255, 0.04);
     transition:
       border-color 360ms ease,
-      background 360ms ease,
-      box-shadow 360ms ease;
+      background 360ms ease;
   }
 
   .nav-glass {
@@ -166,8 +150,8 @@
       drop-shadow(0 0 24px rgba(56, 189, 248, 0.20));
   }
 
-  /* Scale the whole stage (artwork + travelling lights together) so the run
-     glow stays locked to its machine while the bay reads larger. */
+  /* No scale/bleed: the stage stays at the panel's content width so its 8 even
+     modules line up exactly with the cards pinned above by machineX. */
   .factory-stage {
     position: relative;
     transform-origin: bottom center;
@@ -175,7 +159,7 @@
 
   @media (min-width: 1024px) {
     .factory-stage {
-      transform: scale(1.09);
+      transform: none;
     }
   }
 
@@ -268,13 +252,66 @@
 
   /* Concise single-line run status / commit bar — glassy, see-through. */
   .status-bar {
-    background: rgba(11, 17, 24, 0.34);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--hairline);
+  }
+
+  /*
+   * Subliminal engineering-blueprint grid for the lower sections — texture that
+   * fits the infrastructure theme without competing with content. Kept faint.
+   */
+  .blueprint {
+    position: relative;
+  }
+
+  .blueprint::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 55%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 55%, transparent 100%);
+  }
+
+  /*
+   * Flat surface elevated by a hairline, not by blur — the Linear/Vercel move.
+   * Hover only brightens the border; no lift, no coloured glow.
+   */
+  .surface-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.07),
-      0 10px 26px rgba(0, 0, 0, 0.22);
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 1px 2px rgba(0, 0, 0, 0.4);
+    transition: border-color 240ms ease, background 240ms ease;
+  }
+
+  .surface-card:hover {
+    border-color: var(--hairline-hover);
+    background: #121315;
+  }
+
+  /* Monochrome technical tag — hairline + mono text, no colour, no sticker. */
+  .tool-chip {
+    border-radius: 4px;
+    border: 1px solid var(--hairline);
+    background: rgba(255, 255, 255, 0.015);
+    color: var(--text-2);
+    transition: border-color 200ms ease, color 200ms ease;
+  }
+
+  .tool-chip:hover {
+    border-color: var(--hairline-hover);
+    color: var(--text-1);
   }
 
   .liquid-glass {

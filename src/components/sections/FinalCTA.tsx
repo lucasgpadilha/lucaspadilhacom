@@ -1,11 +1,20 @@
+import type { ComponentType } from 'react';
 import { motion } from 'framer-motion';
-import { BriefcaseBusiness, GitBranch, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { GithubIcon, LinkedinIcon } from '../devops/brand-icons';
 import { useLocale, type Locale } from '../../lib/i18n';
 
-const links = [
-  { label: 'GitHub', href: 'https://github.com/lucasgpadilha', icon: GitBranch },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/lucasgpadilha/', icon: BriefcaseBusiness },
-  { label: 'Email', href: 'mailto:lucasgpadilhatec@gmail.com', icon: Mail },
+type CtaLink = {
+  label: string;
+  href: string;
+  icon: ComponentType<{ size?: number; className?: string }>;
+  primary?: boolean;
+};
+
+const links: CtaLink[] = [
+  { label: 'Email', href: 'mailto:lucasgpadilhatec@gmail.com', icon: Mail, primary: true },
+  { label: 'GitHub', href: 'https://github.com/lucasgpadilha', icon: GithubIcon },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/lucasgpadilha/', icon: LinkedinIcon },
 ];
 
 const copy: Record<Locale, { eyebrow: string; title: string; description: string; footer: string }> = {
@@ -30,43 +39,44 @@ export default function FinalCTA() {
   const text = copy[locale];
 
   return (
-    <section id="contact" className="relative px-5 py-24 sm:py-32">
-      <div className="absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_50%_100%,rgba(103,232,249,0.10),transparent_55%)]" />
+    <section id="contact" className="blueprint relative px-5 py-24 sm:py-32">
       <motion.div
-        initial={{ opacity: 0, y: 28, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="liquid-glass mx-auto max-w-4xl rounded-3xl p-6 text-center sm:p-10"
+        className="surface-card relative z-10 mx-auto max-w-4xl p-8 text-center sm:p-12"
       >
-        <div className="relative z-10">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-cyan-100/60">
-            {text.eyebrow}
-          </p>
-          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-normal text-white sm:text-5xl">
-            {text.title}
-          </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/62 sm:text-lg">
-            {text.description}
-          </p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
+          {text.eyebrow}
+        </p>
+        <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold text-[var(--text-1)] sm:text-5xl">
+          {text.title}
+        </h2>
+        <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[var(--text-2)] sm:text-lg">
+          {text.description}
+        </p>
 
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            {links.map(({ label, href, icon: Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target={label === 'Email' ? undefined : '_blank'}
-                rel={label === 'Email' ? undefined : 'noreferrer'}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-5 py-3 text-sm font-semibold text-white/78 transition hover:border-cyan-100/28 hover:text-white"
-              >
-                <Icon size={16} />
-                {label}
-              </a>
-            ))}
-          </div>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {links.map(({ label, href, icon: Icon, primary }) => (
+            <a
+              key={label}
+              href={href}
+              target={label === 'Email' ? undefined : '_blank'}
+              rel={label === 'Email' ? undefined : 'noreferrer'}
+              className={
+                primary
+                  ? 'inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--signal)] px-6 py-3 text-sm font-semibold text-[#1a1204] transition hover:brightness-105 sm:w-auto'
+                  : 'inline-flex w-full items-center justify-center gap-2 rounded-md border border-[var(--hairline-strong)] px-6 py-3 text-sm font-medium text-[var(--text-2)] transition hover:border-[var(--hairline-hover)] hover:text-white sm:w-auto'
+              }
+            >
+              <Icon size={16} />
+              {label}
+            </a>
+          ))}
         </div>
       </motion.div>
-      <p className="relative z-10 mt-10 text-center text-xs text-white/30">
+      <p className="relative z-10 mt-10 text-center font-mono text-[11px] text-white/30">
         {text.footer}
       </p>
     </section>

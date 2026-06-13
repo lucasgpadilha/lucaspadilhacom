@@ -10,6 +10,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { stackCategoriesByLocale, type StackCategory } from '../../data/stack';
+import { ToolLogo } from '../../lib/tool-meta';
 import { useLocale, type Locale } from '../../lib/i18n';
 
 const icons: Record<StackCategory['icon'], typeof Cloud> = {
@@ -44,53 +45,50 @@ export default function StackSection() {
   const stackCategories = stackCategoriesByLocale[locale];
 
   return (
-    <section id="stack" className="relative px-5 py-20 sm:py-28">
-      <div className="mx-auto max-w-6xl">
-        <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
+    <section id="stack" className="blueprint relative px-5 py-24 sm:py-32">
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="font-mono text-xs uppercase tracking-[0.24em] text-cyan-100/60">
+            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
               {text.eyebrow}
             </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-normal text-white sm:text-5xl">
+            <h2 className="mt-4 text-3xl font-semibold text-[var(--text-1)] sm:text-5xl">
               {text.title}
             </h2>
-            <p className="mt-5 text-base leading-7 text-white/58">
+            <p className="mt-5 text-base leading-7 text-[var(--text-2)]">
               {text.description}
             </p>
           </motion.div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="divide-y divide-[var(--hairline)] overflow-hidden rounded-xl border border-[var(--hairline)] bg-[var(--surface)]">
             {stackCategories.map((category, index) => {
               const Icon = icons[category.icon];
 
               return (
                 <motion.div
                   key={category.title}
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-80px' }}
-                  transition={{ duration: 0.55, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-                  className="liquid-glass rounded-2xl p-4"
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.45, delay: index * 0.035, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col gap-3 px-5 py-4 transition-colors duration-200 hover:bg-[#121315] sm:flex-row sm:items-center sm:gap-6"
                 >
-                  <div className="relative z-10 flex items-start gap-3">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-cyan-100/14 bg-cyan-100/[0.055] text-cyan-50/80">
-                      <Icon size={18} strokeWidth={1.7} />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-white/86">{category.title}</h3>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {category.items.map((item) => (
-                          <span key={item} className="rounded-full bg-white/[0.04] px-3 py-1 text-xs text-white/56">
-                            {item}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="flex w-44 shrink-0 items-center gap-2.5">
+                    <Icon size={15} strokeWidth={1.8} className="text-white/40" />
+                    <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/55">
+                      {category.title}
+                    </h3>
+                  </div>
+                  <div className="hidden h-6 w-px shrink-0 bg-[var(--hairline)] sm:block" aria-hidden="true" />
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
+                    {category.items.map((item) => (
+                      <ToolLogo key={item} name={item} />
+                    ))}
                   </div>
                 </motion.div>
               );

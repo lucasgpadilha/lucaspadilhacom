@@ -74,37 +74,37 @@ export default function Navbar() {
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="absolute left-0 right-0 top-6 z-50 px-4 sm:top-8 md:px-8"
     >
-      <nav className="nav-glass mx-auto flex h-12 max-w-7xl items-center justify-between rounded-2xl px-4 text-sm text-white/80 sm:rounded-full sm:px-6">
-        <a href="#" className="text-[13px] font-semibold tracking-wide text-white">
+      <nav className="nav-glass mx-auto flex h-12 max-w-7xl items-center justify-between rounded-xl px-4 text-sm text-white/80 sm:px-6">
+        <a href="#" className="text-[13px] font-semibold tracking-tight text-white">
           Lucas Padilha
         </a>
 
-        <div className="hidden items-center gap-2 md:flex lg:gap-5">
+        <div className="hidden items-center gap-1 md:flex lg:gap-3">
           {navLinks[locale].map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className={`relative rounded-full px-2.5 py-1 text-[13px] transition hover:text-white ${
-                active === link.href ? 'font-medium text-white' : 'text-white/64'
+              className={`relative rounded-md px-2.5 py-1 text-[13px] transition hover:text-white ${
+                active === link.href ? 'text-white' : 'text-white/55'
               }`}
             >
               {link.label}
               {active === link.href && (
-                <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-cyan-300" />
+                <span className="absolute -bottom-0.5 left-2.5 right-2.5 h-px bg-[var(--signal)]" />
               )}
             </a>
           ))}
         </div>
 
         <div className="hidden items-center gap-1.5 md:flex">
-          <div className="mr-1 flex rounded-full border border-white/10 bg-white/[0.035] p-0.5">
+          <div className="mr-1 flex rounded-md border border-white/10 bg-white/[0.025] p-0.5">
             {(['en', 'pt'] as Locale[]).map((item) => (
               <button
                 key={item}
                 type="button"
                 onClick={() => setLocale(item)}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide transition ${
-                  locale === item ? 'bg-white text-[#061018]' : 'text-white/55 hover:text-white'
+                className={`rounded px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide transition ${
+                  locale === item ? 'bg-white text-[#0a0b0d]' : 'text-white/50 hover:text-white'
                 }`}
                 aria-pressed={locale === item}
               >

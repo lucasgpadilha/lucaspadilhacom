@@ -21,6 +21,7 @@ type Indicator = {
 
 const copy: Record<Locale, {
   eyebrow: string;
+  available: string;
   headline: string;
   description: string;
   projects: string;
@@ -29,6 +30,7 @@ const copy: Record<Locale, {
 }> = {
   en: {
     eyebrow: 'DevOps • Cloud • Infrastructure Automation',
+    available: 'Available for opportunities',
     headline: 'Infrastructure that moves from commit to production.',
     description:
       'I build labs and automations with Terraform, Ansible, Docker and CI/CD pipelines, turning provisioning, configuration and deploy into reproducible flows.',
@@ -42,6 +44,7 @@ const copy: Record<Locale, {
   },
   pt: {
     eyebrow: 'DevOps • Cloud • Infrastructure Automation',
+    available: 'Disponível para oportunidades',
     headline: 'Infraestrutura que sai do commit e chega em produção.',
     description:
       'Construo laboratórios e automações com Terraform, Ansible, Docker e pipelines CI/CD, transformando provisionamento, configuração e deploy em fluxos reproduzíveis.',
@@ -90,10 +93,22 @@ export default function Hero() {
           className="relative mx-auto max-w-3xl text-center md:mx-0 md:text-left"
         >
           <div className="pointer-events-none absolute -inset-x-10 -inset-y-8 -z-10 hidden rounded-[48px] bg-black/18 blur-3xl md:block" />
+          <motion.div
+            variants={fadeUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.03] px-3 py-1 backdrop-blur-sm"
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--signal)] opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
+            </span>
+            <span className="font-mono text-[11px] tracking-tight text-white/70">{text.available}</span>
+          </motion.div>
+
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-5 font-mono text-xs uppercase tracking-[0.26em] text-cyan-100/78"
+            className="mb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-white/40"
           >
             {text.eyebrow}
           </motion.p>
@@ -101,7 +116,7 @@ export default function Hero() {
           <motion.h1
             variants={fadeUp}
             transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
-            className="text-5xl font-semibold leading-[0.94] tracking-normal text-white sm:text-6xl md:whitespace-nowrap lg:text-6xl xl:text-7xl"
+            className="text-5xl font-semibold leading-[0.92] tracking-[-0.03em] text-white sm:text-6xl md:whitespace-nowrap lg:text-6xl xl:text-7xl"
           >
             Lucas Padilha
           </motion.h1>
@@ -129,7 +144,7 @@ export default function Hero() {
           >
             <a
               href="#projects"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#061018] transition hover:bg-cyan-50 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--signal)] px-5 py-3 text-sm font-semibold text-[#1a1204] transition hover:brightness-105 sm:w-auto"
             >
               {text.projects}
               <ArrowRight size={16} />
@@ -138,10 +153,10 @@ export default function Hero() {
               href="https://github.com/lucasgpadilha"
               target="_blank"
               rel="noreferrer"
-              className="liquid-glass inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white/88 transition hover:text-white sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-white/15 bg-white/[0.03] px-5 py-3 text-sm font-medium text-white/85 backdrop-blur-sm transition hover:border-white/25 hover:text-white sm:w-auto"
             >
-              <GithubIcon size={16} className="relative z-10" />
-              <span className="relative z-10">{text.github}</span>
+              <GithubIcon size={16} />
+              <span>{text.github}</span>
             </a>
           </motion.div>
 
@@ -150,13 +165,13 @@ export default function Hero() {
             transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
             className="mt-6 flex flex-wrap items-center justify-center gap-2.5 md:justify-start"
           >
-            {text.indicators.map(({ label, icon: Icon, iconClass }) => (
+            {text.indicators.map(({ label, icon: Icon }) => (
               <div
                 key={label}
-                className="liquid-glass inline-flex items-center gap-2 rounded-full px-3 py-1.5"
+                className="inline-flex items-center gap-2 rounded-md border border-white/12 bg-white/[0.03] px-3 py-1.5 backdrop-blur-sm"
               >
-                <Icon size={12} className={`relative z-10 shrink-0 ${iconClass}`} />
-                <span className="relative z-10 whitespace-nowrap text-[11px] font-medium text-white/80">
+                <Icon size={12} className="shrink-0 text-white/55" />
+                <span className="whitespace-nowrap font-mono text-[11px] text-white/65">
                   {label}
                 </span>
               </div>

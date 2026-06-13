@@ -4,12 +4,17 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
-        night: '#05080d',
-        graphite: '#0b1118',
+        night: '#0a0b0d',
+        graphite: '#101113',
+        ink: '#08090a',
+        signal: {
+          DEFAULT: '#f5a524',
+          soft: 'rgba(245,165,36,0.10)',
+        },
         cloud: {
           100: '#cffafe',
           200: '#a5f3fc',
