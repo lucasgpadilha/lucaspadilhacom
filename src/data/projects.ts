@@ -35,7 +35,7 @@ export const projectsByLocale: Record<Locale, Project[]> = {
       ],
       stack: ['AWS', 'Terraform', 'EC2', 'S3', 'IAM', 'GitHub Actions'],
       status: 'Provisioning',
-      link: 'https://github.com/lucasgpadilha/terraform',
+      link: 'https://github.com/lucasgpadilha/aws-terraform',
     },
     {
       title: 'AWS Ansible',
