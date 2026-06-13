@@ -4,7 +4,7 @@ Portfólio DevOps de Lucas Padilha, construído como uma landing page estática 
 
 ## Visão
 
-O site comunica projetos práticos em AWS, Terraform, Ansible, Docker, CI/CD e operação Linux. A direção visual usa uma hero com vídeo 16:9 em loop, UI glass discreta e um command deck DevOps para representar o fluxo Commit -> Build -> Tests -> Terraform -> AWS -> Ansible -> Deploy -> Monitoring.
+O site comunica projetos práticos em AWS, Terraform, Ansible, Docker, CI/CD e operação Linux. A direção visual é sóbria (superfícies hairline, tipografia Space Grotesk/JetBrains Mono, um único acento âmbar) com uma hero em vídeo 16:9 e um command deck DevOps representando o fluxo Commit -> Build -> Tests -> Terraform -> AWS -> Ansible -> Deploy -> Monitoring.
 
 ## Idiomas
 
@@ -18,7 +18,7 @@ O site é bilíngue:
 
 A detecção fica em `src/lib/i18n.ts`. Como o projeto é estático, a detecção acontece no navegador e não depende de serviço externo de IP.
 
-## Stack
+## Stack do site (build)
 
 - Astro
 - React
@@ -27,6 +27,25 @@ A detecção fica em `src/lib/i18n.ts`. Como o projeto é estático, a detecçã
 - Framer Motion
 - GSAP
 - Lucide React
+
+## Stack operacional (conteúdo da página)
+
+A seção "Operational Stack" do site é orientada a dados e fácil de editar em
+`src/data/stack.ts`. Cada categoria tem `title`, `description` (en/pt) e uma
+lista de `tools`, onde cada ferramenta declara um nível de proficiência:
+
+```ts
+{ name: 'Terraform', level: 'core' }     // core | hands-on | lab
+```
+
+- `core` — uso diário, hands-on
+- `hands-on` — usado em trabalho real, confortável
+- `lab` — labs e experimentos (inclui o que está em exploração)
+
+No visual, apenas `core` recebe o acento âmbar; `hands-on` e `lab` se diferenciam
+por peso/opacidade, evitando uma lista chapada de buzzwords. Para adicionar uma
+categoria, inclua um objeto novo no array e (se precisar de ícone próprio) um
+mapeamento em `icons` dentro de `src/components/sections/StackSection.tsx`.
 
 ## Rodar localmente
 
@@ -53,14 +72,14 @@ Use uma URL pública de CDN para um vídeo 16:9 em loop. O elemento `video` já 
 
 ## Deployment Scene
 
-A visualização da pipeline usa uma abordagem blueprint/command deck:
+A visualização da pipeline (command deck da hero) combina:
 
-- visual base em SVG/HTML
-- timeline GSAP para pulso contínuo e progresso da linha
-- labels, ícones, status e log em React
-- Framer Motion apenas para entrada/reveal
+- arte 3D da "fábrica" em `public/assets/factory/deployment-factory-v2.webp` (8 módulos, um por estágio)
+- timeline GSAP movendo um foco de luz (`--sweep-x`) entre os módulos
+- cards de estágio fixados no centro medido de cada módulo (`machineX` em `src/components/devops/DeploymentScene.tsx`)
+- labels, status e log em React; Framer Motion apenas para o reveal
 
-A decisão técnica está documentada em `docs/motion-strategy.md`. Os assets em `public/assets/factory/` ficam como referência/fallback futuro, mas não são a peça principal da hero atual.
+A decisão de motion está documentada em `docs/motion-strategy.md`.
 
 ## Visual QA
 
@@ -97,10 +116,10 @@ dist/
 
 ## Deploy
 
-Arquitetura simples:
+Arquitetura simples (o mesmo fluxo mostrado no card "How this site is deployed"):
 
 ```text
-GitHub Actions -> Astro build -> SCP/SSH -> EC2/Nginx
+push to main -> GitHub Actions -> Astro build -> SCP/SSH -> EC2 -> Nginx -> healthcheck
 ```
 
 Use secrets ou variáveis do pipeline para dados sensíveis:

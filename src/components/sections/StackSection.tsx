@@ -1,101 +1,127 @@
+import type { ComponentType } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
-  Box,
+  Boxes,
   Cloud,
   Code2,
+  Container,
   FileCode2,
+  KeyRound,
+  Network,
+  Package,
+  Server,
   Settings2,
-  Terminal,
+  ShieldCheck,
   Workflow,
 } from 'lucide-react';
-import { stackCategoriesByLocale, type StackCategory } from '../../data/stack';
-import { ToolLogo } from '../../lib/tool-meta';
+import { levelLabels, stackCategories, type StackIcon, type ToolLevel } from '../../data/stack';
 import { useLocale, type Locale } from '../../lib/i18n';
 
-const icons: Record<StackCategory['icon'], typeof Cloud> = {
+const icons: Record<StackIcon, ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
   cloud: Cloud,
-  code: Code2,
-  settings: Settings2,
-  box: Box,
-  workflow: Workflow,
-  terminal: Terminal,
-  file: FileCode2,
-  activity: Activity,
+  iac: Code2,
+  config: Settings2,
+  containers: Container,
+  kubernetes: Boxes,
+  cicd: Workflow,
+  security: ShieldCheck,
+  secrets: KeyRound,
+  observability: Activity,
+  systems: Server,
+  networking: Network,
+  registry: Package,
+  scripting: FileCode2,
+};
+
+const levelText: Record<ToolLevel, string> = {
+  core: 'text-white/90',
+  'hands-on': 'text-white/60',
+  lab: 'text-white/38',
 };
 
 const copy: Record<Locale, { eyebrow: string; title: string; description: string }> = {
   en: {
     eyebrow: 'Stack',
-    title: 'Operational stack',
-    description:
-      'Tools selected to build, version, provision, configure and observe infrastructure.',
+    title: 'Operational Stack',
+    description: 'Tools I use to provision, configure, deploy and observe infrastructure.',
   },
   pt: {
     eyebrow: 'Stack',
-    title: 'Stack operacional',
-    description:
-      'Ferramentas escolhidas para construir, versionar, provisionar, configurar e observar infraestrutura.',
+    title: 'Operational Stack',
+    description: 'Ferramentas que uso para provisionar, configurar, fazer deploy e observar infraestrutura.',
   },
 };
 
 export default function StackSection() {
   const { locale } = useLocale();
   const text = copy[locale];
-  const stackCategories = stackCategoriesByLocale[locale];
 
   return (
     <section id="stack" className="blueprint relative px-5 py-24 sm:py-32">
       <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
-              {text.eyebrow}
-            </p>
-            <h2 className="mt-4 text-3xl font-semibold text-[var(--text-1)] sm:text-5xl">
-              {text.title}
-            </h2>
-            <p className="mt-5 text-base leading-7 text-[var(--text-2)]">
-              {text.description}
-            </p>
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-2xl"
+        >
+          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
+            {text.eyebrow}
+          </p>
+          <h2 className="mt-4 text-3xl font-semibold text-[var(--text-1)] sm:text-5xl">
+            {text.title}
+          </h2>
+          <p className="mt-5 text-base leading-7 text-[var(--text-2)]">{text.description}</p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="divide-y divide-[var(--hairline)] overflow-hidden rounded-xl border border-[var(--hairline)] bg-[var(--surface)]"
-          >
-            {stackCategories.map((category) => {
-              const Icon = icons[category.icon];
+          {/* Legend — the single amber accent marks Core; the rest read by weight. */}
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[11px] text-white/45">
+            <span className="inline-flex items-center gap-1.5 text-white/85">
+              <span className="h-1 w-1 rounded-full bg-[var(--signal)]" />
+              {levelLabels.core[locale]}
+            </span>
+            <span className="text-white/55">{levelLabels['hands-on'][locale]}</span>
+            <span className="text-white/38">{levelLabels.lab[locale]}</span>
+          </div>
+        </motion.div>
 
-              return (
-                <div
-                  key={category.title}
-                  className="flex flex-col gap-3 px-5 py-4 transition-colors duration-200 hover:bg-[#121315] sm:flex-row sm:items-center sm:gap-6"
-                >
-                  <div className="flex w-44 shrink-0 items-center gap-2.5">
-                    <Icon size={15} strokeWidth={1.8} className="text-white/40" />
-                    <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/55">
-                      {category.title}
-                    </h3>
-                  </div>
-                  <div className="hidden h-6 w-px shrink-0 bg-[var(--hairline)] sm:block" aria-hidden="true" />
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
-                    {category.items.map((item) => (
-                      <ToolLogo key={item} name={item} />
-                    ))}
-                  </div>
+        <div className="mt-12 grid gap-3 md:grid-cols-2">
+          {stackCategories.map((category, index) => {
+            const Icon = icons[category.icon];
+
+            return (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.45, delay: (index % 2) * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                className="surface-card p-5"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon size={15} strokeWidth={1.8} className="shrink-0 text-white/45" />
+                  <h3 className="text-sm font-semibold text-[var(--text-1)]">{category.title}</h3>
                 </div>
-              );
-            })}
-          </motion.div>
+                <p className="mt-2 text-[13px] leading-5 text-white/45">
+                  {category.description[locale]}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {category.tools.map((tool) => (
+                    <span
+                      key={tool.name}
+                      className={`inline-flex items-center gap-1.5 rounded border border-[var(--hairline)] bg-white/[0.02] px-2 py-0.5 font-mono text-[11px] ${levelText[tool.level]}`}
+                    >
+                      {tool.level === 'core' && (
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--signal)]" />
+                      )}
+                      {tool.name}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

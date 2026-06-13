@@ -3,6 +3,7 @@ import '../styles/globals.css';
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/sections/Hero';
 import Projects from '../components/sections/Projects';
+import DeployFlow from '../components/sections/DeployFlow';
 import StackSection from '../components/sections/StackSection';
 import Timeline from '../components/sections/Timeline';
 import FinalCTA from '../components/sections/FinalCTA';
@@ -16,6 +17,7 @@ import FinalCTA from '../components/sections/FinalCTA';
   <Hero client:load />
   <main>
     <Projects client:visible />
+    <DeployFlow client:visible />
     <StackSection client:visible />
     <Timeline client:visible />
     <FinalCTA client:visible />

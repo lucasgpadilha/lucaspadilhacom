@@ -49,7 +49,7 @@ const stages: DeploymentStage[] = [
     icon: CheckCircle2,
     iconClass: 'text-emerald-300',
     machineX: 31.8,
-    log: { en: 'Tests: all checks passed', pt: 'Tests: checks aprovados' },
+    log: { en: 'Tests: checks & security scans passed', pt: 'Tests: checks e scans de segurança aprovados' },
   },
   {
     key: 'plan',
