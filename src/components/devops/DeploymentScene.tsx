@@ -32,7 +32,7 @@ const stages: DeploymentStage[] = [
     label: 'Commit',
     icon: CodeXml,
     iconClass: 'text-cyan-200',
-    machineX: 5.6,
+    machineX: 7.4,
     log: { en: 'Git push: commit received', pt: 'Git push: commit recebido' },
   },
   {
@@ -40,7 +40,7 @@ const stages: DeploymentStage[] = [
     label: 'Build',
     icon: Package,
     iconClass: 'text-white/95',
-    machineX: 18.9,
+    machineX: 19.6,
     log: { en: 'Build: docker image built', pt: 'Build: imagem docker criada' },
   },
   {
@@ -48,7 +48,7 @@ const stages: DeploymentStage[] = [
     label: 'Tests',
     icon: CheckCircle2,
     iconClass: 'text-emerald-300',
-    machineX: 32.2,
+    machineX: 31.8,
     log: { en: 'Tests: all checks passed', pt: 'Tests: checks aprovados' },
   },
   {
@@ -56,7 +56,7 @@ const stages: DeploymentStage[] = [
     label: 'Terraform Plan',
     icon: TerraformIcon,
     iconClass: 'text-violet-300',
-    machineX: 45.1,
+    machineX: 44.0,
     log: { en: 'Terraform: 3 to add, 0 to change', pt: 'Terraform: 3 to add, 0 to change' },
   },
   {
@@ -64,7 +64,7 @@ const stages: DeploymentStage[] = [
     label: 'AWS Provision',
     icon: AwsIcon,
     iconClass: 'text-[#ff9900]',
-    machineX: 59.3,
+    machineX: 56.2,
     log: { en: 'AWS: compute and network ready', pt: 'AWS: rede e compute prontos' },
   },
   {
@@ -72,7 +72,7 @@ const stages: DeploymentStage[] = [
     label: 'Ansible Config',
     icon: AnsibleIcon,
     iconClass: 'text-white/90',
-    machineX: 69,
+    machineX: 68.4,
     log: { en: 'Ansible: playbook applied', pt: 'Ansible: playbook aplicado' },
   },
   {
@@ -80,7 +80,7 @@ const stages: DeploymentStage[] = [
     label: 'Deploy',
     icon: Rocket,
     iconClass: 'text-cyan-100',
-    machineX: 80,
+    machineX: 80.6,
     log: { en: 'Deploy: service updated', pt: 'Deploy: serviço atualizado' },
   },
   {
@@ -88,7 +88,7 @@ const stages: DeploymentStage[] = [
     label: 'Monitoring',
     icon: BarChart3,
     iconClass: 'text-sky-300',
-    machineX: 92.3,
+    machineX: 92.8,
     log: { en: 'Monitoring: healthcheck 200 OK', pt: 'Monitoring: healthcheck 200 OK' },
   },
 ];
@@ -237,67 +237,80 @@ export default function DeploymentScene() {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
       data-flow={isRunning ? 'running' : isHealthy ? 'healthy' : 'idle'}
-      className="deployment-scene-shell relative w-full min-w-0 max-w-full scroll-mt-28 rounded-[30px] p-4 sm:p-5"
+      className="deployment-scene-shell relative w-full min-w-0 max-w-full scroll-mt-28 rounded-[18px] p-4 sm:p-5"
     >
       <div className="relative z-20 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={runPipeline}
-          className="liquid-glass inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-emerald-200 transition hover:text-emerald-100"
+          className="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/12 bg-white/[0.04] px-3.5 py-2 font-mono text-[11px] text-white/80 backdrop-blur-sm transition hover:border-white/22 hover:text-white"
         >
-          <Play size={12} fill="currentColor" className="relative z-10" />
-          <span className="relative z-10">{text.button}</span>
+          <Play size={11} fill="currentColor" />
+          <span>{text.button}</span>
         </button>
-        <div className="liquid-glass inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium text-white/85">
+        <div className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.025] px-3 py-2 font-mono text-[11px] text-white/70 backdrop-blur-sm">
           <span
             className={
-              isHealthy || isRunning
-                ? 'relative z-10 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300'
-                : 'relative z-10 h-1.5 w-1.5 rounded-full bg-white/35'
+              isRunning
+                ? 'h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-300'
+                : isHealthy
+                  ? 'h-1.5 w-1.5 rounded-full bg-cyan-300'
+                  : 'h-1.5 w-1.5 rounded-full bg-white/30'
             }
           />
-          <span className="relative z-10">{deckStatus}</span>
-          <Activity size={13} className="relative z-10 text-emerald-300/85" />
+          <span>{deckStatus}</span>
+          <Activity size={13} className={isRunning || isHealthy ? 'text-cyan-300/80' : 'text-white/35'} />
         </div>
       </div>
 
-      {/*
-        Stage cards as an even row: a clean, uniform stepper that reads aligned.
-        The detected machine centers sit within ~3% of an 8-column grid, so the
-        even row also lands over its machines without looking crooked.
-      */}
-      <div className="relative z-20 mt-4 grid grid-cols-4 gap-1.5 sm:gap-2 lg:grid-cols-8">
+      {/* Mobile/tablet: compact even grid above the artwork. */}
+      <div className="relative z-20 mt-4 grid grid-cols-4 gap-2 lg:hidden">
         {stages.map((stage, index) => (
           <StageCard key={stage.key} stage={stage} state={getStageState(activeIndex, index)} />
         ))}
       </div>
 
-      <div className="relative -mx-1 mt-3 sm:-mx-2 lg:-mx-5 lg:mt-3.5">
-        <div className="factory-stage relative z-10">
-          <div className="factory-floor-glow" aria-hidden="true" />
-          <div className="factory-sweep" aria-hidden="true" />
-          <div className="factory-pool" aria-hidden="true" />
-          <img
-            src="/assets/factory/deployment-factory.webp"
-            alt=""
-            width={1894}
-            height={518}
-            draggable={false}
-            className="factory-img pointer-events-none relative z-10 w-full select-none"
-            aria-hidden="true"
-          />
-          <div className="factory-ambiance" aria-hidden="true" />
-        </div>
+      {/*
+        Desktop: each card is pinned to its module's measured centre. The cards
+        strip and the artwork below are both at the panel's content width (no
+        bleed, no scale), so the 8 even modules line up exactly with the cards.
+      */}
+      <div className="relative z-20 mt-4 hidden h-[64px] lg:block xl:h-[68px]">
+        {stages.map((stage, index) => (
+          <div
+            key={stage.key}
+            className="absolute top-0 w-[11.5%] -translate-x-1/2"
+            style={{ left: `${stage.machineX}%` }}
+          >
+            <StageCard stage={stage} state={getStageState(activeIndex, index)} />
+          </div>
+        ))}
       </div>
 
-      <div className="status-bar relative z-20 mt-4 flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5">
+      <div className="factory-stage relative z-10 mt-3">
+        <div className="factory-floor-glow" aria-hidden="true" />
+        <div className="factory-sweep" aria-hidden="true" />
+        <div className="factory-pool" aria-hidden="true" />
+        <img
+          src="/assets/factory/deployment-factory-v2.webp"
+          alt=""
+          width={2048}
+          height={560}
+          draggable={false}
+          className="factory-img pointer-events-none relative z-10 w-full select-none"
+          aria-hidden="true"
+        />
+        <div className="factory-ambiance" aria-hidden="true" />
+      </div>
+
+      <div className="status-bar relative z-20 mt-4 flex min-w-0 items-center gap-3 rounded-xl px-4 py-2.5">
         <span
           className={
-            isHealthy
-              ? 'h-2 w-2 shrink-0 rounded-full bg-emerald-300 shadow-[0_0_10px_2px_rgba(110,231,183,0.6)]'
-              : isRunning
-                ? 'h-2 w-2 shrink-0 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_10px_2px_rgba(103,232,249,0.6)]'
-                : 'h-2 w-2 shrink-0 rounded-full bg-white/30'
+            isRunning
+              ? 'h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-cyan-300'
+              : isHealthy
+                ? 'h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300'
+                : 'h-1.5 w-1.5 shrink-0 rounded-full bg-white/30'
           }
         />
         <motion.span
@@ -305,15 +318,15 @@ export default function DeploymentScene() {
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.24, ease: 'easeOut' }}
-          className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-white/88"
+          className="min-w-0 flex-1 truncate font-mono text-[12px] text-white/75"
         >
           {logLine}
         </motion.span>
         <span className="hidden shrink-0 items-center gap-2 font-mono text-[11px] sm:flex">
-          <code className="rounded-md border border-cyan-200/25 bg-cyan-400/[0.08] px-1.5 py-0.5 text-cyan-200">
+          <code className="rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-white/65">
             a7c9e2b
           </code>
-          <span className="text-white/40">{text.commitTime}</span>
+          <span className="text-white/35">{text.commitTime}</span>
         </span>
       </div>
     </motion.article>
