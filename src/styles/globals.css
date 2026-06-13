@@ -68,9 +68,9 @@
     --sweep-x: 8%;
     isolation: isolate;
     background:
-      radial-gradient(circle at 75% 42%, rgba(103, 232, 249, 0.11), transparent 32%),
-      radial-gradient(circle at 20% 76%, rgba(34, 197, 94, 0.055), transparent 24%),
-      linear-gradient(145deg, rgba(6, 12, 18, 0.54), rgba(11, 10, 12, 0.30));
+      radial-gradient(circle at 72% 46%, rgba(103, 232, 249, 0.16), transparent 36%),
+      radial-gradient(circle at 20% 76%, rgba(34, 197, 94, 0.05), transparent 24%),
+      linear-gradient(145deg, rgba(6, 12, 18, 0.72), rgba(8, 9, 12, 0.52));
     backdrop-filter: blur(9px);
     -webkit-backdrop-filter: blur(9px);
     border: 1px solid rgba(255, 255, 255, 0.13);
@@ -97,23 +97,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 0.3rem;
     min-width: 0;
     padding: 0.5rem 0.2rem 0.45rem;
     border-radius: 0.9rem;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(8, 14, 20, 0.58);
+    background: rgba(11, 17, 24, 0.42);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 14px 32px rgba(0, 0, 0, 0.24);
-    translate: 0 0;
+      0 10px 26px rgba(0, 0, 0, 0.22);
     transition:
-      border-color 360ms ease,
-      background 360ms ease,
-      box-shadow 360ms ease,
-      opacity 360ms ease,
-      translate 360ms ease;
+      border-color 480ms ease,
+      background 480ms ease,
+      box-shadow 480ms ease,
+      opacity 480ms ease;
   }
 
   .stage-card__icon {
@@ -122,8 +122,8 @@
     width: 1.6rem;
     height: 1.6rem;
     border-radius: 0.55rem;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
     transition:
       border-color 360ms ease,
       background 360ms ease,
@@ -140,62 +140,100 @@
       0 18px 50px rgba(0, 0, 0, 0.30);
   }
 
-  .stage-card[data-state="waiting"] {
-    opacity: 0.66;
-  }
-
+  /*
+   * State styling stays deliberately quiet: only the running card carries an
+   * accent, and completed cards return to neutral so the row never accumulates
+   * color noise. Green is reserved for the status pill and the LIVE badge.
+   */
   .stage-card[data-state="running"] {
-    opacity: 1;
-    border-color: rgba(165, 243, 252, 0.55);
-    background: rgba(10, 28, 36, 0.72);
+    border-color: rgba(165, 243, 252, 0.52);
+    background: rgba(11, 26, 34, 0.88);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 0 30px rgba(103, 232, 249, 0.26),
-      0 18px 40px rgba(0, 0, 0, 0.32);
-    translate: 0 -3px;
+      0 0 26px rgba(103, 232, 249, 0.20),
+      0 14px 32px rgba(0, 0, 0, 0.30);
   }
 
   .stage-card[data-state="running"] .stage-card__icon {
-    border-color: rgba(165, 243, 252, 0.45);
+    border-color: rgba(165, 243, 252, 0.42);
     background: rgba(103, 232, 249, 0.13);
-    box-shadow: 0 0 18px rgba(103, 232, 249, 0.30);
   }
 
-  .stage-card[data-state="success"] {
-    opacity: 1;
-    border-color: rgba(167, 243, 208, 0.30);
-    background: rgba(14, 32, 26, 0.55);
+  /* Crisp, cyan-forward render that matches the reference: lift the artwork
+     out of the muddy/warm midtones and let the glowing cores pop. */
+  .factory-img {
+    filter: saturate(1.34) contrast(1.18) brightness(1.13)
+      drop-shadow(0 0 24px rgba(56, 189, 248, 0.20));
   }
 
-  .stage-card[data-state="success"] .stage-card__icon {
-    border-color: rgba(167, 243, 208, 0.28);
-    background: rgba(74, 222, 128, 0.10);
+  /* Scale the whole stage (artwork + travelling lights together) so the run
+     glow stays locked to its machine while the bay reads larger. */
+  .factory-stage {
+    position: relative;
+    transform-origin: bottom center;
+  }
+
+  @media (min-width: 1024px) {
+    .factory-stage {
+      transform: scale(1.09);
+    }
   }
 
   .factory-floor-glow {
     position: absolute;
-    inset-inline: 6%;
-    bottom: 6%;
-    height: 26%;
+    inset-inline: 2%;
+    bottom: 0%;
+    height: 34%;
+    z-index: 5;
     pointer-events: none;
     border-radius: 999px;
-    background: radial-gradient(ellipse at center, rgba(103, 232, 249, 0.22), rgba(103, 232, 249, 0.05) 58%, transparent 78%);
-    filter: blur(18px);
+    background: radial-gradient(ellipse at center, rgba(103, 232, 249, 0.30), rgba(56, 189, 248, 0.09) 56%, transparent 80%);
+    filter: blur(24px);
+    animation: factory-breathe 5.5s ease-in-out infinite alternate;
   }
 
+  /* Cool cyan ambiance pooled across the lower machines, screened over the
+     warm artwork so the whole bay reads cyan like the reference. */
+  .factory-ambiance {
+    position: absolute;
+    inset: 0;
+    z-index: 11;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 96%, rgba(56, 189, 248, 0.22), transparent 70%),
+      radial-gradient(ellipse 90% 60% at 50% 78%, rgba(34, 211, 238, 0.08), transparent 75%);
+  }
+
+  @keyframes factory-breathe {
+    from {
+      opacity: 0.78;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  /*
+   * Soft cyan backlight that travels behind the active machine — a glow that
+   * halos the unit rather than a hard ellipse stamped on the floor, so it never
+   * looks clipped. Sits under the artwork (z below the img) for a real backlight.
+   */
   .factory-sweep {
     position: absolute;
-    top: 6%;
-    bottom: 4%;
+    bottom: -6%;
     left: var(--sweep-x);
-    z-index: 15;
-    width: 24%;
+    z-index: 1;
+    width: 26%;
+    height: 116%;
     pointer-events: none;
     transform: translateX(-50%);
-    background: radial-gradient(ellipse at center, rgba(165, 243, 252, 0.34), rgba(103, 232, 249, 0.10) 52%, transparent 74%);
+    background: radial-gradient(ellipse 50% 50% at 50% 60%, rgba(125, 224, 255, 0.55), rgba(56, 189, 248, 0.14) 48%, transparent 72%);
+    filter: blur(20px);
     mix-blend-mode: screen;
     opacity: 0;
-    transition: opacity 500ms ease;
+    transition: opacity 600ms ease;
   }
 
   [data-flow="running"] .factory-sweep {
@@ -203,7 +241,40 @@
   }
 
   [data-flow="healthy"] .factory-sweep {
-    opacity: 0.55;
+    opacity: 0;
+  }
+
+  /* Soft pool of light washing the base of the active machine, layered in front
+     of the artwork but kept low and blurred so it reads as spill, not a stamp. */
+  .factory-pool {
+    position: absolute;
+    bottom: 4%;
+    left: var(--sweep-x);
+    z-index: 12;
+    width: 17%;
+    height: 30%;
+    pointer-events: none;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse 50% 60% at 50% 100%, rgba(165, 243, 252, 0.4), rgba(103, 232, 249, 0.1) 50%, transparent 72%);
+    filter: blur(10px);
+    mix-blend-mode: screen;
+    opacity: 0;
+    transition: opacity 600ms ease;
+  }
+
+  [data-flow="running"] .factory-pool {
+    opacity: 1;
+  }
+
+  /* Concise single-line run status / commit bar — glassy, see-through. */
+  .status-bar {
+    background: rgba(11, 17, 24, 0.34);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 10px 26px rgba(0, 0, 0, 0.22);
   }
 
   .liquid-glass {

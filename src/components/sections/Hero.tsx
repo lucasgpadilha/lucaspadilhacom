@@ -82,7 +82,7 @@ export default function Hero() {
 
       <Navbar />
 
-      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-7xl items-center gap-10 px-5 pb-20 pt-32 md:grid-cols-[0.9fr_1.1fr] md:px-8 md:pt-28 lg:gap-12">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[88rem] items-center gap-10 px-5 pb-20 pt-32 md:grid-cols-[0.78fr_1.22fr] md:px-8 md:pt-32 lg:gap-14">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -164,7 +164,7 @@ export default function Hero() {
           </motion.div>
         </motion.div>
 
-        <div className="mx-auto w-full min-w-0 max-w-3xl md:mx-0">
+        <div className="mx-auto w-full min-w-0 max-w-none md:mx-0">
           <DeploymentScene />
         </div>
       </div>

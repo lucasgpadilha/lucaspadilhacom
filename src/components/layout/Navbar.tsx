@@ -72,7 +72,7 @@ export default function Navbar() {
       initial={{ opacity: 0, y: -18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute left-0 right-0 top-4 z-50 px-4 sm:top-5 md:px-8"
+      className="absolute left-0 right-0 top-6 z-50 px-4 sm:top-8 md:px-8"
     >
       <nav className="nav-glass mx-auto flex h-12 max-w-7xl items-center justify-between rounded-2xl px-4 text-sm text-white/80 sm:rounded-full sm:px-6">
         <a href="#" className="text-[13px] font-semibold tracking-wide text-white">
