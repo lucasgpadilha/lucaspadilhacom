@@ -65,17 +65,19 @@ export default function StackSection() {
             </p>
           </motion.div>
 
-          <div className="divide-y divide-[var(--hairline)] overflow-hidden rounded-xl border border-[var(--hairline)] bg-[var(--surface)]">
-            {stackCategories.map((category, index) => {
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="divide-y divide-[var(--hairline)] overflow-hidden rounded-xl border border-[var(--hairline)] bg-[var(--surface)]"
+          >
+            {stackCategories.map((category) => {
               const Icon = icons[category.icon];
 
               return (
-                <motion.div
+                <div
                   key={category.title}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ duration: 0.45, delay: index * 0.035, ease: [0.22, 1, 0.36, 1] }}
                   className="flex flex-col gap-3 px-5 py-4 transition-colors duration-200 hover:bg-[#121315] sm:flex-row sm:items-center sm:gap-6"
                 >
                   <div className="flex w-44 shrink-0 items-center gap-2.5">
@@ -90,10 +92,10 @@ export default function StackSection() {
                       <ToolLogo key={item} name={item} />
                     ))}
                   </div>
-                </motion.div>
+                </div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
