@@ -1,0 +1,13 @@
+---
+import Text from './Text.astro';
+import Mark from './Mark.astro';
+import { copy } from '../../data/startup-content';
+---
+<section id="studio" class="studio-section section-space" aria-labelledby="studio-heading">
+  <div class="studio-symbol"><Mark /><p translate="no">Nexora Games</p><span><Text text={{ en: 'Brazil, and beyond.', pt: 'Do Brasil, para além.' }} /></span></div>
+  <div class="studio-description"><h2 id="studio-heading"><Text text={copy.studioTitle} /></h2><p><Text text={copy.studioBody} /></p><p><Text text={copy.studioBody2} /></p></div>
+</section>
+<section class="research-section section-space" aria-labelledby="research-title">
+  <div class="research-intro"><p class="section-note"><Text text={{ en: 'Research & development', pt: 'Pesquisa e desenvolvimento' }} /></p><h2 id="research-title"><Text text={copy.researchTitle} /></h2><p><Text text={copy.researchIntro} /></p></div>
+  <dl class="research-roadmap">{copy.research.map((item, i) => <div><dt class:list={{ 'built-state': i === 0 }}><Text text={item.state} /></dt><dd><h3><Text text={item.title} /></h3><p><Text text={item.body} /></p></dd></div>)}</dl>
+</section>

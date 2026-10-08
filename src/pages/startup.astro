@@ -1,0 +1,45 @@
+---
+import StartupLayout from '../layouts/StartupLayout.astro';
+import Hero from '../components/startup/Hero.astro';
+import Game from '../components/startup/Game.astro';
+import Studio from '../components/startup/Studio.astro';
+import Contact from '../components/startup/Contact.astro';
+import Footer from '../components/startup/Footer.astro';
+import Text from '../components/startup/Text.astro';
+import Mark from '../components/startup/Mark.astro';
+import { copy } from '../data/startup-content';
+---
+<StartupLayout>
+  <a class="skip-link" href="#main"><Text text={copy.skip} /></a>
+  <header id="top" class="studio-header">
+    <a href="#top" class="brand" aria-label="Nexora Games"><Mark /><span translate="no">Nexora Games</span></a>
+    <nav aria-label="Main navigation" data-label-en="Main navigation" data-label-pt="Navegação principal"><a href="#comboio"><Text text={copy.games} /></a><a href="#studio"><Text text={copy.studio} /></a><a href="#contact"><Text text={copy.contact} /></a></nav>
+    <div class="locale-picker" role="group" aria-label="Language / Idioma"><button type="button" data-locale="en" lang="en" aria-label="EN — Read in English" aria-pressed="true">EN</button><button type="button" data-locale="pt" lang="pt-BR" aria-label="PT — Ler em português" aria-pressed="false">PT</button></div>
+  </header>
+  <main id="main" tabindex="-1"><Hero /><Game /><Studio /><Contact /></main>
+  <Footer />
+  <script>
+    import { copy } from '../data/startup-content';
+    type Locale = 'en' | 'pt';
+    function applyLocale(locale: Locale) {
+      document.documentElement.lang = locale === 'pt' ? 'pt-BR' : 'en';
+      document.title = locale === 'pt' ? 'Nexora Games — Jogos Independentes, Experiências Compartilhadas' : 'Nexora Games — Independent Games, Shared Experiences';
+      document.querySelectorAll<HTMLButtonElement>('[data-locale]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.locale === locale)));
+      document.querySelectorAll<HTMLElement>('[data-label-en]').forEach(el => el.setAttribute('aria-label', el.dataset[locale === 'pt' ? 'labelPt' : 'labelEn']!));
+      document.querySelectorAll<HTMLImageElement>('[data-alt-en]').forEach(el => el.alt = el.dataset[locale === 'pt' ? 'altPt' : 'altEn']!);
+      for (const selector of ['meta[name="description"]','meta[property="og:description"]','meta[name="twitter:description"]']) document.querySelector(selector)?.setAttribute('content', copy.description[locale]);
+      for (const selector of ['meta[property="og:title"]','meta[name="twitter:title"]']) document.querySelector(selector)?.setAttribute('content', document.title);
+      document.querySelector('meta[property="og:locale"]')?.setAttribute('content', locale === 'pt' ? 'pt_BR' : 'en_US');
+      document.querySelector('meta[property="og:locale:alternate"]')?.setAttribute('content', locale === 'pt' ? 'en_US' : 'pt_BR');
+    }
+    applyLocale(document.documentElement.lang === 'pt-BR' ? 'pt' : 'en');
+    document.querySelectorAll<HTMLButtonElement>('[data-locale]').forEach(button => button.addEventListener('click', () => {
+      const locale = button.dataset.locale as Locale;
+      try { localStorage.setItem('lucaspadilha.locale', locale); } catch {}
+      const url = new URL(location.href); url.searchParams.set('lang', locale); history.replaceState(null, '', url);
+      applyLocale(locale); window.dispatchEvent(new CustomEvent('lucaspadilha:locale-change', { detail: locale }));
+    }));
+    window.addEventListener('storage', event => { if (event.key === 'lucaspadilha.locale' && (event.newValue === 'en' || event.newValue === 'pt')) applyLocale(event.newValue); });
+    window.addEventListener('popstate', () => { const locale = new URLSearchParams(location.search).get('lang'); if (locale === 'en' || locale === 'pt') applyLocale(locale); });
+  </script>
+</StartupLayout>

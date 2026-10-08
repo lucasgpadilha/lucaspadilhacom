@@ -1,0 +1,204 @@
+@font-face { font-family: 'Nexora Display'; src: url('/startup/fonts/barlow-condensed-600.woff2') format('woff2'); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Nexora Display'; src: url('/startup/fonts/barlow-condensed-800.woff2') format('woff2'); font-style: normal; font-weight: 800; font-display: swap; }
+
+.nexora-page { background: #163d37; color-scheme: dark; scroll-behavior: smooth; }
+.nexora { --forest: #163d37; --deep: #102b28; --daylight: #edf2ef; --fern: #b9d3b9; --yellow: #f4cf53; --ink: #192a26; --gutter: clamp(24px, 5vw, 80px); margin: 0; background: var(--forest); color: var(--daylight); font: 17px/1.65 Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
+.nexora *, .nexora *::before, .nexora *::after { box-sizing: border-box; }
+.nexora :where(h1, h2, h3, h4, p, figure, ol, dl, dd) { margin: 0; }
+.nexora :where(h1, h2, h3, h4) { text-wrap: balance; font-weight: 600; }
+.nexora :where(a, button, summary) { touch-action: manipulation; -webkit-tap-highlight-color: #b9d3b950; }
+.nexora a { color: inherit; text-decoration: none; }
+.nexora button { font: inherit; }
+.nexora :where(a, button, summary, [tabindex]):focus-visible { outline: 3px solid var(--yellow); outline-offset: 6px; }
+.nexora :where(.game-section, .game-gallery, .studio-section, .research-section) :where(a, [tabindex]):focus-visible { outline-color: var(--forest); }
+.nexora :where(section, figure) { scroll-margin-top: 30px; }
+.nexora ::selection { background: var(--yellow); color: var(--deep); }
+.nexora .language-pt { display: none; }
+.nexora-page[lang='pt-BR'] .language-en { display: none; }
+.nexora-page[lang='pt-BR'] .language-pt { display: inline; }
+.nexora .skip-link { position: absolute; inset: 12px auto auto 24px; transform: translateY(-200%); z-index: 10; background: var(--yellow); color: var(--deep); padding: 12px 20px; }
+.nexora .skip-link:focus { transform: translateY(0); }
+.nexora .section-space { padding: 112px var(--gutter); }
+.nexora .studio-header, .nexora .studio-hero, .nexora .footer-row, .nexora .media-credits { max-width: 1600px; margin-inline: auto; }
+.nexora .studio-header { display: flex; align-items: center; justify-content: space-between; gap: 32px; min-height: 100px; padding: 20px var(--gutter); }
+.nexora .brand { display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 17px; font-weight: 600; }
+.nexora .brand svg { flex-shrink: 0; color: var(--fern); }
+.nexora .brand:hover, .nexora .media-credits a:hover { color: var(--yellow); }
+.nexora .studio-header nav { display: flex; gap: 40px; margin-left: auto; }
+.nexora .studio-header nav a { display: flex; align-items: center; min-height: 44px; font-size: 15px; }
+.nexora .studio-header nav a:hover, .nexora .text-link:hover { color: var(--fern); }
+.nexora .locale-picker { display: flex; gap: 2px; margin-left: 32px; }
+.nexora .locale-picker button { border: 0; border-radius: 4px; min-width: 44px; min-height: 44px; padding: 0 9px; cursor: pointer; color: var(--fern); background: transparent; font-size: 13px; font-weight: 700; }
+.nexora .locale-picker button[aria-pressed='true'] { background: var(--fern); color: var(--deep); }
+.nexora .locale-picker button:hover { background: var(--daylight); color: var(--deep); }
+.nexora .studio-hero { padding: 8px var(--gutter) 64px; }
+.nexora .hero-wordmark { margin-bottom: 36px; }
+.nexora .hero-wordmark h1 { display: flex; align-items: baseline; gap: .15em; font-family: 'Nexora Display', sans-serif; font-size: clamp(104px, 14vw, 212px); font-weight: 800; text-transform: uppercase; letter-spacing: -.035em; line-height: .87; }
+.nexora .hero-wordmark h1 > span { color: var(--fern); }
+.nexora .hero-composition { position: relative; display: grid; grid-template-columns: 1fr 1.06fr; gap: clamp(40px, 8vw, 120px); align-items: center; padding-right: 34px; }
+.nexora .hero-copy { padding-block: 28px; }
+.nexora .studio-intro { color: var(--fern); font-size: 15px; margin-bottom: 26px; }
+.nexora .hero-statement { font-family: 'Nexora Display', sans-serif; font-size: clamp(52px, 5.8vw, 86px); font-weight: 600; line-height: .98; letter-spacing: -.015em; }
+.nexora .hero-statement > span { display: block; }
+.nexora .hero-description { max-width: 46ch; margin-top: 28px; color: #d4dfda; font-size: 17px; }
+.nexora .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; margin-top: 36px; }
+.nexora .button { display: inline-flex; justify-content: space-between; align-items: center; gap: 24px; padding: 15px 22px; min-height: 54px; font-size: 14px; font-weight: 700; border-radius: 3px; }
+.nexora .button-yellow { background: var(--yellow); color: var(--deep); }
+.nexora .button-yellow:hover { background: var(--daylight); }
+.nexora .text-link { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; font-size: 14px; }
+.nexora .hero-game { overflow: hidden; position: relative; border-radius: 80px 4px 4px 4px; background: #385c51; }
+.nexora .hero-game img { display: block; width: 100%; height: clamp(460px, 36vw, 550px); object-fit: cover; object-position: center 47%; }
+.nexora .hero-game figcaption { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 22px; font-size: 13px; background: var(--deep); }
+.nexora .hero-game figcaption > span:first-child { font-weight: 700; }
+.nexora .hero-game figcaption > span:last-child { color: var(--fern); }
+.nexora .hero-side-note { position: absolute; right: -10px; top: 44%; writing-mode: vertical-rl; font-size: 12px; color: var(--fern); }
+.nexora .game-section { color-scheme: light; background: var(--daylight); color: var(--ink); }
+.nexora .game-heading, .nexora .gallery-heading, .nexora .studio-section, .nexora .research-section, .nexora .contact-section { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 9vw, 160px); }
+.nexora .game-heading { max-width: 1440px; margin-inline: auto; align-items: center; }
+.nexora .section-note { font-size: 14px; margin-bottom: 22px; }
+.nexora .game-heading h2 { font-family: 'Nexora Display', sans-serif; font-size: clamp(84px, 9vw, 144px); font-weight: 800; letter-spacing: -.025em; line-height: .9; text-transform: uppercase; }
+.nexora .title-period { color: #407454; }
+.nexora .game-description h3 { font-family: 'Nexora Display', sans-serif; font-size: 42px; line-height: 1.05; margin-bottom: 22px; }
+.nexora .game-description > p { max-width: 48ch; }
+.nexora .prototype-status { display: flex; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 600; margin-top: 27px; }
+.nexora .status-square { width: 7px; height: 7px; flex-shrink: 0; background: #407454; }
+.nexora .former-title { color: #586a60; font-size: 12px; margin-top: 9px; }
+.nexora .participation { max-width: 1440px; margin: 88px auto 0; }
+.nexora .participation > h3 { margin-bottom: 28px; font-size: 16px; }
+.nexora .participation-steps { padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+.nexora .participation-steps li { display: grid; grid-template-columns: auto 1fr; gap: 20px; padding-top: 24px; border-top: 1px solid #b9c8bf; }
+.nexora .step-command { font-family: 'Nexora Display', sans-serif; font-size: 30px; font-weight: 800; line-height: 1; color: #32674e; padding-top: 3px; }
+.nexora .participation-steps h4 { font-size: 16px; margin-bottom: 9px; }
+.nexora .participation-steps p { font-size: 14px; color: #475c50; line-height: 1.65; }
+.nexora .game-gallery { color-scheme: light; background: #d6e4d9; color: var(--ink); padding-top: 80px; padding-bottom: 72px; overflow: clip; }
+.nexora .gallery-heading { margin: 0 auto 48px; max-width: 1440px; align-items: end; }
+.nexora .gallery-heading h2, .nexora .studio-description h2, .nexora .research-intro h2, .nexora .contact-intro h2 { font-family: 'Nexora Display', sans-serif; font-weight: 600; font-size: clamp(44px, 4.3vw, 64px); line-height: 1.02; letter-spacing: -.01em; }
+.nexora .gallery-heading p { max-width: 48ch; font-size: 15px; }
+.nexora .gallery-rail { display: flex; gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: #7d9b83 transparent; padding-bottom: 26px; max-width: 1440px; margin-inline: auto; }
+.nexora .game-capture { flex: 0 0 clamp(280px, 25vw, 340px); scroll-snap-align: center; scroll-margin-top: 40px; }
+.nexora .game-capture img { display: block; width: 100%; height: auto; border-radius: 3px; }
+.nexora .game-capture figcaption { padding-top: 17px; font-size: 14px; font-weight: 600; }
+.nexora .capture-1 { padding-top: 52px; }
+.nexora .capture-2 { padding-top: 18px; }
+.nexora .capture-3 { padding-top: 52px; }
+.nexora .gallery-index { display: flex; flex-wrap: wrap; gap: 10px 30px; max-width: 1440px; margin: 22px auto 0; }
+.nexora .gallery-index a { display: inline-flex; align-items: center; min-height: 44px; border-bottom: 1px solid #8aa38f; font-size: 13px; }
+.nexora .gallery-index a:hover { border-color: var(--ink); }
+.nexora .studio-section { color-scheme: light; color: var(--ink); background: var(--daylight); align-items: center; }
+.nexora .studio-symbol { color: var(--forest); padding: 48px 0; }
+.nexora .studio-symbol > svg { width: 180px; height: 180px; display: block; margin-bottom: 22px; }
+.nexora .studio-symbol > p { font-family: 'Nexora Display', sans-serif; font-size: 36px; font-weight: 800; }
+.nexora .studio-symbol > span { font-size: 14px; color: #52685a; }
+.nexora .studio-description p { max-width: 49ch; margin-top: 28px; color: #475c50; }
+.nexora .research-section { background: #dfdfcf; color: var(--ink); color-scheme: light; }
+.nexora .research-intro > p:last-child { max-width: 48ch; margin-top: 28px; color: #455b4c; }
+.nexora .research-roadmap { padding: 0; }
+.nexora .research-roadmap > div { display: grid; grid-template-columns: 110px 1fr; gap: 28px; padding: 25px 0; border-top: 1px solid #b4bead; }
+.nexora .research-roadmap dt { font-size: 12px; color: #506248; }
+.nexora .research-roadmap .built-state { color: #1b4d34; font-weight: 700; }
+.nexora .research-roadmap h3 { font-size: 18px; line-height: 1.4; margin-bottom: 10px; }
+.nexora .research-roadmap p { color: #455b4c; font-size: 14px; }
+.nexora .contact-section { background: var(--deep); align-items: end; }
+.nexora .contact-intro p { max-width: 45ch; margin-top: 28px; color: #bdcec4; }
+.nexora .contact-email { display: inline-flex; align-items: center; gap: 18px; min-height: 48px; margin-top: 28px; font-size: clamp(18px, 2.3vw, 32px); font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid #829c8b; }
+.nexora .contact-email:hover { color: var(--yellow); }
+.nexora .founder { max-width: 40ch; padding-bottom: 8px; }
+.nexora .founder-name { font-size: 23px; font-weight: 600; }
+.nexora .founder-role { color: var(--fern); font-size: 14px; margin-bottom: 20px; }
+.nexora .founder > p:last-of-type { color: #bdcec4; font-size: 15px; margin-bottom: 22px; }
+.nexora .studio-footer { padding: 40px var(--gutter) 32px; background: var(--deep); border-top: 1px solid #2e4b40; font-size: 12px; color: #bdcec4; }
+.nexora .footer-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; }
+.nexora .footer-row .brand { font-size: 15px; }
+.nexora .footer-links { display: flex; flex-wrap: wrap; gap: 8px 32px; max-width: 1600px; margin: 20px auto 0; }
+.nexora .footer-links a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; }
+.nexora .footer-links a:hover { color: var(--yellow); }
+.nexora .media-credits { margin-top: 28px; }
+.nexora .media-credits summary { cursor: pointer; min-height: 44px; display: list-item; width: fit-content; }
+.nexora .media-credits summary:hover { color: var(--daylight); }
+.nexora .media-credits > div { max-width: 80ch; padding-top: 16px; }
+.nexora .media-credits ul { margin: 16px 0; padding-left: 20px; }
+.nexora .media-credits a { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .nexora .hero-wordmark, .nexora .hero-composition { animation: studio-open 600ms ease-out both; }
+  .nexora .hero-composition { animation-delay: 90ms; }
+  @keyframes studio-open { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+}
+@media (min-width: 1600px) {
+  .nexora .section-space { padding-inline: max(var(--gutter), calc((100vw - 1440px) / 2)); }
+}
+@media (max-width: 1000px) {
+  .nexora .section-space { padding-block: 80px; }
+  .nexora .studio-header { gap: 18px; }
+  .nexora .studio-header nav { gap: 24px; }
+  .nexora .locale-picker { margin-left: 12px; }
+  .nexora .hero-composition { gap: 34px; padding-right: 20px; }
+  .nexora .hero-wordmark h1 { font-size: 15vw; }
+  .nexora .hero-statement { font-size: 56px; }
+  .nexora .hero-description { font-size: 15px; }
+  .nexora .hero-game img { height: 490px; }
+  .nexora .hero-game figcaption { flex-wrap: wrap; gap: 3px; padding: 14px 18px; }
+  .nexora .hero-game figcaption > span:last-child { width: 100%; }
+  .nexora .hero-actions { gap: 16px; }
+  .nexora .game-heading, .nexora .gallery-heading, .nexora .studio-section, .nexora .research-section, .nexora .contact-section { gap: 44px; }
+  .nexora .participation-steps { gap: 26px; }
+  .nexora .participation-steps li { display: block; }
+  .nexora .step-command { display: inline-block; margin-bottom: 20px; }
+  .nexora .research-roadmap > div { grid-template-columns: 1fr; gap: 10px; }
+}
+@media (max-width: 640px) {
+  .nexora { --gutter: 24px; font-size: 16px; }
+  .nexora .studio-header { min-height: 82px; gap: 12px; padding-block: 14px; }
+  .nexora .studio-header .brand > span { display: none; }
+  .nexora .studio-header .brand svg { width: 36px; height: 36px; }
+  .nexora .studio-header nav { gap: 15px; }
+  .nexora .studio-header nav a { font-size: 13px; }
+  .nexora .studio-header nav a:last-child { display: none; }
+  .nexora .locale-picker { margin-left: 0; }
+  .nexora .studio-hero { padding-top: 14px; padding-bottom: 58px; }
+  .nexora .hero-wordmark { margin-bottom: 30px; }
+  .nexora .hero-wordmark h1 { font-size: 16.9vw; gap: .16em; }
+  .nexora .hero-composition { grid-template-columns: 1fr; padding-right: 0; gap: 0; }
+  .nexora .hero-copy { display: contents; }
+  .nexora .studio-intro { grid-row: 1; font-size: 12px; margin-bottom: 21px; }
+  .nexora .hero-statement { grid-row: 2; font-size: clamp(49px, 13.5vw, 72px); }
+  .nexora .hero-description { grid-row: 5; margin-top: 24px; font-size: 15px; line-height: 1.65; }
+  .nexora .hero-actions { grid-row: 3; margin-top: 25px; margin-bottom: 28px; column-gap: 18px; row-gap: 8px; }
+  .nexora .button { font-size: 13px; padding: 14px 18px; gap: 20px; }
+  .nexora .text-link { font-size: 13px; }
+  .nexora .hero-game { grid-row: 4; border-top-left-radius: 56px; }
+  .nexora .hero-game img { height: 360px; object-position: center 47%; }
+  .nexora .hero-game figcaption { flex-wrap: nowrap; padding-inline: 16px; font-size: 11px; }
+  .nexora .hero-game figcaption > span:last-child { width: auto; }
+  .nexora .hero-side-note { display: none; }
+  .nexora .section-space { padding-block: 62px; }
+  .nexora .game-heading, .nexora .gallery-heading, .nexora .studio-section, .nexora .research-section, .nexora .contact-section { grid-template-columns: 1fr; gap: 34px; }
+  .nexora .section-note { margin-bottom: 18px; }
+  .nexora .game-heading h2 { font-size: 94px; }
+  .nexora .game-description h3 { font-size: 36px; }
+  .nexora .prototype-status { font-size: 12px; margin-top: 22px; }
+  .nexora .participation { margin-top: 45px; }
+  .nexora .participation > h3 { margin-bottom: 6px; }
+  .nexora .participation-steps { grid-template-columns: 1fr; gap: 0; }
+  .nexora .participation-steps li { display: grid; grid-template-columns: 58px 1fr; gap: 18px; padding-block: 24px; }
+  .nexora .step-command { margin: 0; font-size: 32px; }
+  .nexora .gallery-heading { margin-bottom: 32px; }
+  .nexora .gallery-heading h2, .nexora .studio-description h2, .nexora .research-intro h2, .nexora .contact-intro h2 { font-size: 43px; }
+  .nexora .gallery-heading p { font-size: 14px; }
+  .nexora .gallery-rail { margin-right: calc(-1 * var(--gutter)); padding-right: var(--gutter); gap: 18px; }
+  .nexora .game-capture { flex-basis: 78vw; }
+  .nexora .capture-1, .nexora .capture-2, .nexora .capture-3 { padding-top: 0; }
+  .nexora .gallery-index { gap: 4px 20px; margin-top: 14px; }
+  .nexora .studio-symbol { display: none; }
+  .nexora .studio-description p { margin-top: 22px; }
+  .nexora .research-roadmap > div { grid-template-columns: 1fr; gap: 10px; }
+  .nexora .research-intro > p:last-child { margin-top: 22px; }
+  .nexora .contact-section { gap: 52px; }
+  .nexora .contact-email { font-size: clamp(17px, 5vw, 28px); gap: 14px; }
+  .nexora .contact-email svg { width: 20px; height: 20px; }
+  .nexora .studio-footer { padding-top: 30px; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .nexora .footer-row { align-items: start; gap: 16px; }
+  .nexora .footer-row .brand { flex-basis: 100%; }
+  .nexora .footer-row > p { margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .nexora-page { scroll-behavior: auto; } .nexora *, .nexora *::before, .nexora *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

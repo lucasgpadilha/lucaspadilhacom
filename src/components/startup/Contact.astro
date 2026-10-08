@@ -1,0 +1,8 @@
+---
+import Text from './Text.astro';
+import { copy } from '../../data/startup-content';
+---
+<section id="contact" class="contact-section section-space" aria-labelledby="contact-title">
+  <div class="contact-intro"><h2 id="contact-title"><Text text={copy.contactTitle} /></h2><p><Text text={copy.contactBody} /></p><a class="contact-email" href="mailto:ceo@lucaspadilha.com">ceo@lucaspadilha.com<svg width="28" height="28" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5h10v10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a></div>
+  <div class="founder"><p class="founder-name" translate="no">Lucas Padilha</p><p class="founder-role"><Text text={copy.founderRole} /></p><p><Text text={copy.founderBody} /></p><a class="text-link" href="/"><Text text={copy.portfolio} /></a></div>
+</section>

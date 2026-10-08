@@ -1,0 +1,6 @@
+---
+import type { Copy } from '../../data/startup-content';
+interface Props { text: Copy; }
+const { text } = Astro.props;
+---
+<span class="language-en" lang="en">{text.en}</span><span class="language-pt" lang="pt-BR">{text.pt}</span>

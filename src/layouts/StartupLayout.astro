@@ -1,0 +1,46 @@
+---
+import '../styles/startup.css';
+import { copy } from '../data/startup-content';
+const title = 'Nexora Games — Independent Games, Shared Experiences';
+const canonical = 'https://lucaspadilha.com/startup/';
+---
+<!doctype html>
+<html lang="en" class="nexora-page">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title><meta name="description" content={copy.description.en} /><meta name="author" content="Nexora Games" />
+    <link rel="canonical" href={canonical} /><link rel="alternate" hreflang="en" href={`${canonical}?lang=en`} /><link rel="alternate" hreflang="pt-BR" href={`${canonical}?lang=pt`} /><link rel="alternate" hreflang="x-default" href={canonical} />
+    <meta property="og:title" content={title} /><meta property="og:description" content={copy.description.en} /><meta property="og:type" content="website" /><meta property="og:site_name" content="Nexora Games" /><meta property="og:url" content={canonical} /><meta property="og:image" content="https://lucaspadilha.com/startup/og-nexora.jpg" /><meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" /><meta property="og:image:alt" content="Nexora Games and an actual capture of the Comboio Bruto prototype" /><meta property="og:locale" content="en_US" /><meta property="og:locale:alternate" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={copy.description.en} /><meta name="twitter:image" content="https://lucaspadilha.com/startup/og-nexora.jpg" /><meta name="theme-color" content="#163d37" />
+    <link rel="icon" href="/startup/favicon.svg" type="image/svg+xml" /><link rel="preload" href="/startup/fonts/barlow-condensed-800.woff2" as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      // Match the portfolio's locale key and detection policy before first paint.
+      (() => {
+        let locale = 'en';
+        const query = new URLSearchParams(location.search).get('lang');
+        let stored = null;
+        try { stored = localStorage.getItem('lucaspadilha.locale'); } catch {}
+        if (query === 'en' || query === 'pt') {
+          locale = query;
+          try { localStorage.setItem('lucaspadilha.locale', locale); } catch {}
+        } else if (stored === 'en' || stored === 'pt') locale = stored;
+        else {
+          const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
+          const portuguese = value => /^pt(?:-|$)/i.test(value) || /-(BR|PT)$/i.test(value);
+          if (langs[0] && portuguese(langs[0])) locale = 'pt';
+          else if (langs.some(value => /^en(?:-|$)/i.test(value))) locale = 'en';
+          else if (langs.some(portuguese)) locale = 'pt';
+          else {
+            try {
+              const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+              if (['America/Sao_Paulo','America/Fortaleza','America/Recife','America/Belem','America/Maceio','America/Bahia','America/Campo_Grande','America/Cuiaba','America/Manaus','America/Porto_Velho','America/Boa_Vista','America/Rio_Branco','Atlantic/Azores','Atlantic/Madeira','Europe/Lisbon'].includes(zone)) locale = 'pt';
+            } catch {}
+          }
+        }
+        document.documentElement.lang = locale === 'pt' ? 'pt-BR' : 'en';
+      })();
+    </script>
+    <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@type': 'Organization', name: 'Nexora Games', url: canonical, email: 'ceo@lucaspadilha.com', founder: { '@type': 'Person', name: 'Lucas Padilha', url: 'https://lucaspadilha.com/' }, description: copy.description.en })} />
+  </head>
+  <body class="nexora"><slot /></body>
+</html>
