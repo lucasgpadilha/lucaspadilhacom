@@ -1,0 +1,102 @@
+[
+  {
+    "route": "/startup/?lang=en",
+    "version": "13.5.0",
+    "fetchedAt": "2026-10-08T23:12:00.197Z",
+    "formFactor": "mobile",
+    "screen": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "throttlingMethod": "simulate",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "scores": {
+      "performance": 99,
+      "accessibility": 100,
+      "seo": 100
+    },
+    "metrics": {
+      "first-contentful-paint": {
+        "value": 1064.2568999999999,
+        "unit": "millisecond"
+      },
+      "largest-contentful-paint": {
+        "value": 2184.5045999999998,
+        "unit": "millisecond"
+      },
+      "total-blocking-time": {
+        "value": 0,
+        "unit": "millisecond"
+      },
+      "cumulative-layout-shift": {
+        "value": 0,
+        "unit": "unitless"
+      },
+      "speed-index": {
+        "value": 1064.2568999999999,
+        "unit": "millisecond"
+      }
+    },
+    "failedAccessibilityAudits": []
+  },
+  {
+    "route": "/startup/?lang=pt",
+    "version": "13.5.0",
+    "fetchedAt": "2026-10-08T23:12:12.899Z",
+    "formFactor": "mobile",
+    "screen": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "throttlingMethod": "simulate",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "scores": {
+      "performance": 99,
+      "accessibility": 100,
+      "seo": 100
+    },
+    "metrics": {
+      "first-contentful-paint": {
+        "value": 1064.2737,
+        "unit": "millisecond"
+      },
+      "largest-contentful-paint": {
+        "value": 2184.5158,
+        "unit": "millisecond"
+      },
+      "total-blocking-time": {
+        "value": 0,
+        "unit": "millisecond"
+      },
+      "cumulative-layout-shift": {
+        "value": 0,
+        "unit": "unitless"
+      },
+      "speed-index": {
+        "value": 1064.2737,
+        "unit": "millisecond"
+      }
+    },
+    "failedAccessibilityAudits": []
+  }
+]

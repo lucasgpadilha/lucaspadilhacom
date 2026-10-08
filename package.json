@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "screenshot:hero": "node scripts/screenshot-hero.mjs"
+    "screenshot:hero": "node scripts/screenshot-hero.mjs",
+    "test:startup": "node scripts/check-startup.mjs"
   },
   "dependencies": {
     "@astrojs/node": "9.2.2",
