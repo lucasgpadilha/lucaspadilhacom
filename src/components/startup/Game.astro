@@ -1,0 +1,23 @@
+---
+import Text from './Text.astro';
+import { copy, scenes } from '../../data/startup-content';
+---
+<section id="comboio" class="game-section section-space" aria-labelledby="game-title">
+  <div class="game-heading">
+    <div><p class="section-note"><Text text={copy.gameLabel} /></p><h2 id="game-title" translate="no">Comboio<br />Bruto<span class="title-period">.</span></h2></div>
+    <div class="game-description"><h3><Text text={copy.gameTitle} /></h3><p><Text text={copy.gameIntro} /></p><p class="prototype-status"><span class="status-square" aria-hidden="true"></span><Text text={copy.status} /></p><p class="former-title"><Text text={copy.oldName} /></p></div>
+  </div>
+  <div class="participation">
+    <h3><Text text={copy.loopTitle} /></h3>
+    <ol class="participation-steps">
+      {copy.steps.map(step => <li><span class="step-command" translate="no">{step.symbol}</span><div><h4><Text text={step.title} /></h4><p><Text text={step.body} /></p></div></li>)}
+    </ol>
+  </div>
+</section>
+<section class="game-gallery section-space" aria-labelledby="gallery-title">
+  <div class="gallery-heading"><h2 id="gallery-title"><Text text={copy.galleryTitle} /></h2><p><Text text={copy.galleryIntro} /></p></div>
+  <div class="gallery-rail" tabindex="0" role="region" aria-label="Gameplay captures" data-label-en="Gameplay captures; scroll horizontally to explore" data-label-pt="Capturas do jogo; role horizontalmente para explorar">
+    {scenes.map((scene, index) => <figure id={`scene-${scene.name}`} class:list={['game-capture', `capture-${index}`]}><img src={`/startup/${scene.name}-720.webp`} srcset={`/startup/${scene.name}-360.webp 360w, /startup/${scene.name}-720.webp 720w, /startup/${scene.name}-1080.webp 1080w`} sizes="(max-width: 640px) 78vw, (max-width: 1000px) 40vw, 340px" width="1080" height="1920" loading="lazy" decoding="async" alt={scene.alt.en} data-alt-en={scene.alt.en} data-alt-pt={scene.alt.pt} /><figcaption>{scene.title}</figcaption></figure>)}
+  </div>
+  <nav class="gallery-index" aria-label="Select a gameplay capture" data-label-en="Select a gameplay capture" data-label-pt="Escolha uma captura do jogo">{scenes.map(scene => <a href={`#scene-${scene.name}`}>{scene.title}</a>)}</nav>
+</section>
