@@ -1,0 +1,195 @@
+---
+import Photo from './Photo.astro';
+
+interface Item { name: string; desc?: string; price: string; from?: boolean; fav?: boolean }
+interface Group { title: string; note: string; items: Item[] }
+
+const groups: Group[] = [
+  {
+    title: 'Pão de queijo',
+    note: 'polvilho azedo e queijo meia-cura de Minas',
+    items: [
+      { name: 'Pão de queijo', desc: 'Casquinha crocante, miolo puxa-puxa. Unidade.', price: '7', fav: true },
+      { name: 'Na chapa', desc: 'Aberto ao meio, com manteiga, tostado na hora.', price: '10' },
+      { name: 'Para assar em casa', desc: 'Pacote com 20 congelados. 25 min a 180 °C.', price: '68' },
+    ],
+  },
+  {
+    title: 'Do forno',
+    note: 'fermentação natural, até 36 horas de massa',
+    items: [
+      { name: 'Pão de campanha', desc: 'Casca grossa, miolo aberto e úmido. 800 g.', price: '34', fav: true },
+      { name: 'Integral com sementes', desc: 'Linhaça, girassol e gergelim tostado. 700 g.', price: '36' },
+      { name: 'Azeitona e alecrim', desc: 'Azeitona preta e alecrim fresco. 600 g.', price: '38' },
+      { name: 'Baguete', desc: 'Para o café da manhã ou para a tábua de queijos.', price: '16' },
+    ],
+  },
+  {
+    title: 'Cafés',
+    note: 'grãos especiais da Mogiana e do Sul de Minas',
+    items: [
+      { name: 'Coado do dia', desc: 'Passado na hora, no filtro de papel. 240 ml.', price: '12', fav: true },
+      { name: 'Espresso', desc: 'Curto ou longo.', price: '8' },
+      { name: 'Pingado', desc: 'Espresso com um tanto de leite, no copo americano.', price: '9' },
+      { name: 'Cappuccino da casa', desc: 'Leite vaporizado e um toque de canela.', price: '16' },
+      { name: 'Leite de aveia', desc: 'Em qualquer bebida.', price: '+3' },
+    ],
+  },
+  {
+    title: 'Bolos de vó',
+    note: 'receitas de caderno, assadas toda manhã',
+    items: [
+      { name: 'Fubá com goiabada', desc: 'Massa cremosa e goiabada cascão derretendo no meio.', price: '13', fav: true },
+      { name: 'Cenoura com chocolate', desc: 'Cobertura de brigadeiro mole, que escorre.', price: '14' },
+      { name: 'Chocolate da casa', desc: 'Massa úmida de cacau, na forma de furo, com açúcar por cima.', price: '13' },
+      { name: 'Bolo inteiro', desc: 'Qualquer sabor, forma de 22 cm. Sob encomenda.', price: '78', from: true },
+    ],
+  },
+];
+---
+<section id="cardapio" class="cardapio" aria-labelledby="cardapio-title">
+  <div class="cj-wrap cardapio-grid">
+    <div class="cardapio-head">
+      <p class="cj-eyebrow">Feito aqui, todo dia</p>
+      <h2 id="cardapio-title" class="cj-h2">Cardápio</h2>
+      <p class="cj-lead">
+        Tudo sai da nossa cozinha em fornadas pequenas. A massa do pão descansa de um dia
+        para o outro, o pão de queijo é enrolado à mão e o café é moído na hora de passar.
+      </p>
+      <p class="legend"><span class="cj-dot" aria-hidden="true"></span> Os queridinhos da casa</p>
+    </div>
+
+    <div class="sheet">
+      <p class="sheet-top" aria-hidden="true"><span>Casa Jabuticaba</span><span>Preços do balcão, em reais</span></p>
+      <div class="sheet-cols">
+        {groups.map((g) => (
+          <div class="group">
+            <h3 class="group-title">{g.title}</h3>
+            <p class="group-note">{g.note}</p>
+            <ul class="cj-menu" role="list">
+              {g.items.map((it) => (
+                <li class:list={['cj-item', { fav: it.fav }]}>
+                  <p class="cj-line">
+                    <span class="cj-name">
+                      {it.fav && <span class="cj-dot fav-dot" aria-hidden="true"></span>}
+                      {it.name}
+                      {it.fav && <span class="cj-sr"> (queridinho da casa)</span>}
+                    </span>
+                    <span class="cj-leader" aria-hidden="true"></span>
+                    <span class="cj-price">
+                      {it.from && <span class="cj-from">a partir de </span>}
+                      {it.price.startsWith('+') ? <>+<small>R$</small>{it.price.slice(1)}</> : <><small>R$</small>{it.price}</>}
+                    </span>
+                  </p>
+                  {it.desc && <p class="cj-desc">{it.desc}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="estacao cj-dark">
+      <div class="estacao-photo">
+        <Photo slot="jabuticaba" sizes="15rem" tone="jabuticaba" />
+      </div>
+      <p class="cj-eyebrow">Da estação</p>
+      <h3 id="estacao-title" class="estacao-title">Jabuticaba, só enquanto tem no pé</h3>
+      <p class="estacao-text">
+        Chega com a primavera e vai embora sem avisar. Enquanto a safra durar, a fruta entra no forno,
+        no copo e no pote.
+      </p>
+      <ul class="cj-menu" role="list">
+        <li class="cj-item">
+          <p class="cj-line"><span class="cj-name">Torta de jabuticaba</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small>19</span></p>
+          <p class="cj-desc">Creme de baunilha e a fruta em calda. Fatia.</p>
+        </li>
+        <li class="cj-item">
+          <p class="cj-line"><span class="cj-name">Soda de jabuticaba</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small>14</span></p>
+          <p class="cj-desc">Xarope feito aqui, água com gás e limão.</p>
+        </li>
+        <li class="cj-item">
+          <p class="cj-line"><span class="cj-name">Geleia da casa</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small>29</span></p>
+          <p class="cj-desc">Pote de 220 g, com pedacinhos da casca.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cardapio { padding-block: clamp(4.5rem, 10vw, 8rem) clamp(4rem, 9vw, 7rem); }
+  .cardapio-grid { display: grid; gap: 2.5rem; }
+  .legend { display: flex; align-items: center; gap: 0.6rem; margin-top: 1.5rem; font-size: 0.9375rem; font-weight: 560; color: var(--tinta); }
+  .legend .cj-dot { width: 0.9rem; height: 0.9rem; }
+
+  .sheet {
+    position: relative; background: var(--papel); color: var(--tinta);
+    padding: 1rem 0.875rem 1.5rem;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 0 rgb(43 21 48 / 0.08), 0 30px 60px -36px rgb(43 21 48 / 0.45);
+    outline: 1px solid rgb(43 21 48 / 0.85); outline-offset: -0.5rem;
+  }
+  .sheet::after {
+    content: ''; position: absolute; inset: 0.75rem; pointer-events: none;
+    border: 1px solid rgb(43 21 48 / 0.35);
+  }
+  .sheet-top {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem;
+    padding: 0.75rem 0.5rem 1rem; margin-bottom: 0.25rem;
+    border-bottom: 1px solid rgb(43 21 48 / 0.35);
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tinta-2);
+  }
+  .sheet-cols { display: grid; gap: 0.5rem; padding-inline: 0.5rem; }
+  .group { padding-top: 1.5rem; }
+  .group-title {
+    font-family: var(--display); font-weight: 660; font-size: clamp(1.625rem, 1.3rem + 1vw, 2.125rem); line-height: 1;
+    color: var(--jabuticaba); letter-spacing: -0.015em; font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  }
+  .group-note { margin-top: 0.4rem; font-size: 0.875rem; color: var(--tinta-2); }
+  .group .cj-menu { margin-top: 1rem; }
+  .fav-dot { width: 0.62em; height: 0.62em; margin-right: 0.35em; vertical-align: 0; }
+
+  .estacao {
+    position: relative; margin-top: 3.5rem;
+    padding: 5.5rem 1.5rem 1.75rem; border-radius: 1.5rem;
+    background: var(--jabuticaba); color: var(--creme);
+  }
+  .estacao-photo {
+    position: absolute; top: -3.5rem; left: 1.5rem; width: 8.5rem; aspect-ratio: 1;
+    border-radius: 50%; overflow: hidden; background: #4a2a52;
+    box-shadow: 0 0 0 6px var(--creme), 0 0 0 7px rgb(43 21 48 / 0.3);
+  }
+  .estacao-photo :global(img), .estacao-photo :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
+  .estacao-photo :global(img) { object-position: 32% 64%; }
+  .estacao .cj-eyebrow { color: var(--crosta-clara); }
+  .estacao-title {
+    margin-top: 0.6rem; font-family: var(--display); font-weight: 620; line-height: 1.02;
+    font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.375rem); letter-spacing: -0.02em; font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  }
+  .estacao-text { margin-top: 0.85rem; color: var(--lilas); }
+  .estacao .cj-menu { margin-top: 1.5rem; }
+  .estacao .cj-desc { color: var(--lilas); }
+  .estacao .cj-price small, .estacao .cj-price { color: var(--creme); }
+
+  @media (min-width: 720px) {
+    .sheet { padding: 1.75rem 1.75rem 2.25rem; }
+    .sheet-cols, .sheet-top { padding-inline: 0.75rem; }
+    .sheet-cols { grid-template-columns: 1fr 1fr; column-gap: 2.75rem; }
+  }
+  @media (min-width: 900px) and (max-width: 1079px) {
+    .estacao { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2.5rem; align-items: start; padding: 2.25rem 2.25rem 2.25rem 14rem; }
+    .estacao-photo { top: 50%; left: 2.25rem; width: 10rem; translate: 0 -50%; }
+    .estacao > :not(.estacao-photo, .cj-menu) { grid-column: 1; }
+    .estacao .cj-menu { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+  }
+
+  @media (min-width: 1080px) {
+    .cardapio-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-rows: auto 1fr; column-gap: clamp(2.5rem, 4vw, 4.5rem); align-items: start; }
+    .cardapio-head { grid-column: 1; grid-row: 1; }
+    .sheet { grid-column: 2; grid-row: 1 / span 2; rotate: -0.6deg; }
+    .estacao { grid-column: 1; grid-row: 2; margin-top: 6rem; padding-top: 6.75rem; rotate: 0.8deg; }
+    .estacao-photo { width: 9.5rem; top: -4rem; }
+  }
+</style>
