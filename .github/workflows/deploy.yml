@@ -3,20 +3,55 @@ name: Deploy
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
       - run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Check the production preview
+        run: |
+          npx astro preview --host 127.0.0.1 --port 4321 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:4321/ && break; sleep 1; done
+          npm run test:site
+          STARTUP_PREVIEW_URL=http://127.0.0.1:4321 STARTUP_QA_OUTPUT="$RUNNER_TEMP/startup-qa" npm run test:startup
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
 
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
@@ -28,3 +63,11 @@ jobs:
           target: "/var/www/portfolio"
           strip_components: 1
           overwrite: true
+
+      - name: Healthcheck
+        run: |
+          for path in / /pt/ /sites/ /startup/; do
+            curl -fsS --retry 6 --retry-delay 5 --retry-all-errors -o /dev/null -w "%{http_code} ${path}\n" "https://lucaspadilha.com${path}"
+          done
+          # The footer prints the commit that built the page: prove this deploy is the one being served.
+          curl -fsS "https://lucaspadilha.com/" | grep -q "${GITHUB_SHA::7}" && echo "live build is ${GITHUB_SHA::7}"

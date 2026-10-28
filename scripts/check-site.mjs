@@ -1,6 +1,7 @@
 // End-to-end checks for the portfolio, the /sites/ showcase and the concept
 // sites. Runs against a production preview: `npm run build && npm run preview`.
 import { chromium } from 'playwright';
+import sharp from 'sharp';
 
 const base = (process.env.SITE_PREVIEW_URL || 'http://127.0.0.1:4321').replace(/\/$/, '');
 const PROD = 'https://lucaspadilha.com';
@@ -58,7 +59,8 @@ const routes = [
   { path: '/', lang: 'en', extra: portfolio },
   { path: '/pt/', lang: 'pt-BR', extra: portfolio },
   ...DEMOS.map((slug) => ({ path: `/sites/exemplos/${slug}/`, lang: 'pt-BR', extra: demo })),
-].filter((route) => !onlyDemo || route.path === `/sites/exemplos/${onlyDemo}/`);
+].filter((route) => !onlyDemo || route.path === `/sites/exemplos/${onlyDemo}/`)
+  .filter((route) => !process.env.SITE_SKIP_DEMOS || !route.path.startsWith('/sites/exemplos/'));
 
 const browser = await chromium.launch();
 
@@ -120,6 +122,43 @@ try {
     check(url.pathname + url.hash === item.expect, `locale "${item.name}": landed on ${url.pathname}${url.hash}`);
     check(errors.length === 0, `locale "${item.name}": ${errors.join(' | ')}`);
     await context.close();
+  }
+
+  // SEO files, 404 page, social images and structured data.
+  if (!onlyDemo) {
+    const get = (path) => fetch(base + path);
+    const robots = await (await get('/robots.txt')).text();
+    check(robots.includes('Sitemap: https://lucaspadilha.com/sitemap.xml'), 'robots.txt: missing Sitemap line');
+    const sitemapResponse = await get('/sitemap.xml');
+    const sitemap = await sitemapResponse.text();
+    check(sitemapResponse.status === 200, `sitemap.xml: status ${sitemapResponse.status}`);
+    for (const path of ['/', '/pt/', '/sites/', '/startup/']) {
+      check(sitemap.includes(`<loc>${PROD}${path}</loc>`), `sitemap.xml: missing ${path}`);
+    }
+    check(!sitemap.includes('/sites/exemplos/'), 'sitemap.xml: lists concept sites (they are noindex)');
+    const notFound = await get('/404.html');
+    const notFoundHtml = await notFound.text();
+    check(notFound.status === 200 && /<meta name="robots" content="noindex/.test(notFoundHtml), '404.html: missing or indexable');
+
+    const { context, page } = await open('/');
+    const meta = await page.evaluate(() => ({
+      ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((el) => el.textContent),
+    }));
+    let person = null;
+    try { person = JSON.parse(meta.ld[0] || 'null'); } catch {}
+    check(person?.['@type'] === 'Person', `home JSON-LD: ${person?.['@type'] ?? 'missing'}`);
+    await context.close();
+
+    for (const path of ['/', '/pt/', ...(routes.some((r) => r.path === '/sites/') ? ['/sites/'] : [])]) {
+      const html = await (await get(path)).text();
+      const og = html.match(/<meta property="og:image" content="([^"]+)"/)?.[1] ?? '';
+      const image = await fetch(local(og));
+      check(image.status === 200, `${path}: og:image ${og} → ${image.status}`);
+      if (image.status === 200) {
+        const { width, height } = await sharp(Buffer.from(await image.arrayBuffer())).metadata();
+        check(width === 1200 && height === 630, `${path}: og:image is ${width}×${height}`);
+      }
+    }
   }
 
   // Content must be visible without JavaScript and with reduced motion.

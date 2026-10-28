@@ -1,141 +1,73 @@
 # lucaspadilhacom
 
-Portfólio DevOps de Lucas Padilha, construído como uma landing page estática com foco em Cloud, Infrastructure as Code, automação e deploy reproduzível.
+Site pessoal de Lucas Padilha em [lucaspadilha.com](https://lucaspadilha.com). Reúne três coisas:
 
-## Visão
+- `/` e `/pt/`: portfólio (full-stack, DevOps, web), em inglês e português.
+- `/sites/`: vitrine para vender sites a pequenos negócios (só PT), com três sites conceito em `/sites/exemplos/`.
+- `/startup/`: página do estúdio Nexora Games (independente do resto, com layout e CSS próprios).
 
-O site comunica projetos práticos em AWS, Terraform, Ansible, Docker, CI/CD e operação Linux. A direção visual é sóbria (superfícies hairline, tipografia Space Grotesk/JetBrains Mono, um único acento âmbar) com uma hero em vídeo 16:9 e um command deck DevOps representando o fluxo Commit -> Build -> Tests -> Terraform -> AWS -> Ansible -> Deploy -> Monitoring.
+## Stack
+
+- Astro 5, saída estática. Sem React e sem Tailwind: componentes `.astro`, CSS com tokens em `src/styles/site.css` e alguns KB de JS inline.
+- Fontes self-hosted via Fontsource (Bricolage Grotesque e JetBrains Mono no site; Newsreader, Manrope, Plus Jakarta Sans, Fraunces e DM Sans nos sites conceito).
+- Playwright e axe-core para QA; sharp para imagens.
+
+## Estrutura
+
+```text
+src/
+  layouts/Base.astro          head, SEO, OG, script de idioma
+  layouts/DemoLayout.astro    layout dos sites conceito (noindex, faixa e créditos)
+  components/site/            portfólio: Header, Receipt, Work, Shipping, Stack...
+  components/sites/           vitrine /sites/
+  components/demos/<slug>/    um diretório por site conceito
+  data/home.ts                textos e projetos do portfólio (en/pt)
+  data/stack.ts               ferramentas por nível, sempre com evidência
+  data/sites.ts               oferta, planos, FAQ e contato da vitrine
+  lib/build-info.ts           commit, data e run do build (usados no recibo)
+```
 
 ## Idiomas
 
-O site é bilíngue:
+`/` é inglês e `/pt/` é português, ambos estáticos. Um script inline no `<head>` de `/` manda para `/pt/` antes da primeira pintura quando:
 
-- inglês como idioma padrão
-- português quando o idioma principal do navegador indicar `pt`, `BR`, `PT` ou quando não houver preferência por inglês e a timezone for lusófona
-- seletor manual `EN/PT` na navbar
-- preferência manual persistida em `localStorage`
-- override por URL com `?lang=en` ou `?lang=pt`
+- a URL tem `?lang=pt`;
+- a preferência salva é `pt`;
+- não há preferência salva e o idioma principal do navegador começa com `pt`.
 
-A detecção fica em `src/lib/i18n.ts`. Como o projeto é estático, a detecção acontece no navegador e não depende de serviço externo de IP.
+Em `/pt/`, `?lang=en` volta para `/`. A preferência fica em `localStorage` (`lucaspadilha.locale`) e é compartilhada com `/startup/`. Sem JavaScript, cada URL mostra seu próprio idioma.
 
-## Stack do site (build)
+## Conteúdo
 
-- Astro
-- React
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-- GSAP
-- Lucide React
-
-## Stack operacional (conteúdo da página)
-
-A seção "Operational Stack" do site é orientada a dados e fácil de editar em
-`src/data/stack.ts`. Cada categoria tem `title`, `description` (en/pt) e uma
-lista de `tools`, onde cada ferramenta declara um nível de proficiência:
-
-```ts
-{ name: 'Terraform', level: 'core' }     // core | hands-on | lab
-```
-
-- `core` — uso diário, hands-on
-- `hands-on` — usado em trabalho real, confortável
-- `lab` — labs e experimentos (inclui o que está em exploração)
-
-No visual, apenas `core` recebe o acento âmbar; `hands-on` e `lab` se diferenciam
-por peso/opacidade, evitando uma lista chapada de buzzwords. Para adicionar uma
-categoria, inclua um objeto novo no array e (se precisar de ícone próprio) um
-mapeamento em `icons` dentro de `src/components/sections/StackSection.tsx`.
+- Projetos: `src/data/home.ts`. Repositórios privados nunca ganham link.
+- Stack: `src/data/stack.ts`, com níveis `core`, `hands-on` e `exposure`. Toda ferramenta aponta para onde está a evidência.
+- Vitrine: `src/data/sites.ts`. O número de WhatsApp fica em `contact.whatsapp`. Enquanto ele for `null`, os botões usam e-mail com assunto preenchido.
 
 ## Rodar localmente
 
 ```bash
 npm ci
-npm run dev
+npm run dev                 # http://localhost:4321
 ```
 
-Servidor local padrão:
-
-```text
-http://localhost:4321
-```
-
-## Configurar vídeo da hero
-
-Edite a constante em `src/components/sections/Hero.tsx`:
-
-```ts
-export const HERO_VIDEO_URL = 'https://pub-cee283bbed284d29826195df8d5a2571.r2.dev/202606121059.mp4';
-```
-
-Use uma URL pública de CDN para um vídeo 16:9 em loop. O elemento `video` já está configurado com `autoPlay`, `muted`, `loop`, `playsInline`, `preload="auto"` e `object-cover`.
-
-## Deployment Scene
-
-A visualização da pipeline (command deck da hero) combina:
-
-- arte 3D da "fábrica" em `public/assets/factory/deployment-factory-v2.webp` (8 módulos, um por estágio)
-- timeline GSAP movendo um foco de luz (`--sweep-x`) entre os módulos
-- cards de estágio fixados no centro medido de cada módulo (`machineX` em `src/components/devops/DeploymentScene.tsx`)
-- labels, status e log em React; Framer Motion apenas para o reveal
-
-A decisão de motion está documentada em `docs/motion-strategy.md`.
-
-## Visual QA
-
-Com o dev server rodando:
-
-```bash
-npm run dev
-npm run screenshot:hero
-```
-
-Para usar outra porta:
-
-```bash
-SCREENSHOT_URL=http://localhost:4322 npm run screenshot:hero
-```
-
-O screenshot é salvo em:
-
-```text
-screenshots/hero-1440x900.png
-```
-
-## Build
+## Verificar
 
 ```bash
 npm run build
+npm run preview -- --host 127.0.0.1 --port 4321 &
+npm run test:site           # rotas, idioma, overflow, metadados, a11y, sites conceito
+STARTUP_PREVIEW_URL=http://127.0.0.1:4321 npm run test:startup
 ```
 
-O build estático será gerado em:
+`SITE_WIDTHS=390 npm run test:site` roda só uma largura. `SITE_DEMO=cafe npm run test:site` testa só um site conceito.
 
-```text
-dist/
-```
+Para regerar as imagens de compartilhamento depois de mudar textos ou visual, rode `node scripts/make-og.mjs`.
 
 ## Deploy
 
-Arquitetura simples (o mesmo fluxo mostrado no card "How this site is deployed"):
-
 ```text
-push to main -> GitHub Actions -> Astro build -> SCP/SSH -> EC2 -> Nginx -> healthcheck
+PR      → build → Playwright + axe contra o preview
+main    → build → checks → SCP para o servidor → healthcheck
 ```
 
-Use secrets ou variáveis do pipeline para dados sensíveis:
-
-```text
-SERVER_IP=<SERVER_IP>
-SERVER_USER=<SERVER_USER>
-DEPLOY_PATH=<DEPLOY_PATH>
-SSH_PRIVATE_KEY=<SSH_PRIVATE_KEY>
-```
-
-Não exponha IP real do servidor, usuário SSH ou caminho interno do deploy no repositório.
-
-## Preview de produção
-
-```bash
-npm run build
-npm run preview
-```
+O healthcheck pede `/`, `/pt/`, `/sites/` e `/startup/` com retry e confirma que a home servida traz o commit do build. Segredos usados pelo workflow: `SERVER_IP` e `SSH_PRIVATE_KEY`. O servidor de produção é Caddy, que precisa de `handle_errors` para servir o `404.html` gerado.
