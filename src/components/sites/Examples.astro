@@ -12,14 +12,15 @@ import { demos } from '../../data/sites';
     <ol class="list" role="list">
       {demos.map((demo, index) => (
         <li class="row">
-          <a class="shot" href={`/sites/exemplos/${demo.slug}/`}>
+          <div class="shot">
             <BrowserFrame
               url={`lucaspadilha.com/sites/exemplos/${demo.slug}`}
               src={`/sites/thumbs/${demo.slug}-1280.webp`}
               srcset={`/sites/thumbs/${demo.slug}-640.webp 640w, /sites/thumbs/${demo.slug}-1280.webp 1280w`}
-              alt={`Abrir o site conceito ${demo.name}`}
+              alt={`Prévia do site conceito ${demo.name}`}
+              video={`/sites/previews/${demo.slug}.webm`}
             />
-          </a>
+          </div>
           <div class="copy">
             <h3>{demo.name}</h3>
             <p class="niche">{demo.niche}</p>
@@ -41,8 +42,7 @@ import { demos } from '../../data/sites';
   .credits { margin-top: clamp(3rem, 2rem + 3vw, 4.5rem); font-size: var(--step--1); color: var(--ink-2); max-width: 60ch; }
   .list { display: grid; gap: clamp(3.5rem, 2rem + 5vw, 6.5rem); }
   .row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.75rem; align-items: center; }
-  .shot { display: block; text-decoration: none; transition: transform 0.4s var(--ease-out); }
-  .shot:hover { transform: translateY(-4px); }
+  .shot { display: block; }
   .copy { display: grid; gap: 0.9rem; justify-items: start; }
   h3 { font-size: var(--step-3); }
   .niche { color: var(--ink-2); margin-top: -0.4rem; }
@@ -55,5 +55,4 @@ import { demos } from '../../data/sites';
     .row:nth-child(even) { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); }
     .row:nth-child(even) .shot { order: 2; }
   }
-  @media (prefers-reduced-motion: reduce) { .shot, .shot:hover { transition: none; transform: none; } }
 </style>

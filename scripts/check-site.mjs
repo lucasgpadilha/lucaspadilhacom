@@ -112,6 +112,12 @@ async function sitesPage(page, label) {
   check(facts.marketing, `${label}: #marketing section missing`);
   if (channels.has('email')) for (const c of facts.contacts) check(c.href.startsWith('mailto:ceo@lucaspadilha.com'), `${label}: contact goes to ${c.href.slice(0, 40)}`);
   for (const word of FORBIDDEN) check(!facts.all.includes(word), `${label}: mentions "${word}"`);
+  const previews = await page.evaluate(() => [...document.querySelectorAll('#exemplos video')].map((v) => ({
+    preload: v.getAttribute('preload'), poster: Boolean(v.getAttribute('poster')), loop: v.loop, muted: v.muted,
+    button: v.closest('figure')?.querySelector('button[aria-pressed]') !== null,
+  })));
+  check(previews.length === 3, `${label}: ${previews.length} video previews (expected 3)`);
+  for (const v of previews) check(v.preload === 'none' && v.poster && !v.loop && v.muted && v.button, `${label}: preview must be preload=none, poster, no loop, muted, with a pause button: ${JSON.stringify(v)}`);
   const brows = await page.evaluate((src) => new Function(`return (${src})()`)(), eyebrows.toString());
   check(brows === 0, `${label}: ${brows} eyebrow labels above headings`);
   check(facts.contato, `${label}: #contato missing`);
@@ -351,6 +357,16 @@ try {
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(500);
     const top = await theme();
     check(night === 'night' && paper === 'paper' && top === 'paper', `theme shift: infra=${night}, stack=${paper}, top=${top}`);
+    await context.close();
+  }
+
+  // Video previews never start on their own under reduced motion.
+  if (!onlyDemo) {
+    const { context, page } = await open('/sites/', { viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+    await page.evaluate(() => document.querySelector('#exemplos').scrollIntoView({ behavior: 'instant' }));
+    await page.waitForTimeout(1500);
+    const playing = await page.evaluate(() => [...document.querySelectorAll('#exemplos video')].filter((v) => !v.paused).length);
+    check(playing === 0, `/sites/ (reduced motion): ${playing} previews playing on their own`);
     await context.close();
   }
 
