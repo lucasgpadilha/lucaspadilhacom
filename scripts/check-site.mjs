@@ -132,8 +132,8 @@ const routes = [
 const browser = await chromium.launch();
 
 async function open(path, options = {}) {
-  const { init, ...contextOptions } = options;
-  const context = await browser.newContext({ locale: 'en-US', ...contextOptions });
+  const { init, using = browser, ...contextOptions } = options;
+  const context = await using.newContext({ locale: 'en-US', ...contextOptions });
   if (init) await context.addInitScript(init);
   const page = await context.newPage();
   const errors = [];
@@ -183,6 +183,26 @@ try {
         if (more.receiptJs !== null) check(Math.abs(more.receiptJs - more.realJsKb) <= 0.15, `${label}: receipt says ${more.receiptJs} KB of JS, page runs ${more.realJsKb.toFixed(2)} KB`);
       }
       if (width === 390 && route.extra) await route.extra(page, label);
+      if (width === 1440 && (await page.locator('[data-scene]').count())) {
+        const host = page.locator('[data-scene]').first();
+        await host.scrollIntoViewIfNeeded();
+        await page.waitForFunction(() => ['live', 'fallback'].includes(document.querySelector('[data-scene]')?.dataset.scene), null, { timeout: 15000 }).catch(() => {});
+        const state = await host.getAttribute('data-scene');
+        check(state === 'live', `${label}: scene is "${state}" (expected live where WebGL works)`);
+        if (state === 'live') {
+          const webgl = await page.evaluate(() => {
+            const canvas = document.querySelector('[data-scene] canvas');
+            return Boolean(canvas && (canvas.getContext('webgl2') || canvas.getContext('webgl')));
+          });
+          check(webgl, `${label}: scene canvas has no WebGL context`);
+          await page.mouse.move(1, 1);
+          await page.waitForTimeout(1500);
+          const before = await host.screenshot();
+          await page.waitForTimeout(6000);
+          const after = await host.screenshot();
+          check(before.equals(after), `${label}: the scene keeps moving on its own after 5 s (WCAG 2.2.2)`);
+        }
+      }
       if (width === 390 || width === 1440) {
         // Scroll-reveal starts hidden; show everything so axe judges the final state.
         await page.evaluate(() => document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-in')));
@@ -297,6 +317,41 @@ try {
     contact.whatsapp = 'a definir';
     check(contactHref('oi').startsWith('mailto:'), `contactHref with an invalid number: ${contactHref('oi')}`);
     contact.whatsapp = saved;
+  }
+
+  const noWebGL = await chromium.launch({ args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] });
+  try {
+    for (const route of routes) {
+      for (const [name, options] of [['reduced motion', { reducedMotion: 'reduce' }], ['no WebGL', { using: noWebGL }]]) {
+        const { context, page, errors } = await open(route.path, { viewport: { width: 1440, height: 900 }, ...options });
+        if (await page.locator('[data-scene]').count()) {
+          await page.locator('[data-scene]').first().scrollIntoViewIfNeeded();
+          await page.waitForTimeout(1200);
+          const facts = await page.evaluate(() => {
+            const host = document.querySelector('[data-scene]');
+            const fallback = host.querySelector('[data-fallback]');
+            return { state: host.dataset.scene, canvas: Boolean(host.querySelector('canvas')), shown: Boolean(fallback && !fallback.hidden && fallback.getBoundingClientRect().height > 0) };
+          });
+          check(facts.state === 'fallback' && !facts.canvas && facts.shown, `${route.path} (${name}): expected the static fallback, got ${JSON.stringify(facts)}`);
+          check(errors.length === 0, `${route.path} (${name}): ${errors.join(' | ')}`);
+        }
+        await context.close();
+      }
+    }
+  } finally {
+    await noWebGL.close();
+  }
+
+  if (!onlyDemo) {
+    const { context, page } = await open('/', { viewport: { width: 1440, height: 900 } });
+    const theme = () => page.evaluate(() => document.documentElement.dataset.theme || 'paper');
+    const at = async (selector) => { await page.evaluate((sel) => document.querySelector(sel).scrollIntoView({ block: 'center' }), selector); await page.waitForTimeout(700); return theme(); };
+    const night = await at('#infra [data-step="migrate"]');
+    const paper = await at('#stack');
+    await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(700);
+    const top = await theme();
+    check(night === 'night' && paper === 'paper' && top === 'paper', `theme shift: infra=${night}, stack=${paper}, top=${top}`);
+    await context.close();
   }
 
   // Content must be visible without JavaScript and with reduced motion.
