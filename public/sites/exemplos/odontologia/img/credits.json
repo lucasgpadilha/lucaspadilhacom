@@ -1,0 +1,54 @@
+[
+  {
+    "name": "consultorio",
+    "file_prefix": "consultorio-",
+    "title": "Kneebreak dental chair.jpg",
+    "author": "Thedentalguy",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Kneebreak_dental_chair.jpg",
+    "width": 1600,
+    "height": 1200,
+    "alt_pt": "Consultório odontológico moderno e iluminado, com cadeira estofada em vermelho, refletor e bancada branca sob a janela.",
+    "changes": "Recortada, retocada (pequeno logotipo do equipamento removido), redimensionada e convertida para WebP."
+  },
+  {
+    "name": "instrumentos",
+    "file_prefix": "instrumentos-",
+    "title": "200501-N-LW757-4054 (49891138472).jpg",
+    "author": "Navy Medicine from Washington, DC, USA",
+    "license": "Domínio público",
+    "license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military-Navy",
+    "source_url": "https://commons.wikimedia.org/wiki/File:200501-N-LW757-4054_(49891138472).jpg",
+    "width": 1600,
+    "height": 1065,
+    "alt_pt": "Instrumentos odontológicos de aço inoxidável alinhados sobre um campo cirúrgico azul.",
+    "changes": "Brilho ajustado, redimensionada e convertida para WebP."
+  },
+  {
+    "name": "ambiente",
+    "file_prefix": "ambiente-",
+    "title": "Corridor leading to indoor pool of spa at Amantaka luxury Resort & Hotel in Luang Prabang Laos front view.jpg",
+    "author": "Basile Morin",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Corridor_leading_to_indoor_pool_of_spa_at_Amantaka_luxury_Resort_%26_Hotel_in_Luang_Prabang_Laos_front_view.jpg",
+    "width": 1600,
+    "height": 2400,
+    "alt_pt": "Corredor claro e tranquilo, com portas em arco, paredes brancas e piso de cerâmica, iluminado por luz natural.",
+    "changes": "Recortada, redimensionada e convertida para WebP."
+  },
+  {
+    "name": "cuidado",
+    "file_prefix": "cuidado-",
+    "title": "USMC-120705-M-SP892-014.jpg",
+    "author": "Sgt. Alvin D. Parson Jr",
+    "license": "Domínio público",
+    "license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military",
+    "source_url": "https://commons.wikimedia.org/wiki/File:USMC-120705-M-SP892-014.jpg",
+    "width": 1600,
+    "height": 1067,
+    "alt_pt": "Mãos com luvas descartáveis segurando com cuidado instrumentos odontológicos, entre eles um espelho bucal.",
+    "changes": "Redimensionada e convertida para WebP."
+  }
+]

@@ -1,0 +1,36 @@
+---
+/** Decorative ribbon between the hero and the menu. Repeats what the page already says. */
+const words = ['Fermentação natural', 'Pão de queijo de verdade', 'Café coado na hora', 'Bolo de vó', 'Jabuticaba da estação'];
+const run = [...words, ...words];
+---
+<div class="faixa" aria-hidden="true">
+  <div class="faixa-band">
+    <div class="faixa-track">
+      {[0, 1].map(() => (
+        <span class="faixa-run">
+          {run.map((w) => <><span>{w}</span><i class="cj-dot faixa-dot"></i></>)}
+        </span>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .faixa { overflow-x: clip; padding-block: 1.25rem; margin-block: -1.25rem; position: relative; z-index: 2; }
+  .faixa-band {
+    width: 110%; margin-left: -5%; rotate: -2deg;
+    background: var(--crosta); color: var(--creme);
+    border-block: 2px solid var(--jabuticaba);
+    overflow: hidden;
+  }
+  .faixa-track { display: flex; width: max-content; }
+  .faixa-run { display: flex; align-items: center; flex: none; }
+  .faixa-run > span {
+    padding: 0.7rem 0 0.8rem; white-space: nowrap;
+    font-family: var(--display); font-weight: 600; font-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.5rem); line-height: 1;
+    letter-spacing: -0.01em; font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  }
+  .faixa-dot { width: 0.85rem; height: 0.85rem; margin-inline: 1.1rem; flex: none; }
+  @media (prefers-reduced-motion: no-preference) {
+  }
+</style>

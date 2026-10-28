@@ -1,0 +1,102 @@
+---
+import Sun from './Sun.astro';
+import Photo from './Photo.astro';
+import Arrow from './Arrow.astro';
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap hero__grid">
+    <div class="hero__copy">
+      <p class="label">Taquaral · Campinas&nbsp;– SP</p>
+      <h1 id="hero-title" class="hero__title">Odontologia <strong>sem&nbsp;pressa<span class="dot">.</span></strong></h1>
+      <p class="hero__lead">
+        Consultas com tempo para conversar, explicação antes de cada etapa e um plano de
+        tratamento que você entende antes de decidir. Para adultos e crianças.
+      </p>
+      <div class="hero__actions">
+        <a class="btn" href="/sites/#contato">Agendar avaliação <Arrow /></a>
+        <a class="quiet-link" href="#tratamentos">Ver tratamentos</a>
+      </div>
+      <p class="demo-note">Demonstração: no site real, este botão abre o WhatsApp da Aurora Odontologia.</p>
+    </div>
+
+    <div class="hero__visual">
+      <div class="hero__sun"><Sun /></div>
+      <div class="hero__photo frame">
+        <Photo name="consultorio" priority position="38% 50%" sizes="(min-width: 1360px) 540px, (min-width: 960px) 40vw, calc(100vw - 32px)" />
+      </div>
+    </div>
+  </div>
+
+  <ul class="wrap hero__ways" role="list">
+    <li>
+      <strong>Hora marcada</strong>
+      <span>Agenda com intervalo entre pacientes, sem sala de espera cheia.</span>
+    </li>
+    <li>
+      <strong>Tudo explicado</strong>
+      <span>Antes de cada etapa, você sabe o que vai ser feito e por quê.</span>
+    </li>
+    <li>
+      <strong>Plano por escrito</strong>
+      <span>Você leva para casa as etapas do tratamento antes de decidir.</span>
+    </li>
+  </ul>
+</section>
+
+<style>
+  .hero { padding: 12px 0 0; }
+  .hero__grid { display: grid; gap: 36px; }
+  .hero__title {
+    margin-top: 18px;
+    font-size: clamp(2.75rem, 1.45rem + 6.4vw, 7rem);
+    font-weight: 280; line-height: 0.98; letter-spacing: -0.045em;
+    color: var(--ink);
+  }
+  .hero__title strong { display: block; font-weight: 760; color: var(--teal); letter-spacing: -0.05em; }
+  .hero__lead {
+    margin-top: 24px; max-width: 34ch;
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.3125rem); line-height: 1.6; color: var(--ink-2);
+  }
+  .hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 28px; }
+  .demo-note { margin-top: 16px; max-width: 40ch; }
+
+  .hero__visual { position: relative; }
+  .hero__sun { width: 72%; margin-left: 20%; margin-bottom: -1px; }
+  .hero__photo { aspect-ratio: 5 / 4; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__sun :global(svg) { animation: rise 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 50% 100%; }
+    @keyframes rise {
+      from { transform: translateY(22%) scale(0.94); }
+      to { transform: none; }
+    }
+  }
+  /* the photo frame sits over the lower half of the rising sun */
+  .hero__photo { position: relative; z-index: 1; }
+  .hero__sun { position: relative; z-index: 0; overflow: hidden; }
+
+  .hero__ways {
+    display: grid; gap: 0; margin-top: 56px; padding-block: 8px 0;
+  }
+  .hero__ways li {
+    display: grid; gap: 4px; padding: 20px 0; border-top: 1px solid var(--line);
+  }
+  .hero__ways strong { font-size: 1rem; font-weight: 680; color: var(--ink); }
+  .hero__ways span { font-size: 0.9375rem; color: var(--ink-2); max-width: 36ch; }
+
+  @media (min-width: 600px) and (max-width: 959px) {
+    .hero__visual { width: min(100%, 540px); justify-self: end; }
+  }
+  @media (min-width: 720px) {
+    .hero__ways { grid-template-columns: repeat(3, 1fr); column-gap: 32px; }
+  }
+  @media (min-width: 960px) {
+    .hero { padding-top: 24px; }
+    .hero__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 32px; align-items: end; }
+    .hero__copy { grid-column: 1 / 8; align-self: center; padding-top: 48px; }
+    .hero__visual { grid-column: 8 / 13; }
+    .hero__photo { aspect-ratio: 1 / 1; }
+    .hero__sun { width: 84%; margin-left: 10%; }
+    .hero__ways { margin-top: 72px; }
+  }
+</style>

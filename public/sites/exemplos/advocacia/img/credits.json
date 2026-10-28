@@ -1,0 +1,28 @@
+[
+  {
+    "name": "biblioteca",
+    "file_prefix": "biblioteca-",
+    "title": "Bibliothèque chateau breteuil.jpg",
+    "author": "Jebulon",
+    "license": "Domínio público",
+    "license_url": "https://commons.wikimedia.org/wiki/Template:PD-self",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Biblioth%C3%A8que_chateau_breteuil.jpg",
+    "width": 1600,
+    "height": 1067,
+    "alt_pt": "Estantes com fileiras de livros antigos encadernados em couro, com lombadas douradas e ornamentadas.",
+    "changes": "Recortada, redimensionada e convertida para WebP."
+  },
+  {
+    "name": "escritorio",
+    "file_prefix": "escritorio-",
+    "title": "Reception desks of Amantaka luxury Resort & Hotel in Luang Prabang Laos.jpg",
+    "author": "Basile Morin",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Reception_desks_of_Amantaka_luxury_Resort_%26_Hotel_in_Luang_Prabang_Laos.jpg",
+    "width": 1600,
+    "height": 1067,
+    "alt_pt": "Sala ampla de paredes brancas com duas escrivaninhas de madeira simétricas, abajures acesos e poltronas de palhinha.",
+    "changes": "Redimensionada e convertida para WebP."
+  }
+]

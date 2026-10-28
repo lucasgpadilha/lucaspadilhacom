@@ -1,0 +1,135 @@
+---
+import { getBuildInfo } from '../../lib/build-info';
+import type { Locale } from '../../lib/locale';
+
+interface Props {
+  locale: Locale;
+  /** "home" proves the pipeline; "sites" proves the page speed to a business owner. */
+  variant: 'home' | 'sites';
+}
+
+const { locale, variant } = Astro.props;
+const build = getBuildInfo();
+const pt = locale === 'pt';
+const builtAt = `${build.builtAt.slice(0, 10)} ${build.builtAt.slice(11, 16)} UTC`;
+const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 'Recibo desta página';
+---
+<div class="receipt-shell" data-reveal>
+  <figure class="receipt" data-receipt data-locale={pt ? 'pt-BR' : 'en'}>
+    <p class="head">
+      <span>{title}</span>
+      <span aria-hidden="true">#{build.shortSha}</span>
+    </p>
+    <p class="site">lucaspadilha.com</p>
+    {variant === 'home' && (
+      <dl class="rows">
+        <div><dt>commit</dt><dd>{build.commitUrl ? <a href={build.commitUrl}>{build.shortSha}</a> : build.shortSha}</dd></div>
+        <div><dt>{pt ? 'build' : 'built'}</dt><dd><time datetime={build.builtAt}>{builtAt}</time></dd></div>
+        <div><dt>pipeline</dt><dd>{build.runUrl ? <a href={build.runUrl}>GitHub Actions</a> : 'GitHub Actions'}</dd></div>
+        <div><dt>deploy</dt><dd>SCP → {pt ? 'servidor' : 'server'}</dd></div>
+        <div><dt>{pt ? 'saúde' : 'health'}</dt><dd>{pt ? 'checada após deploy' : 'checked after deploy'}</dd></div>
+      </dl>
+    )}
+    <hr />
+    <dl class="rows live">
+      <div><dt>HTML</dt><dd data-weight>—</dd></div>
+      <div><dt>{pt ? 'carregou em' : 'loaded in'}</dt><dd data-time>—</dd></div>
+      <div><dt>{pt ? 'arquivos' : 'requests'}</dt><dd data-requests>—</dd></div>
+      <div><dt>JavaScript</dt><dd data-js>—</dd></div>
+    </dl>
+    <p class="total"><span>{pt ? 'Total' : 'Total'}</span><strong data-total>—</strong></p>
+    <figcaption>
+      {pt ? 'Medido no seu navegador, agora.' : 'Measured in your browser, just now.'}
+      {variant === 'sites' && (
+        <>
+          {' '}A página mediana da web passa de 2 MB (<a href="https://almanac.httparchive.org/en/2024/page-weight">HTTP Archive</a>).
+        </>
+      )}
+    </figcaption>
+  </figure>
+</div>
+
+<script>
+  type Entry = PerformanceResourceTiming | PerformanceNavigationTiming;
+  const size = (entry: Entry) => entry.transferSize || entry.encodedBodySize || 0;
+
+  function render(receipt: HTMLElement) {
+    const locale = receipt.dataset.locale || 'en';
+    const kb = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+    const sec = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const bytes = (nav ? size(nav) : 0) + resources.reduce((sum, entry) => sum + size(entry), 0);
+    // Only code the browser runs: JSON-LD and other data blocks are not JavaScript.
+    const executable = (el: HTMLScriptElement) => !el.type || ['module', 'text/javascript', 'application/javascript'].includes(el.type);
+    const inline = [...document.scripts].filter((el) => !el.src && executable(el)).reduce((sum, el) => sum + (el.textContent || '').length, 0);
+    const js = inline + resources.filter((entry) => entry.initiatorType === 'script').reduce((sum, entry) => sum + size(entry), 0);
+    const kbJs = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+    const loaded = nav && nav.loadEventEnd > 0 ? nav.loadEventEnd : performance.now();
+    const set = (key: string, value: string) => {
+      const el = receipt.querySelector(`[data-${key}]`);
+      if (el) el.textContent = value;
+    };
+    set('weight', `${kb.format((nav ? size(nav) : 0) / 1024)} KB`);
+    set('time', `${sec.format(loaded / 1000)} s`);
+    set('requests', kb.format(resources.length + 1));
+    set('js', `${kbJs.format(js / 1024)} KB`);
+    set('total', `${kb.format(bytes / 1024)} KB`);
+  }
+
+  const receipts = [...document.querySelectorAll<HTMLElement>('[data-receipt]')];
+  let queued = false;
+  const update = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; receipts.forEach(render); });
+  };
+  if (document.readyState === 'complete') update();
+  else addEventListener('load', () => setTimeout(update, 0), { once: true });
+  // Lazy images arrive later; keep the totals honest as they do.
+  if ('PerformanceObserver' in window) new PerformanceObserver(update).observe({ type: 'resource', buffered: false });
+</script>
+
+<style>
+  .receipt-shell {
+    filter: drop-shadow(0 0 0.5px var(--line-strong)) drop-shadow(0 22px 28px rgb(20 20 19 / 0.12));
+  }
+  .receipt {
+    --tooth: 12px;
+    margin: 0;
+    position: relative;
+    padding: 26px 22px 30px;
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    -webkit-mask:
+      radial-gradient(circle at 50% 0, transparent 4.5px, #000 5px) top / var(--tooth) 51% repeat-x,
+      radial-gradient(circle at 50% 100%, transparent 4.5px, #000 5px) bottom / var(--tooth) 51% repeat-x;
+    mask:
+      radial-gradient(circle at 50% 0, transparent 4.5px, #000 5px) top / var(--tooth) 51% repeat-x,
+      radial-gradient(circle at 50% 100%, transparent 4.5px, #000 5px) bottom / var(--tooth) 51% repeat-x;
+  }
+  .head {
+    display: flex; justify-content: space-between; gap: 1rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;
+  }
+  .site { color: var(--ink-2); margin-top: 0.25rem; }
+  .rows { display: grid; gap: 0.35rem; margin-top: 1rem; }
+  .rows div { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+  .rows dt { color: var(--ink-2); white-space: nowrap; }
+  .rows div::after { content: ''; order: 1; flex: 1; border-bottom: 1px dotted var(--line-strong); min-width: 1rem; }
+  .rows dd { order: 2; text-align: right; overflow-wrap: anywhere; }
+  .live dd { font-variant-numeric: tabular-nums; }
+  hr { border: 0; border-top: 1px dashed var(--line-strong); margin: 1.1rem 0 0; }
+  .total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 1.1rem; padding-top: 0.9rem; border-top: 2px solid var(--ink);
+    text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; font-weight: 700;
+  }
+  .total strong { font-size: 1.625rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  figcaption { margin-top: 0.9rem; color: var(--ink-2); font-size: 0.75rem; }
+  @media (min-width: 960px) {
+    .receipt { transform: rotate(1.25deg); }
+  }
+</style>

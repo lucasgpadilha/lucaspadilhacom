@@ -1,0 +1,30 @@
+---
+/** Mandatory strip on every concept site: says it is fictional and who made it. */
+---
+<div class="demo-banner" role="note" aria-label="Aviso de site conceito">
+  <p>
+    <strong>Site conceito</strong>
+    <span class="sep" aria-hidden="true">·</span>
+    <span>empresa fictícia</span><span class="by">, feito por <a href="/sites/">Lucas Padilha</a></span>
+  </p>
+  <a class="want" href="/sites/#contato">Quero um assim</a>
+</div>
+
+<style>
+  .demo-banner {
+    position: sticky; top: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    min-height: 44px; padding: 0 max(12px, env(safe-area-inset-left)) 0 max(12px, env(safe-area-inset-right));
+    background: #141413; color: #ece9e1;
+    font: 500 13px/1.3 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  .demo-banner p { margin: 0; min-width: 0; }
+  .demo-banner a { color: inherit; text-underline-offset: 0.2em; }
+  .sep { opacity: 0.6; margin: 0 0.25rem; }
+  .want {
+    flex: none; display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px;
+    background: #ff5a1f; color: #1c0b02 !important; border-radius: 3px; font-weight: 650; text-decoration: none;
+  }
+  .want:focus-visible, .demo-banner a:focus-visible { outline: 2px solid #ece9e1; outline-offset: 2px; }
+  @media (max-width: 420px) { .by { display: none; } }
+</style>

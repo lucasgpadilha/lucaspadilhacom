@@ -1,0 +1,90 @@
+---
+const perguntas = [
+  {
+    q: 'O pão de queijo é sem glúten?',
+    a: 'A receita não leva trigo: é polvilho, queijo, ovo, leite e um fio de óleo. Mas ele é assado na mesma cozinha dos pães de fermentação natural, então não indicamos para quem tem doença celíaca.',
+  },
+  {
+    q: 'O que é fermentação natural, afinal?',
+    a: 'É o pão feito com levain, um fermento vivo de farinha e água que a gente alimenta todo dia, sem fermento biológico de pacote. A massa descansa até 36 horas. O pão fica mais saboroso, mais leve para digerir e dura mais dias em casa.',
+  },
+  {
+    q: 'Dá para reservar pão e buscar mais tarde?',
+    a: 'Dá. Mande mensagem até as 10h dizendo o que você quer e a gente separa da fornada. A retirada é no balcão, até as 18h.',
+  },
+  {
+    q: 'Vocês entregam?',
+    a: 'Sim, fazemos delivery na região de Barão Geraldo e bairros vizinhos, de terça a domingo. Para encomendas grandes, combinamos o horário da entrega com você.',
+  },
+  {
+    q: 'Tem opção sem lactose ou vegana?',
+    a: 'Os pães de fermentação natural são veganos: farinha, água, sal e tempo. Para o café, temos leite de aveia. Os bolos e o pão de queijo levam leite e ovos.',
+  },
+  {
+    q: 'Como funciona a encomenda de bolo de aniversário?',
+    a: 'Peça com pelo menos 5 dias. Você escolhe massa, recheio e tamanho, a gente responde com o valor e reserva a data com um sinal de 50%. Velinha e topo de bolo ficam por sua conta.',
+  },
+  {
+    q: 'Posso estudar ou trabalhar aí?',
+    a: 'Pode, e muita gente faz isso. As mesas do fundo têm tomada e Wi-Fi. No sábado de manhã a casa enche, e aí pedimos para liberar a mesa depois do café.',
+  },
+];
+---
+<section id="perguntas" class="faq" aria-labelledby="faq-title">
+  <div class="cj-wrap faq-grid">
+    <div class="faq-head">
+      <p class="cj-eyebrow">Perguntas frequentes</p>
+      <h2 id="faq-title" class="cj-h2">Dúvidas de balcão</h2>
+      <p class="cj-lead">O que mais perguntam enquanto o café está passando.</p>
+    </div>
+    <div class="faq-list">
+      {perguntas.map((p) => (
+        <details class="qa">
+          <summary>
+            <span class="qa-q">{p.q}</span>
+            <span class="qa-mark" aria-hidden="true"></span>
+          </summary>
+          <p class="qa-a">{p.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq { padding-block: clamp(4.5rem, 10vw, 8rem); }
+  .faq-grid { display: grid; gap: 2.5rem; }
+  .faq-list { border-top: 2px solid var(--jabuticaba); }
+  .qa { border-bottom: 1px solid rgb(43 21 48 / 0.22); }
+  .qa summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
+    min-height: 44px; padding-block: 1.15rem; cursor: pointer; list-style: none;
+  }
+  .qa summary::-webkit-details-marker { display: none; }
+  .qa summary:focus-visible { outline-offset: 2px; }
+  .qa-q {
+    font-family: var(--display); font-weight: 560; font-size: clamp(1.1875rem, 1.05rem + 0.5vw, 1.5rem); line-height: 1.2;
+    color: var(--jabuticaba); font-variation-settings: 'SOFT' 80, 'WONK' 0;
+  }
+  .qa-mark {
+    position: relative; flex: none; width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--jabuticaba); transition: background-color 0.2s ease, rotate 0.25s ease;
+  }
+  .qa-mark::before, .qa-mark::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 0.75rem; height: 2px; margin: -1px 0 0 -0.375rem;
+    background: var(--creme); border-radius: 1px;
+  }
+  .qa-mark::after { rotate: 90deg; transition: opacity 0.2s ease; }
+  .qa[open] .qa-mark { background: var(--crosta-texto); rotate: 180deg; }
+  .qa[open] .qa-mark::after { opacity: 0; }
+  .qa summary:hover .qa-q { text-decoration: underline; text-decoration-color: var(--crosta); text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
+  .qa-a { max-width: 40rem; padding: 0 3rem 1.5rem 0; line-height: 1.6; }
+
+  @media (min-width: 1080px) {
+    .faq-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); column-gap: clamp(3rem, 7vw, 7rem); align-items: start; }
+    .faq-head { position: sticky; top: 5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .qa-mark, .qa-mark::after { transition: none; }
+  }
+</style>

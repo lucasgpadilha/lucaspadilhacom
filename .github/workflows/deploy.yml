@@ -3,20 +3,56 @@ name: Deploy
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  build:
+    # Pinned: Playwright 1.60 cannot install Chromium on ubuntu-latest (26.04) yet.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
       - run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Check the production preview
+        run: |
+          npx astro preview --host 127.0.0.1 --port 4321 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:4321/ && break; sleep 1; done
+          npm run test:site
+          STARTUP_PREVIEW_URL=http://127.0.0.1:4321 STARTUP_QA_OUTPUT="$RUNNER_TEMP/startup-qa" npm run test:startup
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
 
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
@@ -28,3 +64,31 @@ jobs:
           target: "/var/www/portfolio"
           strip_components: 1
           overwrite: true
+
+      # SCP only adds and overwrites. Remove what this version stopped shipping, by explicit path only.
+      - name: Remove files this version no longer ships
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ec2-user
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/portfolio && rm -rf -- reference assets/factory
+
+      - name: Healthcheck
+        run: |
+          set -euo pipefail
+          for path in / /pt/ /sites/ /startup/; do
+            curl -fsS --retry 6 --retry-delay 5 --retry-all-errors -o /dev/null -w "%{http_code} ${path}\n" "https://lucaspadilha.com${path}"
+          done
+          # The footer prints the commit that built the page: prove this deploy is the one being served.
+          home="$(curl -fsS https://lucaspadilha.com/)"
+          if ! grep -q "${GITHUB_SHA::7}" <<<"$home"; then
+            echo "::error::the live home does not show build ${GITHUB_SHA::7}"
+            exit 1
+          fi
+          echo "live build is ${GITHUB_SHA::7}"
+          for gone in /reference/hero-target.png /assets/factory/deployment-factory-v2.webp; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "https://lucaspadilha.com${gone}")"
+            if [ "$code" != "404" ]; then echo "::error::${gone} still served (${code})"; exit 1; fi
+          done

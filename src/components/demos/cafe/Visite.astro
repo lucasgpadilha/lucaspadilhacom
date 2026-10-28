@@ -1,0 +1,103 @@
+---
+import Photo from './Photo.astro';
+
+const horarios = [
+  { d: 'Terça a sexta', h: '7h às 19h' },
+  { d: 'Sábado', h: '7h às 18h' },
+  { d: 'Domingo e feriados', h: '7h às 13h' },
+  { d: 'Segunda', h: 'Fechado', note: 'o forno descansa e o fermento ganha comida' },
+];
+
+const extras = [
+  'Delivery na região',
+  'Retirada no balcão',
+  'Mesas na calçada e no quintal',
+  'Cachorro é bem-vindo na varanda',
+  'Wi-Fi nas mesas do fundo',
+];
+---
+<section id="visite" class="visite cj-dark" aria-labelledby="visite-title">
+  <div class="visite-grid">
+    <figure class="visite-photo">
+      <Photo slot="interior" sizes="(min-width: 1080px) 90vw, 100vw" tone="jabuticaba" />
+    </figure>
+
+    <div class="visite-copy">
+      <p class="cj-eyebrow">Visite</p>
+      <h2 id="visite-title" class="cj-h2">Senta, que o café é passado na hora.</h2>
+      <p class="cj-lead">
+        Estamos numa rua tranquila de Barão Geraldo, em Campinas&nbsp;–&nbsp;SP, com mesas na calçada,
+        cheiro de pão desde cedo e espaço para ficar mais um pouco.
+      </p>
+
+      <div class="v-cols">
+      <div>
+      <h3 class="v-sub">Horários</h3>
+      <dl class="horas">
+        {horarios.map((x) => (
+          <div class:list={['hora', { off: x.note }]}>
+            <dt>{x.d}</dt>
+            <dd>{x.h}</dd>
+            {x.note && <dd class="hora-note">{x.note}</dd>}
+          </div>
+        ))}
+      </dl>
+      </div>
+
+      <div>
+      <h3 class="v-sub">Na casa</h3>
+      <ul class="extras" role="list">
+        {extras.map((e) => <li><span class="cj-dot" aria-hidden="true"></span>{e}</li>)}
+      </ul>
+      </div>
+      </div>
+
+      <p class="v-where"><span class="cj-sr">Endereço: </span>Barão Geraldo, <span class="nw">Campinas – SP</span></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .visite { background: var(--jabuticaba); color: var(--creme); overflow-x: clip; }
+  .visite-grid { display: grid; }
+  .visite-photo { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #4a2a52; }
+  .visite-photo :global(img), .visite-photo :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
+  .visite-photo :global(img) { object-position: 56% 50%; }
+  .visite-photo { border-bottom-right-radius: 38% 46%; }
+  .nw { white-space: nowrap; }
+  .visite-copy { width: min(100% - 2 * var(--gutter), 36rem); margin-inline: auto; padding-block: 3rem clamp(4.5rem, 9vw, 7rem); }
+  .visite .cj-eyebrow { color: var(--crosta-clara); }
+  .visite .cj-lead { color: var(--lilas); }
+
+  .v-sub {
+    margin-top: 2.5rem; padding-bottom: 0.6rem; border-bottom: 1px solid rgb(246 238 223 / 0.35);
+    font-size: 0.8125rem; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: var(--crosta-clara);
+  }
+  .horas { margin: 0; }
+  .hora {
+    display: grid; grid-template-columns: 1fr auto; gap: 0.2rem 1rem; align-items: baseline;
+    padding-block: 0.85rem; border-bottom: 1px solid rgb(246 238 223 / 0.14);
+  }
+  .hora dt { font-weight: 520; }
+  .hora dd { margin: 0; text-align: right; font-family: var(--display); font-weight: 560; font-size: 1.375rem; line-height: 1.1; font-variation-settings: 'SOFT' 100, 'WONK' 1; }
+  .hora.off dd:not(.hora-note) { color: var(--crosta-clara); }
+  .hora .hora-note { grid-column: 1 / -1; text-align: left; font: 400 0.875rem/1.4 var(--sans); color: var(--lilas); }
+
+  .extras { margin: 1rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.7rem; }
+  .extras li { display: flex; gap: 0.75rem; align-items: baseline; }
+  .extras .cj-dot { width: 0.6rem; height: 0.6rem; flex: none; background: var(--crosta-clara); box-shadow: none; translate: 0 -0.05rem; }
+  .v-where {
+    margin-top: 2.5rem; font-family: var(--display); font-weight: 600; font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); line-height: 1.1;
+    font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  }
+
+  @media (min-width: 1080px) {
+    .visite-grid { grid-template-columns: minmax(0, 10fr) minmax(0, 13fr); align-items: stretch; }
+    .visite .cj-h2 { font-size: clamp(3rem, 1rem + 3.6vw, 4.75rem); }
+    .visite-photo { aspect-ratio: auto; min-height: 100%; border-radius: 0 50vh 50vh 0 / 0 40% 40% 0; }
+    .visite-copy { width: auto; max-width: 48rem; margin: 0; padding: clamp(5rem, 8vw, 7.5rem) var(--gutter) clamp(5rem, 8vw, 7.5rem) clamp(3rem, 6vw, 6rem); }
+  }
+  @media (min-width: 1280px) {
+    .v-cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2.5rem; }
+  }
+</style>

@@ -1,0 +1,119 @@
+---
+import SecHead from './SecHead.astro';
+
+/* `nota` marks a footnote; the notes cite the rule behind the answer. */
+const faq = [
+  {
+    q: 'Posso ser atendido online?',
+    a: 'Sim. A primeira conversa e o acompanhamento podem ser feitos por videochamada, e os documentos e assinaturas, por meio digital. O atendimento presencial é no Cambuí, com hora marcada.',
+  },
+  {
+    q: 'O que devo levar para a primeira conversa?',
+    a: 'O que tiver à mão: contrato ou carteira de trabalho, holerites, termo de rescisão, mensagens e e-mails, certidões de casamento ou de nascimento. Depois do primeiro contato enviamos uma lista específica para o seu caso.',
+  },
+  {
+    q: 'Quanto tempo tenho para entrar com uma ação trabalhista?',
+    a: 'Em regra, até dois anos depois do fim do contrato, e a ação alcança os últimos cinco anos de trabalho. Há exceções, por isso vale conversar cedo.',
+    nota: 1,
+  },
+  {
+    q: 'O divórcio pode ser feito em cartório?',
+    a: 'Quando o casal está de acordo, muitas vezes sim, sempre com a assistência de um advogado. Se há filhos menores, guarda, convivência e pensão precisam estar resolvidas antes, na Justiça.',
+    nota: 2,
+  },
+  {
+    q: 'Como são cobrados os honorários?',
+    a: 'São combinados por escrito antes do início do trabalho, depois que entendemos o seu caso.',
+  },
+  {
+    q: 'O que eu contar fica em sigilo?',
+    a: 'Sim. O sigilo profissional é um dever do advogado e vale desde o primeiro contato, mesmo que você decida não seguir com o caso.',
+    nota: 3,
+  },
+  {
+    q: 'Vocês atendem empresas?',
+    a: 'Na área trabalhista, sim: orientamos pequenas e médias empresas em contratos, jornada e desligamentos e atuamos na defesa em reclamações trabalhistas.',
+  },
+];
+const notas = [
+  'Constituição Federal, art. 7º, inciso XXIX.',
+  'Código de Processo Civil, art. 733, e Resolução CNJ nº 35/2007, com a redação dada pela Resolução nº 571/2024.',
+  'Código de Ética e Disciplina da OAB, arts. 35 a 38.',
+];
+---
+<section id="perguntas" class="fq" aria-labelledby="fq-title">
+  <div class="lv-wrap fq__grid">
+    <div class="fq__head">
+      <SecHead mark="§ 5º" id="fq-title" title="Perguntas frequentes">
+        <p>Respostas gerais. Cada caso tem detalhes que só aparecem na conversa.</p>
+      </SecHead>
+    </div>
+    <div class="fq__body">
+      <div class="fq__list">
+        {faq.map((f) => (
+          <details class="qa">
+            <summary class="qa__q">
+              <span>{f.q}</span>
+              <span class="qa__icon" aria-hidden="true"></span>
+            </summary>
+            <p class="qa__a">
+              {f.a}{f.nota && <sup class="qa__ref"><span class="visually-hidden">nota </span>{f.nota}</sup>}
+            </p>
+          </details>
+        ))}
+      </div>
+      <div class="fq__notes">
+        <h3 class="lv-label">Notas</h3>
+        <ol role="list">
+          {notas.map((n, i) => <li><span class="fq__n" aria-hidden="true">{i + 1}</span>{n}</li>)}
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .fq { padding-block: clamp(24px, 4vw, 48px) clamp(64px, 9vw, 128px); }
+  .fq__grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .fq__body { margin-top: 36px; }
+  .fq__list { border-top: 1px solid var(--lv-ink); }
+  .qa { border-bottom: 1px solid var(--lv-rule-strong); }
+  .qa__q {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    min-height: 64px; padding-block: 18px; cursor: pointer; list-style: none;
+    font-size: clamp(1.1875rem, 1.08rem + 0.45vw, 1.5rem); font-weight: 420; line-height: 1.3;
+  }
+  .qa__q::-webkit-details-marker { display: none; }
+  .qa__q:hover span:first-child { text-decoration: underline; text-decoration-color: var(--lv-brass); text-decoration-thickness: 1px; text-underline-offset: 0.22em; }
+  /* A plus drawn with two hairlines; the vertical one folds away when open. */
+  .qa__icon { position: relative; flex: none; width: 18px; height: 18px; }
+  .qa__icon::before, .qa__icon::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; margin-top: -0.75px;
+    background: var(--lv-ink); transition: transform 0.3s var(--lv-ease);
+  }
+  .qa__icon::after { transform: rotate(90deg); }
+  .qa[open] .qa__icon::after { transform: rotate(0deg); }
+  .qa__a { padding: 0 40px 26px 0; color: var(--lv-muted); max-width: 38em; }
+  .qa__ref { font-family: var(--lv-sans); font-size: 0.7em; font-weight: 700; color: var(--lv-ink); margin-left: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .fq__notes { margin-top: 36px; }
+  .fq__notes ol { margin-top: 12px; display: grid; gap: 6px; }
+  .fq__notes li {
+    display: grid; grid-template-columns: 1.25rem minmax(0, 1fr);
+    font-family: var(--lv-sans); font-size: 0.8125rem; line-height: 1.55; color: var(--lv-muted);
+  }
+  .fq__n { font-weight: 700; color: var(--lv-ink); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .qa[open] .qa__a { animation: lv-open 0.35s var(--lv-ease) both; }
+  }
+  @keyframes lv-open { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .qa__icon::before, .qa__icon::after { transition: none; } }
+
+  @media (min-width: 1080px) {
+    .fq__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .fq__head { grid-column: 1 / 5; }
+    .fq__head > :global(.sh) { position: sticky; top: 76px; }
+    .fq__body { grid-column: 6 / -1; margin-top: 0; padding-top: 15px; }
+  }
+</style>

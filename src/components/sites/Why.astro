@@ -1,0 +1,32 @@
+---
+import { reasons } from '../../data/sites';
+---
+<section id="por-que" class="section" aria-labelledby="por-que-title">
+  <div class="wrap">
+    <header class="section-head" data-reveal>
+      <p class="label">02 — Por que comigo</p>
+      <h2 id="por-que-title">Bonito é o mínimo. O resto é engenharia.</h2>
+    </header>
+    <ol class="grid" role="list">
+      {reasons.map((reason, index) => (
+        <li data-reveal>
+          <span class="n" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3>{reason.title}</h3>
+          <p>{reason.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .grid { display: grid; gap: 0; border-top: 2px solid var(--ink); }
+  .grid li { display: grid; gap: 0.6rem; padding: 1.75rem 0; border-bottom: 1px solid var(--line); }
+  .n { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-2); }
+  h3 { font-size: var(--step-2); }
+  p { color: var(--ink-2); max-width: 46ch; }
+  @media (min-width: 860px) {
+    .grid { grid-template-columns: 1fr 1fr; column-gap: 3rem; }
+    .grid li { padding: 2.25rem 0; }
+  }
+</style>

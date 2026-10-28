@@ -5,3 +5,5 @@ dist/
 *.log
 .commandcode/taste/
 screenshots/
+
+.superpowers/

@@ -1,0 +1,57 @@
+---
+const links = [
+  { href: '#areas', label: 'Áreas de atuação' },
+  { href: '#para-quem', label: 'Para quem atendemos' },
+  { href: '#primeira-conversa', label: 'Primeira conversa' },
+  { href: '#escritorio', label: 'O escritório' },
+  { href: '#perguntas', label: 'Perguntas frequentes' },
+  { href: '#contato', label: 'Contato' },
+];
+---
+<footer class="ft lv-dark">
+  <div class="lv-wrap ft__grid">
+    <div class="ft__brand">
+      <p class="ft__name">Lacerda <em class="ft__amp">&amp;</em> Viana</p>
+      <p class="lv-label">Advocacia</p>
+      <p class="ft__desc">Direito do Trabalho e Direito de Família e Sucessões. Cambuí, Campinas – SP.</p>
+    </div>
+    <nav class="ft__nav" aria-label="Rodapé">
+      <ul role="list">
+        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+    <div class="ft__legal">
+      <p>
+        Conteúdo informativo, conforme o Código de Ética e Disciplina da OAB e o Provimento nº 205/2021.
+        As informações deste site não substituem a análise de um caso concreto.
+      </p>
+      <p>No site real, aqui aparecem os nomes dos advogados e os números de inscrição na OAB/SP.</p>
+      <p>© 2026 Lacerda &amp; Viana Advocacia</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .ft { padding-block: 56px 40px; font-family: var(--lv-sans); }
+  .ft__grid { display: grid; gap: 40px; }
+  .ft__name { font-family: var(--lv-serif); font-size: 2rem; line-height: 1; font-weight: 420; letter-spacing: -0.012em; margin-bottom: 8px; }
+  .ft__amp { color: var(--lv-brass); font-weight: 380; }
+  .ft__desc { margin-top: 18px; font-size: 0.875rem; line-height: 1.6; color: var(--lv-on-ink-muted); max-width: 24em; }
+  .ft__nav ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
+  .ft__nav a {
+    display: inline-flex; align-items: center; min-height: 44px;
+    font-size: 0.875rem; font-weight: 560; color: var(--lv-on-ink); text-decoration-color: rgba(168, 131, 76, 0.7);
+  }
+  .ft__legal {
+    display: grid; gap: 12px; padding-top: 24px; border-top: 1px solid rgba(244, 239, 228, 0.18);
+    font-size: 0.8125rem; line-height: 1.6; color: var(--lv-on-ink-muted);
+  }
+  @media (min-width: 1080px) {
+    .ft__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 56px; }
+    .ft__brand { grid-column: 1 / 5; }
+    .ft__nav { grid-column: 7 / -1; }
+    .ft__nav ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ft__legal { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+    .ft__legal p:last-child { text-align: right; }
+  }
+</style>

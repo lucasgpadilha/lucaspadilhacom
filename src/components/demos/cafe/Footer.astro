@@ -1,0 +1,70 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="foot cj-dark">
+  <div class="cj-wrap">
+    <p class="foot-mark" aria-hidden="true">Casa Jabuticaba<span class="cj-dot foot-dot"></span></p>
+
+    <div class="foot-grid">
+      <div class="foot-about">
+        <p class="foot-name">Pão com tempo, café sem pressa.</p>
+        <p>Padaria de fermentação natural e café em Barão Geraldo, Campinas&nbsp;–&nbsp;SP. Delivery na região.</p>
+        <a class="cj-btn cj-btn--light" href="/sites/#contato">
+          Fazer encomenda
+          <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </a>
+      </div>
+
+      <div class="foot-col">
+        <h2 class="foot-h">Horários</h2>
+        <ul role="list">
+          <li>Terça a sexta, 7h às 19h</li>
+          <li>Sábado, 7h às 18h</li>
+          <li>Domingo e feriados, 7h às 13h</li>
+          <li>Segunda, fechado</li>
+        </ul>
+      </div>
+
+      <nav class="foot-col" aria-label="Rodapé">
+        <h2 class="foot-h">Na página</h2>
+        <ul role="list">
+          <li><a href="#cardapio">Cardápio</a></li>
+          <li><a href="#fornadas">Fornadas do dia</a></li>
+          <li><a href="#encomendas">Encomendas</a></li>
+          <li><a href="#visite">Visite</a></li>
+          <li><a href="#perguntas">Perguntas frequentes</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <p class="foot-legal">© {year} Casa Jabuticaba · Barão Geraldo, Campinas&nbsp;–&nbsp;SP</p>
+  </div>
+</footer>
+
+<style>
+  .foot { background: var(--jabuticaba); color: var(--creme); padding-block: clamp(3.5rem, 8vw, 6rem) 2rem; overflow-x: clip; }
+  .foot-mark {
+    font-family: var(--display); font-weight: 680; color: var(--creme);
+    font-size: calc((min(100vw, var(--maxw)) - 2 * var(--gutter)) / 7.6); line-height: 0.9; letter-spacing: -0.045em;
+    font-variation-settings: 'SOFT' 100, 'WONK' 1; white-space: nowrap;
+  }
+  .foot-dot { width: 0.2em; height: 0.2em; margin-left: 0.05em; background-color: var(--crosta); }
+  .foot-grid {
+    display: grid; gap: 2.5rem; margin-top: clamp(2.5rem, 6vw, 4.5rem);
+    padding-top: 2.5rem; border-top: 1px solid rgb(246 238 223 / 0.25);
+  }
+  .foot-name { font-family: var(--display); font-weight: 640; font-size: 1.5rem; font-variation-settings: 'SOFT' 100, 'WONK' 1; }
+  .foot-about p:not(.foot-name) { margin-top: 0.5rem; max-width: 22rem; color: var(--lilas); }
+  .foot-about .cj-btn { margin-top: 1.5rem; }
+  .foot-h { font-size: 0.8125rem; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: var(--crosta-clara); }
+  .foot-col ul { margin: 0.85rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.15rem; color: var(--lilas); }
+  .foot-col li { min-height: 2rem; display: flex; align-items: center; }
+  .foot-col a { display: inline-flex; align-items: center; min-height: 44px; color: var(--creme); text-decoration-color: rgb(246 238 223 / 0.4); text-underline-offset: 0.25em; }
+  .foot-col a:hover { text-decoration-color: var(--crosta-clara); }
+  nav.foot-col ul { gap: 0; }
+  .foot-legal { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgb(246 238 223 / 0.25); font-size: 0.875rem; color: var(--lilas); }
+
+  @media (min-width: 760px) {
+    .foot-grid { grid-template-columns: 1.4fr 1fr 1fr; column-gap: 3rem; }
+  }
+</style>

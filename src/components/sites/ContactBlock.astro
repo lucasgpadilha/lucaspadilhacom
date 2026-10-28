@@ -1,0 +1,31 @@
+---
+import Arrow from '../site/Arrow.astro';
+import { contact, contactChannel, contactHref, contactLabel, defaultMessage } from '../../data/sites';
+---
+<section id="contato" class="contact" aria-labelledby="contato-title">
+  <div class="wrap inner" data-reveal>
+    <p class="label">06 — Contato</p>
+    <h2 id="contato-title">Me conta do seu negócio.</h2>
+    <p class="body">Em poucos dias você recebe o link da prévia do seu site. Se não gostar, não fecha. Simples assim.</p>
+    <p class="actions">
+      <a class="btn" href={contactHref(defaultMessage)} data-contact={contactChannel}>{contactLabel} <Arrow /></a>
+      <a class="mail" href={contactHref(defaultMessage)} data-contact={contactChannel}>{contact.email}</a>
+    </p>
+    <p class="aside">Quer conhecer o lado técnico? <a href="/pt/">Veja o portfólio</a>.</p>
+  </div>
+</section>
+
+<style>
+  .contact { background: var(--signal); color: var(--on-signal); padding-block: clamp(4rem, 3rem + 6vw, 8rem); }
+  .inner { display: grid; gap: 1.25rem; justify-items: start; }
+  .label { color: var(--on-signal); }
+  h2 { font-size: var(--step-4); max-width: 14ch; }
+  .body { font-size: var(--step-1); line-height: 1.45; max-width: 44ch; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; margin-top: 0.75rem; }
+  .btn { background: var(--on-signal); border-color: var(--on-signal); color: #fbfaf6; min-height: 52px; }
+  .btn:hover { background: #fbfaf6; border-color: #fbfaf6; color: var(--on-signal); }
+  .mail { font-weight: 600; overflow-wrap: anywhere; text-decoration-color: currentColor; }
+  .aside { margin-top: 1.5rem; font-size: var(--step--1); }
+  .aside a { text-decoration-color: currentColor; }
+  a:focus-visible { outline-color: var(--on-signal); }
+</style>

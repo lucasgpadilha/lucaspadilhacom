@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/site/Header.astro';
+import Footer from '../components/site/Footer.astro';
+---
+<Base
+  title="404 — Lucas Padilha"
+  description="Page not found. Página não encontrada."
+  path="/404/"
+  locale="en"
+  ogImage="/og/home-en.jpg"
+  noindex
+>
+  <Header locale="en" home="/" links={[{ href: '/', label: 'Home' }, { href: '/pt/', label: 'Início (PT)' }, { href: '/sites/', label: 'Sites' }]} />
+  <main id="main" tabindex="-1" class="wrap nf">
+    <p class="label">404</p>
+    <h1>This page took a wrong turn.</h1>
+    <p class="lede" lang="pt-BR">Esta página não existe, ou mudou de lugar.</p>
+    <p class="actions">
+      <a class="btn" href="/">Go home</a>
+      <a class="btn btn--ghost" href="/pt/" lang="pt-BR">Ir para o início</a>
+    </p>
+  </main>
+  <Footer locale="en" />
+</Base>
+
+<style>
+  .nf { display: grid; gap: 1.5rem; padding-block: clamp(5rem, 4rem + 8vw, 10rem); }
+  h1 { font-size: var(--step-4); max-width: 14ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+</style>

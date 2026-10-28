@@ -1,0 +1,74 @@
+---
+import Photo from './Photo.astro';
+
+const pacts = [
+  { title: 'Um sinal para parar', text: 'Levantou a mão, a gente para. Na hora, sem precisar explicar.' },
+  { title: 'Nada de surpresa', text: 'Antes de cada etapa, você sabe o que vai sentir e quanto tempo leva.' },
+  { title: 'Só conversa, se preferir', text: 'A primeira visita pode ser sem nenhum procedimento. Só para conhecer a sala e a equipe.' },
+  { title: 'No seu ritmo', text: 'Pausas quando quiser, fone com a sua música e uma manta, se o ar-condicionado incomodar.' },
+];
+---
+<section class="section medo" id="medo" aria-labelledby="medo-title">
+  <div class="wrap">
+    <div class="panel">
+      <div class="medo__intro">
+        <p class="label">Para quem tem medo de dentista</p>
+        <h2 id="medo-title" class="h2">Se você adia a consulta por medo, <strong>a gente entende<span class="dot">.</span></strong></h2>
+        <p class="medo__lead">
+          É comum passar anos longe do dentista por causa do medo. Aqui ninguém vai julgar você
+          pelo tempo que passou nem pelo estado dos seus dentes. A gente começa de onde você está.
+        </p>
+      </div>
+      <div class="medo__photo frame">
+        <Photo name="ambiente" position="50% 38%" sizes="(min-width: 1360px) 440px, (min-width: 960px) 34vw, calc(100vw - 72px)" />
+      </div>
+      <div class="medo__pacts">
+        <p class="medo__kicker">O que combinamos com você</p>
+        <ul role="list">
+          {pacts.map((p) => (
+            <li>
+              <h3>{p.title}</h3>
+              <p>{p.text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .panel {
+    display: grid; gap: 32px; padding: 32px 20px 20px;
+    background: var(--mint); border-radius: var(--r-lg);
+  }
+  .medo__lead { margin-top: 20px; max-width: 46ch; font-size: 1.0625rem; color: var(--ink); }
+  .medo__photo { aspect-ratio: 4 / 5; border-radius: var(--r); }
+  .medo__kicker { font-size: 0.9375rem; font-weight: 650; color: var(--teal); }
+  .medo__pacts ul { display: grid; gap: 10px; margin-top: 14px; }
+  .medo__pacts li { padding: 22px 22px 24px; background: var(--paper); border-radius: var(--r); }
+  .medo__pacts h3 { font-size: 1.125rem; font-weight: 680; letter-spacing: -0.01em; color: var(--ink); }
+  .medo__pacts li p { margin-top: 6px; color: var(--ink-2); }
+
+  @media (min-width: 720px) and (max-width: 959px) {
+    .medo__photo { aspect-ratio: 16 / 10; }
+    .medo__pacts ul { grid-template-columns: 1fr 1fr; }
+  }
+  @media (min-width: 960px) {
+    .panel {
+      grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 40px; row-gap: 48px;
+      padding: 64px 56px 56px;
+    }
+    .medo__intro { grid-column: 1 / 8; grid-row: 1; }
+    .medo__pacts { grid-column: 1 / 8; grid-row: 2; }
+    /* the photo takes the height of the text column instead of setting it */
+    .medo__photo { position: relative; grid-column: 8 / 13; grid-row: 1 / 3; aspect-ratio: auto; min-height: 520px; }
+    .medo__photo :global(img) { position: absolute; inset: 0; }
+    .medo__pacts ul { gap: 10px; margin-top: 16px; }
+    .medo__pacts li {
+      display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr); column-gap: 24px; align-items: baseline;
+      padding: 22px 26px;
+    }
+    .medo__pacts li p { margin-top: 0; }
+  }
+</style>

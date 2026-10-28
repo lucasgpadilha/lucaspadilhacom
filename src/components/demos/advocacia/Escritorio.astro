@@ -1,0 +1,77 @@
+---
+import SecHead from './SecHead.astro';
+import Foto from './Foto.astro';
+
+const people = [
+  { name: 'Beatriz Lacerda', area: 'Direito do Trabalho', d: 'Conduz as causas de empregados e a consultoria trabalhista para empresas.' },
+  { name: 'Tomás Viana', area: 'Direito de Família e Sucessões', d: 'Cuida de divórcios, guarda, pensão alimentícia, inventários e testamentos.' },
+];
+---
+<section id="escritorio" class="es" aria-labelledby="es-title">
+  <div class="lv-wrap es__grid">
+    <div class="es__head">
+      <SecHead mark="§ 4º" id="es-title" title="O escritório" />
+    </div>
+    <div class="es__text">
+      <p class="es__first">
+        O Lacerda &amp; Viana é um escritório pequeno de propósito. Somos dois advogados, cada um
+        responsável por uma área, e dividimos a mesma forma de trabalhar: explicar antes de agir,
+        registrar por escrito o que foi combinado e manter você informado a cada movimentação.
+      </p>
+      <p>
+        Quando um acordo protege os seus interesses, buscamos o acordo. Quando não protege, o caso
+        segue para a Justiça com o mesmo cuidado na preparação. Em qualquer dos caminhos, você recebe
+        os prazos e as cópias do processo sem precisar pedir.
+      </p>
+      <ul class="es__people" role="list">
+        {people.map((p) => (
+          <li class="person">
+            <h3 class="person__name">{p.name}</h3>
+            <p class="person__area lv-label">{p.area}</p>
+            <p class="person__d">{p.d}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <Foto
+      class="es__photo"
+      name="escritorio"
+      ratio="4 / 3"
+      focus="50% 72%"
+      pattern="grid"
+      sizes="(min-width: 1480px) 640px, (min-width: 1080px) 46vw, 100vw"
+    >
+      <span class="es__cap-rule" aria-hidden="true"></span>
+      <span>Duas áreas, dois responsáveis: cada caso é acompanhado do início ao fim pela mesma pessoa.</span>
+    </Foto>
+  </div>
+</section>
+
+<style>
+  .es { padding-block: clamp(64px, 9vw, 128px); }
+  .es__grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .es__text { margin-top: 32px; display: grid; gap: 1.1em; max-width: 36em; }
+  .es__first { font-size: var(--lv-t-lede); line-height: 1.55; }
+  /* Drop cap in brass: well above 24px, so it clears the large-text minimum. */
+  .es__first::first-letter {
+    float: left; font-size: 4.65em; line-height: 0.8; font-weight: 300; color: var(--lv-brass);
+    margin: 0.08em 0.1em 0 -0.03em;
+  }
+  .es__people { margin-top: 24px; display: grid; border-top: 1px solid var(--lv-ink); }
+  .person { padding-block: 22px; border-bottom: 1px solid var(--lv-rule-strong); }
+  .person__name { font-size: var(--lv-t-h3); font-weight: 400; line-height: 1.15; }
+  .person__area { margin-top: 8px; }
+  .person__d { margin-top: 8px; color: var(--lv-muted); }
+  .es__grid > :global(.es__photo) { margin-top: 40px; }
+  .es__cap-rule { flex: none; width: 28px; height: 1px; margin-top: 0.7em; background: var(--lv-brass); }
+
+  @media (min-width: 720px) {
+    .es__people { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+  }
+  @media (min-width: 1080px) {
+    .es__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .es__head { grid-column: 1 / 7; grid-row: 1; }
+    .es__text { grid-column: 1 / 7; grid-row: 2; margin-top: 48px; }
+    .es__grid > :global(.es__photo) { grid-column: 7 / -1; grid-row: 1 / span 2; align-self: start; margin-top: clamp(96px, 9vw, 136px); }
+  }
+</style>

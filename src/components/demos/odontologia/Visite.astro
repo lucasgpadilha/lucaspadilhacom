@@ -1,0 +1,103 @@
+---
+import Sun from './Sun.astro';
+import Arrow from './Arrow.astro';
+
+const hours = [
+  { day: 'Segunda a sexta', time: '8h às 19h' },
+  { day: 'Sábado', time: '8h às 13h' },
+  { day: 'Domingo e feriados', time: 'Fechado' },
+];
+---
+<section class="section visite" id="visite" aria-labelledby="visite-title">
+  <div class="wrap">
+    <div class="close">
+      <div class="close__copy">
+        <p class="label">Agendamento</p>
+        <h2 id="visite-title" class="close__title">Vamos marcar a sua <strong>avaliação?</strong></h2>
+        <p class="close__text">
+          Mande uma mensagem com os dias e horários que funcionam para você. A recepção responde
+          em horário de atendimento e confirma tudo por escrito.
+        </p>
+        <a class="btn" href="/sites/#contato">Agendar avaliação <Arrow /></a>
+      </div>
+      <div class="close__sun"><Sun /></div>
+    </div>
+
+    <div class="info">
+      <div class="info__block">
+        <h3 class="info__title">Horários</h3>
+        <dl class="hours">
+          {hours.map((h) => (
+            <div>
+              <dt>{h.day}</dt>
+              <dd>{h.time}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="info__note">Urgências: mensagens de segunda a sábado, nos mesmos horários.</p>
+      </div>
+
+      <div class="info__block">
+        <h3 class="info__title">Onde estamos</h3>
+        <p class="place">Taquaral, Campinas&nbsp;– SP</p>
+        <ul class="facts" role="list">
+          <li>A poucas quadras da Lagoa do Taquaral</li>
+          <li>Atendimento todo no térreo, sem escadas</li>
+          <li>Endereço completo junto da confirmação do horário</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .close {
+    position: relative; overflow: hidden; display: grid;
+    padding: 40px 24px 0; background: var(--mint); border-radius: var(--r-lg);
+  }
+  .close__copy { position: relative; z-index: 1; }
+  .close__title {
+    margin-top: 16px; font-size: clamp(2.375rem, 1.5rem + 4vw, 5rem); font-weight: 280;
+    line-height: 1; letter-spacing: -0.045em; color: var(--ink); text-wrap: balance;
+  }
+  .close__title strong { font-weight: 760; color: var(--teal); }
+  .close__text { margin-top: 20px; max-width: 42ch; color: var(--ink-2); }
+  .close .btn { margin-top: 28px; }
+  .close__sun { width: 112%; margin: 40px -6% 0; }
+  .close__sun :global(svg) { margin-bottom: -1px; }
+
+  .info { display: grid; gap: 40px; margin-top: 56px; }
+  .info__title {
+    font-size: 0.8125rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal);
+  }
+  .hours { margin-top: 16px; border-top: 1px solid var(--line); }
+  .hours div {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .hours dt { color: var(--ink); font-weight: 520; }
+  .hours dd { color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .info__note { margin-top: 14px; font-size: 0.9375rem; color: var(--ink-2); }
+  .place {
+    margin-top: 16px; font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem); font-weight: 320;
+    letter-spacing: -0.03em; line-height: 1.15; color: var(--ink);
+  }
+  .facts { margin-top: 14px; }
+  .facts li { padding: 10px 0; border-top: 1px solid var(--line); color: var(--ink-2); }
+
+  @media (min-width: 720px) {
+    .info { grid-template-columns: 1fr 1fr; column-gap: 32px; }
+  }
+  @media (min-width: 960px) {
+    .close {
+      grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 32px; align-items: end;
+      min-height: 520px; padding: 72px 64px 0;
+    }
+    .close__copy { grid-column: 1 / 7; padding-bottom: 72px; align-self: center; }
+    .close__sun { grid-column: 7 / 13; width: auto; margin: 0 -24px 0 0; }
+    .info { grid-template-columns: repeat(12, minmax(0, 1fr)); margin-top: 72px; align-items: start; }
+    .info__block:nth-child(1) { grid-column: 1 / 6; }
+    .info__block:nth-child(2) { grid-column: 7 / 13; }
+  }
+</style>

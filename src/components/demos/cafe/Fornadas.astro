@@ -1,0 +1,84 @@
+---
+import Photo from './Photo.astro';
+
+const fornadas = [
+  { h: '6', m: '30', what: 'Pães de fermentação natural', detail: 'Campanha, integral e azeitona. Saem antes de a porta abrir.' },
+  { h: '7', m: '', what: 'Pão de queijo, primeira leva', detail: 'Para quem passa antes do trabalho ou da aula.' },
+  { h: '9', m: '', what: 'Bolos de vó', detail: 'Fubá com goiabada, cenoura e chocolate, ainda mornos.' },
+  { h: '10', m: '30', what: 'Pão de queijo, segunda leva', detail: 'A fornada do café da manhã tardio.' },
+  { h: '11', m: '30', what: 'Focaccia de alecrim', detail: 'Vendida em fatias, até acabar.' },
+  { h: '15', m: '', what: 'Baguete e pão de queijo da tarde', detail: 'Para o café das quatro chegar quentinho em casa.' },
+  { h: '17', m: '30', what: 'Última leva de pão de queijo', detail: 'Aos sábados, às 16h30. Domingo não tem fornada da tarde.' },
+];
+---
+<section id="fornadas" class="fornadas cj-dark" aria-labelledby="fornadas-title">
+  <div class="cj-wrap fornadas-grid">
+    <div class="fornadas-head">
+      <p class="cj-eyebrow">De terça a domingo</p>
+      <h2 id="fornadas-title" class="cj-h2">Fornadas do dia</h2>
+      <p class="cj-lead">
+        O forno não descansa. Chegue na hora certa e leve o pão ainda estalando, ou mande
+        mensagem até as 10h que a gente separa o seu.
+      </p>
+      <figure class="fornadas-photo">
+        <Photo slot="paes" sizes="(min-width: 600px) 36rem, 106vw" tone="crosta" />
+      </figure>
+    </div>
+
+    <ol class="times" role="list">
+      {fornadas.map((f) => (
+        <li class="time">
+          <p class="time-h"><span class="cj-sr">Às </span>{f.h}<span class="time-u">h</span>{f.m}</p>
+          <div class="time-body">
+            <h3 class="time-what">{f.what}</h3>
+            <p class="time-detail">{f.detail}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .fornadas { background: var(--folha); color: var(--creme); padding-block: clamp(4.5rem, 10vw, 8rem); overflow-x: clip; }
+  .fornadas-grid { display: grid; gap: 3rem; }
+  .fornadas .cj-eyebrow, .fornadas .cj-lead { color: var(--creme); }
+
+  .fornadas-photo {
+    margin-top: 2.5rem; width: min(100%, 30rem); aspect-ratio: 5 / 4; overflow: hidden; rotate: -2.5deg;
+    background: var(--crosta); border-radius: 0.375rem;
+    box-shadow: 0 0 0 8px var(--creme), 0 30px 50px -26px rgb(0 0 0 / 0.55);
+  }
+  .fornadas-photo :global(img), .fornadas-photo :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
+
+  .times { margin: 0; padding: 0; list-style: none; border-top: 2px solid var(--creme); }
+  .time {
+    display: grid; grid-template-columns: 5.75rem 1fr; column-gap: 1rem; align-items: baseline;
+    padding-block: 1.15rem 1.25rem;
+    background: radial-gradient(circle, rgb(246 238 223 / 0.55) 1.2px, transparent 1.7px) 0 100% / 9px 4px repeat-x;
+  }
+  .time:last-child { background: none; border-bottom: 2px solid var(--creme); }
+  .time-h {
+    font-family: var(--display); font-weight: 600; font-size: 2.25rem; line-height: 0.9; letter-spacing: -0.03em;
+    font-variation-settings: 'SOFT' 100, 'WONK' 1; font-variant-numeric: lining-nums;
+  }
+  .time-u { font-size: 0.6em; margin-inline: 0.04em; letter-spacing: 0; }
+  .time-what {
+    font-family: var(--display); font-weight: 560; font-size: 1.125rem; line-height: 1.2;
+    font-variation-settings: 'SOFT' 60, 'WONK' 0;
+  }
+  .time-detail { margin-top: 0.3rem; font-size: 0.9375rem; line-height: 1.5; }
+
+  @media (min-width: 600px) {
+    .time { grid-template-columns: 9.5rem 1fr; }
+    .time-h { font-size: 3.25rem; }
+    .time-what { font-size: 1.375rem; }
+  }
+
+  @media (min-width: 1080px) {
+    .fornadas-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: clamp(3rem, 6vw, 6rem); align-items: start; }
+    .fornadas-photo { margin-top: 3rem; }
+    .time { grid-template-columns: 12.5rem 1fr; padding-block: 1.35rem 1.5rem; }
+    .time-h { font-size: 4rem; }
+  }
+</style>

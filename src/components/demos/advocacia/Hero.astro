@@ -1,0 +1,87 @@
+---
+import Cta from './Cta.astro';
+import Foto from './Foto.astro';
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="lv-wrap hero__grid">
+    <p class="hero__kicker lv-label"><span>Advocacia trabalhista e de família</span><span class="hero__dot" aria-hidden="true"> · </span><span>Cambuí, Campinas – SP</span></p>
+    <span class="lv-rule lv-rule--hero hero__rule" aria-hidden="true"></span>
+    <h1 id="hero-title" class="hero__title">
+      Seus direitos no trabalho e na família, explicados em <em>português claro</em>.
+    </h1>
+    <div class="hero__body">
+      <p class="hero__lede">
+        Atendemos trabalhadores, empresas e famílias no Cambuí, em Campinas, e online em todo o Brasil.
+        Antes de qualquer decisão, você entende o que a lei prevê, os caminhos possíveis e os riscos de cada um.
+      </p>
+      <div class="hero__actions">
+        <Cta />
+        <a class="hero__more" href="#areas">Ver as áreas de atuação</a>
+      </div>
+      <p class="hero__demo">Demonstração: no site real, este botão abre o WhatsApp do escritório.</p>
+    </div>
+    <div class="hero__side">
+      <Foto
+        class="hero__photo"
+        name="biblioteca"
+        ratio="4 / 5"
+        ratioSm="4 / 3"
+        focus="50% 40%"
+        priority
+        pattern="spines"
+        sizes="(min-width: 1360px) 400px, (min-width: 1080px) 30vw, (min-width: 720px) 40vw, 100vw"
+      />
+      <dl class="hero__facts">
+        <div><dt class="lv-label">Atendimento</dt><dd>Presencial no Cambuí ou por vídeo</dd></div>
+        <div><dt class="lv-label">Horário</dt><dd>Segunda a sexta, das 9h às 18h</dd></div>
+        <div><dt class="lv-label">Áreas</dt><dd>Trabalho, família e sucessões</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero { padding-block: clamp(28px, 5vw, 64px) clamp(48px, 5vw, 72px); }
+  .hero__grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .hero__kicker { padding-bottom: 14px; }
+  .hero__kicker > span:not(.hero__dot) { white-space: nowrap; }
+  @media (max-width: 719px) { .hero__dot { display: none; } .hero__kicker > span:last-child { display: block; } }
+  .hero__title {
+    margin-top: clamp(22px, 3.2vw, 44px);
+    font-size: var(--lv-t-h1); font-weight: 340; line-height: 1.0; letter-spacing: -0.022em;
+  }
+  /* The italic file has no optical-size axis, so it is set lighter and tighter to sit with opsz 72. */
+  .hero__title em { font-weight: 300; letter-spacing: -0.03em; padding-right: 0.04em; }
+  .hero__body { margin-top: clamp(24px, 3vw, 40px); }
+  .hero__lede { font-size: var(--lv-t-lede); line-height: 1.5; color: var(--lv-muted); max-width: 31em; }
+  .hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin-top: 28px; }
+  .hero__more {
+    display: inline-flex; align-items: center; min-height: 44px;
+    font-family: var(--lv-sans); font-size: var(--lv-t-ui); font-weight: 600;
+  }
+  .hero__demo {
+    margin-top: 14px; max-width: 30em;
+    font-family: var(--lv-sans); font-size: 0.75rem; line-height: 1.5; color: var(--lv-muted);
+  }
+  .hero__side { margin-top: 48px; }
+  .hero__facts { margin-top: 28px; display: grid; border-top: 1px solid var(--lv-rule-strong); }
+  .hero__facts > div {
+    display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: 12px; align-items: baseline;
+    padding-block: 11px; border-bottom: 1px solid var(--lv-rule);
+  }
+  .hero__facts dd { font-size: 0.9375rem; line-height: 1.45; }
+
+  @media (min-width: 720px) {
+    .hero__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .hero__kicker, .hero__rule, .hero__title { grid-column: 1 / -1; }
+    .hero__body { grid-column: 1 / 8; }
+    .hero__side { grid-column: 8 / -1; margin-top: clamp(24px, 3vw, 40px); }
+  }
+
+  @media (min-width: 1080px) {
+    .hero__title { grid-column: 1 / 9; grid-row: 3; }
+    .hero__body { grid-column: 1 / 7; grid-row: 4; }
+    .hero__side { grid-column: 9 / -1; grid-row: 3 / span 2; margin-top: clamp(28px, 3.2vw, 48px); }
+  }
+
+</style>

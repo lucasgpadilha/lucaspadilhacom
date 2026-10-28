@@ -1,0 +1,92 @@
+---
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/site/Header.astro';
+import Footer from '../../components/site/Footer.astro';
+import Receipt from '../../components/site/Receipt.astro';
+import Arrow from '../../components/site/Arrow.astro';
+import Examples from '../../components/sites/Examples.astro';
+import Why from '../../components/sites/Why.astro';
+import Process from '../../components/sites/Process.astro';
+import Plans from '../../components/sites/Plans.astro';
+import Faq from '../../components/sites/Faq.astro';
+import ContactBlock from '../../components/sites/ContactBlock.astro';
+import { contact, contactChannel, contactHref, defaultMessage, faq, hero } from '../../data/sites';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'ProfessionalService',
+      name: 'Lucas Padilha — sites para negócios',
+      url: 'https://lucaspadilha.com/sites/',
+      description: hero.lede,
+      areaServed: { '@type': 'Country', name: 'Brasil' },
+      email: contact.email,
+      founder: { '@type': 'Person', name: 'Lucas Padilha', url: 'https://lucaspadilha.com/' },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })),
+    },
+  ],
+};
+---
+<Base
+  title="Sites para pequenos negócios — Lucas Padilha"
+  description="Sites rápidos e bonitos para negócios locais, com WhatsApp, Google e hospedagem cuidada. Você vê a prévia do seu site antes de fechar."
+  path="/sites/"
+  locale="pt"
+  ogImage="/og/sites.jpg"
+  jsonLd={jsonLd}
+>
+  <Header
+    locale="pt"
+    home="/pt/"
+    links={[
+      { href: '#exemplos', label: 'Exemplos' },
+      { href: '#como-funciona', label: 'Como funciona' },
+      { href: '#planos', label: 'Planos' },
+      { href: '#duvidas', label: 'Dúvidas' },
+    ]}
+    cta={{ href: '#contato', label: 'Pedir prévia' }}
+  />
+  <main id="main" tabindex="-1">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap grid">
+        <div class="copy">
+          <p class="label">{hero.kicker}</p>
+          <h1 id="hero-title">{hero.title}</h1>
+          <p class="lede">{hero.lede}</p>
+          <div class="actions">
+            <a class="btn btn--signal" href={contactHref(defaultMessage)} data-contact={contactChannel}>{hero.primary} <Arrow /></a>
+            <a class="btn btn--ghost" href="#exemplos">{hero.secondary} <Arrow dir="down" /></a>
+          </div>
+        </div>
+        <div class="receipt-col">
+          <Receipt locale="pt" variant="sites" />
+        </div>
+      </div>
+    </section>
+    <Examples />
+    <Why />
+    <Process />
+    <Plans />
+    <Faq />
+    <ContactBlock />
+  </main>
+  <Footer locale="pt" />
+</Base>
+
+<style>
+  .hero { padding-block: clamp(3rem, 2rem + 6vw, 7rem) clamp(3.5rem, 2rem + 5vw, 6.5rem); }
+  .grid { display: grid; gap: clamp(3rem, 2rem + 4vw, 5rem); align-items: center; }
+  .copy { display: grid; gap: 1.5rem; }
+  h1 { font-size: var(--step-4); font-weight: 680; max-width: 17ch; letter-spacing: -0.035em; line-height: 0.98; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+  .receipt-col { max-width: 380px; width: 100%; justify-self: center; }
+  @media (min-width: 960px) {
+    .grid { grid-template-columns: minmax(0, 7.5fr) minmax(0, 4.5fr); }
+    .receipt-col { justify-self: end; }
+  }
+  @media (max-width: 420px) { .actions .btn { flex: 1 1 100%; } }
+</style>

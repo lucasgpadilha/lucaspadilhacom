@@ -1,0 +1,115 @@
+---
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/site.css';
+import sansLatin from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url';
+import { absolute, htmlLang, type Locale } from '../lib/locale';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path of this page, with trailing slash, e.g. "/pt/". */
+  path: string;
+  locale: Locale;
+  /** Paths of the EN and PT versions when the page exists in both. */
+  alternates?: { en: string; pt: string };
+  /** Absolute path of a 1200×630 image under /og/. */
+  ogImage: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown>;
+  /**
+   * Locale routing that must run before first paint:
+   * "root" sends Portuguese visitors from / to /pt/; "pt" honours ?lang=en on /pt/.
+   */
+  langScript?: 'root' | 'pt';
+}
+
+const { title, description, path, locale, alternates, ogImage, noindex = false, jsonLd, langScript } = Astro.props;
+const canonical = absolute(path);
+---
+<!doctype html>
+<html lang={htmlLang(locale)}>
+  <head>
+    <meta charset="utf-8" />
+    {langScript && (
+      <script is:inline define:vars={{ mode: langScript }}>
+        (function () {
+          var KEY = 'lucaspadilha.locale'; // shared with /startup/
+          var store = {
+            get: function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } },
+            set: function (v) { try { localStorage.setItem(KEY, v); return localStorage.getItem(KEY) === v; } catch (e) { return false; } },
+          };
+          var params = new URLSearchParams(location.search);
+          var query = params.get('lang');
+          var asked = query === 'en' || query === 'pt' ? query : null;
+          // ?lang is dropped only once the choice is saved; otherwise the URL is its only memory.
+          if (asked && store.set(asked)) params.delete('lang');
+          var rest = params.toString() ? '?' + params.toString() : '';
+          if (mode === 'root') {
+            var saved = store.get();
+            var first = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+            var want = asked || (saved === 'en' || saved === 'pt' ? saved : first.indexOf('pt') === 0 ? 'pt' : 'en');
+            if (want === 'pt') return location.replace('/pt/' + rest + location.hash);
+          } else if (asked === 'en') {
+            return location.replace('/' + rest + location.hash);
+          }
+          if (rest !== location.search) history.replaceState(null, '', location.pathname + rest + location.hash);
+        })();
+      </script>
+    )}
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Lucas Padilha" />
+    <link rel="canonical" href={canonical} />
+    {alternates && (
+      <>
+        <link rel="alternate" hreflang="en" href={absolute(alternates.en)} />
+        <link rel="alternate" hreflang="pt-BR" href={absolute(alternates.pt)} />
+        <link rel="alternate" hreflang="x-default" href={absolute(alternates.en)} />
+      </>
+    )}
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2EFE8" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#11110F" />
+    <link rel="preload" href={sansLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Lucas Padilha" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={absolute(ogImage)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={locale === 'pt' ? 'pt_BR' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absolute(ogImage)} />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{locale === 'pt' ? 'Pular para o conteúdo' : 'Skip to content'}</a>
+    <slot />
+    <script is:inline>
+      (function () {
+        var items = document.querySelectorAll('[data-reveal]');
+        if (!('IntersectionObserver' in window)) {
+          items.forEach(function (el) { el.classList.add('is-in'); });
+          return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { entry.target.classList.add('is-in'); io.unobserve(entry.target); }
+          });
+        }, { rootMargin: '0px 0px -8% 0px' });
+        items.forEach(function (el) { io.observe(el); });
+      })();
+    </script>
+  </body>
+</html>

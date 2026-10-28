@@ -1,0 +1,72 @@
+---
+/**
+ * One photo slot. Reads credits.json and the real files at build time so the
+ * <img> always gets a true srcset, width, height and alt. While a photo is
+ * missing it renders a patterned slot of the same shape, so swapping is free.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import sharp from 'sharp';
+
+interface Credit {
+  name: string;
+  file_prefix: string;
+  width: number;
+  height: number;
+  alt_pt: string;
+}
+
+interface Props {
+  /** Candidate slot names, matched against credits `name` / `file_prefix`. */
+  slot: string | string[];
+  sizes: string;
+  priority?: boolean;
+  /** Placeholder tone while the photo is missing. */
+  tone?: 'crosta' | 'folha' | 'jabuticaba' | 'miolo';
+}
+
+const { slot, sizes, priority = false, tone = 'miolo' } = Astro.props;
+const candidates = Array.isArray(slot) ? slot : [slot];
+
+const files = import.meta.glob<Credit[]>('../../../../public/sites/exemplos/cafe/img/credits.json', { eager: true, import: 'default' });
+const credits: Credit[] = Object.values(files)[0] ?? [];
+const dir = path.join(process.cwd(), 'public/sites/exemplos/cafe/img');
+
+const credit = candidates
+  .map((c) => credits.find((x) => x.name === c || x.file_prefix === c))
+  .find(Boolean);
+
+let photo: { src: string; srcset: string; width: number; height: number; alt: string } | null = null;
+if (credit) {
+  const prefix = credit.file_prefix.endsWith('-') ? credit.file_prefix : `${credit.file_prefix}-`;
+  const file = (w: number) => `${prefix}${w}.webp`;
+  const widths = [640, 1024, 1600].filter((w) => fs.existsSync(path.join(dir, file(w))) && fs.statSync(path.join(dir, file(w))).size > 0);
+  if (widths.length) {
+    const largest = widths[widths.length - 1];
+    const meta = await sharp(path.join(dir, file(largest))).metadata().catch(() => ({ width: undefined, height: undefined }));
+    const url = (w: number) => `/sites/exemplos/cafe/img/${file(w)}`;
+    photo = {
+      src: url(widths[Math.min(1, widths.length - 1)]),
+      srcset: widths.map((w) => `${url(w)} ${w}w`).join(', '),
+      width: meta.width ?? credit.width,
+      height: meta.height ?? credit.height,
+      alt: credit.alt_pt,
+    };
+  }
+}
+---
+{photo ? (
+  <img
+    src={photo.src}
+    srcset={photo.srcset}
+    sizes={sizes}
+    width={photo.width}
+    height={photo.height}
+    alt={photo.alt}
+    fetchpriority={priority ? 'high' : undefined}
+    loading={priority ? undefined : 'lazy'}
+    decoding={priority ? undefined : 'async'}
+  />
+) : (
+  <span class={`cj-ph cj-ph--${tone}`} aria-hidden="true" data-slot={candidates[0]}></span>
+)}

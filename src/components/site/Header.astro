@@ -1,0 +1,114 @@
+---
+import type { Locale } from '../../lib/locale';
+
+interface Props {
+  locale: Locale;
+  /** Where the brand link goes. */
+  home: string;
+  links: { href: string; label: string }[];
+  /** EN/PT versions of the current page; omitted on single-language pages. */
+  lang?: { en: string; pt: string };
+  cta?: { href: string; label: string };
+}
+
+const { locale, home, links, lang, cta } = Astro.props;
+const navLabel = locale === 'pt' ? 'Navegação principal' : 'Main navigation';
+---
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href={home}>
+      <span class="mark" aria-hidden="true">LP</span>
+      <span class="name">Lucas Padilha</span>
+    </a>
+    <nav aria-label={navLabel} class="nav">
+      <ul role="list">
+        {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+      </ul>
+    </nav>
+    <div class="tools">
+      {lang && (
+        <div class="lang" role="group" aria-label={locale === 'pt' ? 'Idioma' : 'Language'}>
+          <a href={`${lang.en}?lang=en`} hreflang="en" lang="en" aria-current={locale === 'en' ? 'true' : undefined}>EN</a>
+          <a href={`${lang.pt}?lang=pt`} hreflang="pt-BR" lang="pt-BR" aria-current={locale === 'pt' ? 'true' : undefined}>PT</a>
+        </div>
+      )}
+      {cta && <a class="btn btn--signal cta" href={cta.href}>{cta.label}</a>}
+      <details class="menu">
+        <summary>{locale === 'pt' ? 'Menu' : 'Menu'}</summary>
+        <nav aria-label={navLabel}>
+          <ul role="list">
+            {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+            {cta && <li><a href={cta.href}>{cta.label}</a></li>}
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+<script is:inline>
+  document.querySelectorAll('details.menu').forEach(function (menu) {
+    menu.addEventListener('click', function (event) { if (event.target.closest('a')) menu.open = false; });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && menu.open) { menu.open = false; menu.querySelector('summary').focus(); }
+    });
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    backdrop-filter: saturate(1.4) blur(10px);
+    -webkit-backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar { display: flex; align-items: center; gap: 1.5rem; min-height: 64px; }
+  .brand { display: inline-flex; align-items: center; gap: 0.65rem; text-decoration: none; font-weight: 650; letter-spacing: -0.01em; }
+  .mark {
+    display: grid; place-items: center;
+    width: 30px; height: 30px;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.02em;
+    border-radius: var(--radius);
+  }
+  .nav { margin-left: auto; display: none; }
+  .nav ul { display: flex; gap: 0.25rem; }
+  .nav a, .menu a {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.75rem;
+    text-decoration: none; color: var(--ink-2); font-size: 0.9375rem; font-weight: 500;
+  }
+  .nav a:hover { color: var(--ink); }
+  .tools { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+  .lang { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 2px; }
+  .lang a {
+    display: grid; place-items: center; min-width: 40px; min-height: 40px;
+    font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-decoration: none; color: var(--ink-2);
+    border-radius: 2px;
+  }
+  .lang a[aria-current='true'] { background: var(--ink); color: var(--paper); }
+  .cta { display: none; min-height: 44px; }
+  .menu { position: relative; }
+  .menu summary {
+    list-style: none; cursor: pointer;
+    display: grid; place-items: center; min-height: 44px; padding: 0 0.9rem;
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .menu summary::-webkit-details-marker { display: none; }
+  .menu[open] summary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .menu > nav {
+    position: absolute; right: 0; top: calc(100% + 10px);
+    min-width: 230px; padding: 0.5rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.35);
+  }
+  .menu a { width: 100%; color: var(--ink); }
+  @media (min-width: 900px) {
+    .nav { display: block; }
+    .tools { margin-left: 0; }
+    .menu { display: none; }
+    .cta { display: inline-flex; }
+  }
+</style>

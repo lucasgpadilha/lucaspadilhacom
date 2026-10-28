@@ -1,0 +1,36 @@
+---
+import { getBuildInfo } from '../../lib/build-info';
+import type { Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const build = getBuildInfo();
+const year = new Date(build.builtAt).getUTCFullYear();
+const pt = locale === 'pt';
+---
+<footer class="site-footer">
+  <div class="wrap row">
+    <p>© {year} Lucas Padilha · {pt ? 'Brasil' : 'Brazil'}</p>
+    <p class="build">
+      {pt ? 'Build' : 'Build'}{' '}
+      {build.commitUrl ? <a href={build.commitUrl}>{build.shortSha}</a> : <span>{build.shortSha}</span>}
+      {' · '}{pt ? 'Astro estático, sem rastreadores' : 'Static Astro, no trackers'}
+    </p>
+    <ul role="list" class="links">
+      <li><a href="https://github.com/lucasgpadilha">GitHub</a></li>
+      <li><a href="https://www.linkedin.com/in/lucasgpadilha/">LinkedIn</a></li>
+      <li><a href="/startup/">Nexora Games</a></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site-footer { border-top: 1px solid var(--line); padding-block: 2rem 2.5rem; font-size: var(--step--1); color: var(--ink-2); }
+  .row { display: grid; gap: 0.75rem; }
+  .build { font-family: var(--font-mono); font-size: 0.75rem; }
+  .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+  .links a { display: inline-flex; min-height: 44px; align-items: center; }
+  @media (min-width: 900px) {
+    .row { grid-template-columns: 1fr auto auto; align-items: center; gap: 2rem; }
+  }
+</style>

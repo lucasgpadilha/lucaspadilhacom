@@ -1,0 +1,60 @@
+---
+import Cta from './Cta.astro';
+---
+<section id="contato" class="ct" aria-labelledby="ct-title">
+  <div class="lv-wrap">
+    <span class="lv-rule lv-rule--scroll" aria-hidden="true"></span>
+    <div class="ct__grid">
+      <div class="ct__lead">
+        <p class="ct__mark" aria-hidden="true">§ 6º</p>
+        <h2 id="ct-title" class="ct__title">
+          Atendimento presencial em Campinas e <em>online</em> em todo o Brasil.
+        </h2>
+        <div class="ct__action">
+          <Cta />
+          <p class="ct__hint">Conte o essencial em poucas linhas. Retornamos em horário comercial para marcar a conversa.</p>
+        </div>
+      </div>
+      <dl class="ct__info">
+        <div>
+          <dt class="lv-label">Escritório</dt>
+          <dd>Cambuí, Campinas – SP</dd>
+          <dd class="ct__small">O endereço completo segue com a confirmação do horário.</dd>
+        </div>
+        <div>
+          <dt class="lv-label">Horário</dt>
+          <dd>Segunda a sexta, das 9h às 18h</dd>
+          <dd class="ct__small">Atendimento presencial com hora marcada.</dd>
+        </div>
+        <div>
+          <dt class="lv-label">Online</dt>
+          <dd>Videochamada para todo o Brasil</dd>
+          <dd class="ct__small">Documentos e assinaturas por meio digital.</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ct { padding-block: clamp(24px, 4vw, 48px) clamp(72px, 10vw, 144px); }
+  .ct__grid { display: grid; gap: 48px; padding-top: 14px; }
+  .ct__mark { font-size: 1.625rem; line-height: 1; font-weight: 340; color: var(--lv-brass); letter-spacing: 0.02em; }
+  .ct__title {
+    margin-top: clamp(28px, 4vw, 56px);
+    font-size: clamp(2.25rem, 1.3rem + 4.1vw, 5.5rem); font-weight: 340; line-height: 1.02; letter-spacing: -0.02em;
+  }
+  .ct__title em { font-weight: 300; letter-spacing: -0.03em; }
+  .ct__action { margin-top: 36px; display: grid; gap: 16px; justify-items: start; }
+  .ct__hint { font-family: var(--lv-sans); font-size: 0.875rem; line-height: 1.6; color: var(--lv-muted); max-width: 28em; }
+  .ct__info { display: grid; border-top: 1px solid var(--lv-ink); }
+  .ct__info > div { padding-block: 20px; border-bottom: 1px solid var(--lv-rule-strong); }
+  .ct__info dd { margin-top: 8px; font-size: var(--lv-t-h3); line-height: 1.2; text-wrap: balance; }
+  .ct__info dd.ct__small { margin-top: 6px; font-family: var(--lv-sans); font-size: 0.875rem; line-height: 1.55; color: var(--lv-muted); }
+
+  @media (min-width: 1080px) {
+    .ct__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .ct__lead { grid-column: 1 / 9; }
+    .ct__info { grid-column: 9 / -1; align-self: end; }
+  }
+</style>

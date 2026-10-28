@@ -1,0 +1,90 @@
+---
+import Arrow from './Arrow.astro';
+import Base from '../../layouts/Base.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import Receipt from './Receipt.astro';
+import Work from './Work.astro';
+import Shipping from './Shipping.astro';
+import Stack from './Stack.astro';
+import SitesTeaser from './SitesTeaser.astro';
+import Trajectory from './Trajectory.astro';
+import Contact from './Contact.astro';
+import { hero, meta, nav } from '../../data/home';
+import { homePath, t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const path = homePath(locale);
+const pt = locale === 'pt';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Lucas Padilha',
+  url: 'https://lucaspadilha.com/',
+  jobTitle: pt ? 'Engenheiro DevOps e desenvolvedor web' : 'DevOps engineer and web developer',
+  address: { '@type': 'PostalAddress', addressCountry: 'BR' },
+  sameAs: ['https://github.com/lucasgpadilha', 'https://www.linkedin.com/in/lucasgpadilha/'],
+};
+---
+<Base
+  title={t(meta.title, locale)}
+  description={t(meta.description, locale)}
+  path={path}
+  locale={locale}
+  alternates={{ en: '/', pt: '/pt/' }}
+  ogImage={pt ? '/og/home-pt.jpg' : '/og/home-en.jpg'}
+  jsonLd={jsonLd}
+  langScript={pt ? 'pt' : 'root'}
+>
+  <Header
+    locale={locale}
+    home={path}
+    links={t(nav, locale)}
+    lang={{ en: '/', pt: '/pt/' }}
+    cta={{ href: '/sites/', label: t(hero.secondary, locale) }}
+  />
+  <main id="main" tabindex="-1">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap grid">
+        <div class="copy">
+          <p class="label">{t(hero.kicker, locale)}</p>
+          <h1 id="hero-title">{t(hero.title, locale)}</h1>
+          <p class="lede">{t(hero.lede, locale)}</p>
+          <div class="actions">
+            <a class="btn" href="#work">{t(hero.primary, locale)} <Arrow dir="down" /></a>
+            <a class="btn btn--ghost" href="/sites/">{t(hero.secondary, locale)} <Arrow /></a>
+          </div>
+        </div>
+        <div class="receipt-col">
+          <Receipt locale={locale} variant="home" />
+        </div>
+      </div>
+    </section>
+
+    <Work locale={locale} />
+    <Shipping locale={locale} />
+    <Stack locale={locale} />
+    <SitesTeaser locale={locale} />
+    <Trajectory locale={locale} />
+    <Contact locale={locale} />
+  </main>
+  <Footer locale={locale} />
+</Base>
+
+<style>
+  .hero { padding-block: clamp(3rem, 2rem + 6vw, 7.5rem) clamp(3.5rem, 2rem + 5vw, 7rem); }
+  .grid { display: grid; gap: clamp(3rem, 2rem + 4vw, 5rem); align-items: center; }
+  .copy { display: grid; gap: 1.5rem; }
+  h1 { font-size: var(--step-4); font-weight: 680; max-width: 15ch; letter-spacing: -0.035em; line-height: 0.98; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+  .receipt-col { max-width: 400px; width: 100%; justify-self: center; }
+  @media (min-width: 960px) {
+    .grid { grid-template-columns: minmax(0, 7.5fr) minmax(0, 4.5fr); }
+    .receipt-col { justify-self: end; }
+  }
+  @media (max-width: 420px) {
+    .actions .btn { flex: 1 1 100%; }
+  }
+</style>
