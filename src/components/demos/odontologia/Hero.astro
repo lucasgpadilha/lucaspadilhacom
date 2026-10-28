@@ -6,11 +6,10 @@ import Arrow from './Arrow.astro';
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap hero__grid">
     <div class="hero__copy">
-      <p class="label">Taquaral · Campinas&nbsp;– SP</p>
       <h1 id="hero-title" class="hero__title">Odontologia <strong>sem&nbsp;pressa<span class="dot">.</span></strong></h1>
       <p class="hero__lead">
         Consultas com tempo para conversar, explicação antes de cada etapa e um plano de
-        tratamento que você entende antes de decidir. Para adultos e crianças.
+        tratamento que você entende antes de decidir. Para adultos e crianças, no Taquaral, em Campinas.
       </p>
       <div class="hero__actions">
         <a class="btn" href="/sites/#contato">Agendar avaliação <Arrow /></a>
@@ -47,7 +46,6 @@ import Arrow from './Arrow.astro';
   .hero { padding: 12px 0 0; }
   .hero__grid { display: grid; gap: 36px; }
   .hero__title {
-    margin-top: 18px;
     font-size: clamp(2.75rem, 1.45rem + 6.4vw, 7rem);
     font-weight: 280; line-height: 0.98; letter-spacing: -0.045em;
     color: var(--ink);
@@ -64,10 +62,17 @@ import Arrow from './Arrow.astro';
   .hero__sun { width: 72%; margin-left: 20%; margin-bottom: -1px; }
   .hero__photo { aspect-ratio: 5 / 4; }
 
+  /* the aurora rises once on load, band by band, from behind the photo's top edge */
   @media (prefers-reduced-motion: no-preference) {
-    .hero__sun :global(svg) { animation: rise 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 50% 100%; }
+    .hero__sun :global(circle) {
+      transform-box: view-box;
+      animation: rise 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .hero__sun :global(circle:nth-child(2)) { animation-delay: 0.08s; }
+    .hero__sun :global(circle:nth-child(3)) { animation-delay: 0.16s; }
+    .hero__sun :global(circle:nth-child(4)) { animation-delay: 0.24s; }
     @keyframes rise {
-      from { transform: translateY(22%) scale(0.94); }
+      from { transform: translateY(56%); }
       to { transform: none; }
     }
   }

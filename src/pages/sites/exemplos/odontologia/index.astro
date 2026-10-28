@@ -10,6 +10,11 @@
  *   7/5 list and tile, 7/4 FAQ and payment card). Radii 20–28px, photos always in rounded frames.
  * Signature: "Aurora", a sun of four flat concentric bands rising behind the hero photo's top edge
  *   (the horizon), and once more from the bottom of the closing panel. Nothing else is decorated.
+ * v3 authored moment (Alinhamento + scene.ts): a procedural dental arch in a pinned mint panel.
+ *   Crooked at the start of the scroll, it aligns tooth by tooth from the midline out (the aligner
+ *   metaphor), and when it is aligned the Aurora sun rises behind the molars and warms the enamel.
+ * Supporting motion, both once: the headline revealed by line, the hero sun rising band by band.
+ *   Everything else stays still; under reduced motion the arch is a static render of the scene.
  */
 import '@fontsource-variable/plus-jakarta-sans';
 import DemoLayout from '../../../../layouts/DemoLayout.astro';
@@ -17,6 +22,7 @@ import DemoLayout from '../../../../layouts/DemoLayout.astro';
 import jakartaLatin from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
 import Header from '../../../../components/demos/odontologia/Header.astro';
 import Hero from '../../../../components/demos/odontologia/Hero.astro';
+import Alinhamento from '../../../../components/demos/odontologia/Alinhamento.astro';
 import Tratamentos from '../../../../components/demos/odontologia/Tratamentos.astro';
 import PrimeiraConsulta from '../../../../components/demos/odontologia/PrimeiraConsulta.astro';
 import Medo from '../../../../components/demos/odontologia/Medo.astro';
@@ -31,10 +37,18 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
   themeColor="#FBFAF7"
 >
   <link slot="head" rel="preload" href={jakartaLatin} as="font" type="font/woff2" crossorigin />
+  <script slot="head" is:inline>
+    // Before first paint: if motion is welcome, the scroll story and the headline reveal set up without a jump.
+    try {
+      var c = navigator.connection;
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !(c && c.saveData)) document.documentElement.classList.add('motion');
+    } catch (e) {}
+  </script>
   <div class="aurora">
     <Header />
     <main id="conteudo">
       <Hero />
+      <Alinhamento />
       <Tratamentos />
       <PrimeiraConsulta />
       <Medo />
@@ -44,6 +58,94 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
     <Footer />
   </div>
 </DemoLayout>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { SplitText } from 'gsap/SplitText';
+  import { mountScene } from '../../../../lib/three/mount';
+
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+  const root = document.documentElement;
+  const moving = root.classList.contains('motion');
+
+  // 1. The headline, revealed line by line, once.
+  const title = document.querySelector<HTMLElement>('.hero__title');
+  if (title && moving) {
+    const fonts = Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, 900))]);
+    void fonts.then(() => {
+      const split = SplitText.create(title, { type: 'lines', mask: 'lines', linesClass: 'hero__line' });
+      gsap.set(title, { opacity: 1, animation: 'none' });
+      gsap.from(split.lines, {
+        yPercent: 108,
+        duration: 1.05,
+        ease: 'expo.out',
+        stagger: 0.11,
+        onComplete: () => split.revert(),
+      });
+    });
+  }
+
+  // 2. The authored moment: the arch aligns with the scroll.
+  const section = document.querySelector<HTMLElement>('[data-arco]');
+  const host = section?.querySelector<HTMLElement>('[data-arco-scene]');
+  if (section && host) {
+    const handle = mountScene(host, () => import('../../../../components/demos/odontologia/scene'), { pointer: true });
+    const beats = [...section.querySelectorAll<HTMLElement>('.beat')];
+    const bar = () => document.querySelector<HTMLElement>('.demo-banner')?.offsetHeight ?? 44;
+    root.style.setProperty('--bar', `${bar()}px`);
+    let active = -1;
+    const show = (p: number) => {
+      handle.setProgress(p);
+      // the sun rises over the last third, as the arch settles (same curve as the scene's warm light)
+      const warm = Math.min(1, Math.max(0, (p - 0.68) / 0.3));
+      section.style.setProperty('--sun', (1 - (1 - warm * warm * (3 - 2 * warm)) ** 3).toFixed(4));
+      beats.forEach((beat, i) => beat.style.setProperty('--f', String(Math.min(1, Math.max(0, p * 3 - i)).toFixed(4))));
+      const next = Math.min(beats.length - 1, Math.floor(p * beats.length));
+      if (next !== active) {
+        active = next;
+        beats.forEach((beat, i) => beat.classList.toggle('is-on', i === next));
+      }
+    };
+
+    let story: gsap.core.Tween | null = null;
+    const stop = () => {
+      story?.scrollTrigger?.kill();
+      story?.kill();
+      story = null;
+      section.dataset.story = 'off';
+      beats.forEach((beat) => beat.classList.remove('is-on'));
+      ScrollTrigger.refresh();
+    };
+
+    if (host.dataset.scene === 'fallback' || !moving) {
+      section.dataset.story = 'off';
+    } else {
+      show(0);
+      const state = { p: 0 };
+      const pinned = () => window.innerHeight >= 600;
+      story = gsap.to(state, {
+        p: 1,
+        ease: 'none',
+        onUpdate: () => show(state.p),
+        scrollTrigger: {
+          trigger: section,
+          start: () => (pinned() ? `top ${bar()}px` : 'top 70%'),
+          end: () => (pinned() ? 'bottom bottom' : 'bottom 30%'),
+          scrub: 0.7,
+          invalidateOnRefresh: true,
+        },
+      });
+      // WebGL can still fail later (context loss, load error): then the panel goes static.
+      new MutationObserver(() => {
+        if (host.dataset.scene === 'fallback' && story) {
+          stop();
+          section.style.removeProperty('--sun');
+        }
+      }).observe(host, { attributes: true, attributeFilter: ['data-scene'] });
+    }
+  }
+</script>
 
 <style is:global>
   :root {
@@ -85,6 +187,10 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
   :where(.aurora) p { text-wrap: pretty; }
   :where(.aurora) :where(img, svg) { display: block; max-width: 100%; }
   :where(.aurora) a { color: var(--teal); text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+  /* the parts the browser draws carry the palette too */
+  ::selection { background: #f9cbbb; color: var(--ink); }
+  html { scrollbar-color: var(--mint-line) var(--paper); }
+  body { caret-color: var(--teal); accent-color: var(--teal); }
   .aurora :focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; border-radius: 8px; }
   .aurora .urg :focus-visible { outline-color: #fff; }
 
@@ -106,7 +212,7 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
     font-size: 0.8125rem; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal);
   }
   .h2 {
-    margin-top: 16px; font-size: clamp(2.125rem, 1.45rem + 3vw, 4rem); font-weight: 280;
+    font-size: clamp(2.125rem, 1.45rem + 3vw, 4rem); font-weight: 280;
     line-height: 1.02; letter-spacing: -0.04em; color: var(--ink);
   }
   .h2 strong { font-weight: 740; color: var(--teal); letter-spacing: -0.045em; }
@@ -147,4 +253,10 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
   }
   .quiet-link:hover { text-decoration-color: var(--teal); }
   .demo-note { font-size: 0.8125rem; line-height: 1.5; color: var(--ink-2); }
+
+  /* the headline waits for its line reveal; if the script never runs it shows itself after 2.5 s */
+  .motion .hero__title { opacity: 0; animation: title-failsafe 0.01s linear 2.5s forwards; }
+  @keyframes title-failsafe { to { opacity: 1; } }
+  /* line masks keep the descenders (g, p) while the lines slide up */
+  .hero__line-mask { padding-bottom: 0.16em; margin-bottom: -0.16em; }
 </style>
