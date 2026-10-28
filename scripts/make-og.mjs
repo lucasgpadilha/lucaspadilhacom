@@ -1,5 +1,6 @@
 // Renders the 1200×630 social preview images into public/og/ with the site's own fonts and tokens.
-// Run after design changes: `node scripts/make-og.mjs`.
+// The home cards are the real hero, shot from a running preview in its finished state:
+// `npm run build && npm run preview`, then `node scripts/make-og.mjs`.
 import { chromium } from 'playwright';
 import { mkdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -11,8 +12,6 @@ const mono = await font('@fontsource-variable/jetbrains-mono/files/jetbrains-mon
 const out = fileURLToPath(new URL('../public/og/', import.meta.url));
 
 const cards = [
-  { file: 'home-en.jpg', label: 'lucaspadilha.com', title: 'Infrastructure that holds up in production. Websites that bring in customers.', foot: 'DevOps · Cloud · Websites — Brazil', night: true },
-  { file: 'home-pt.jpg', label: 'lucaspadilha.com', title: 'Infraestrutura que aguenta produção. Sites que trazem cliente.', foot: 'DevOps · Cloud · Sites — Brasil', night: true },
   { file: 'sites.jpg', label: 'lucaspadilha.com/sites', title: 'Sites rápidos e bonitos para negócios que querem ser encontrados.', foot: 'Você vê a prévia antes de fechar', signal: true },
 ];
 
@@ -41,5 +40,20 @@ for (const card of cards) {
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: out + card.file, type: 'jpeg', quality: 86 });
   console.log(`wrote public/og/${card.file}`);
+}
+
+const base = (process.env.SITE_PREVIEW_URL || 'http://127.0.0.1:4321').replace(/\/$/, '');
+const hero = await browser.newPage({ viewport: { width: 1200, height: 630 }, reducedMotion: 'reduce' });
+for (const [path, file] of [['/', 'home-en.jpg'], ['/pt/', 'home-pt.jpg']]) {
+  await hero.goto(base + path, { waitUntil: 'networkidle' });
+  // Title and drawing only: the copy, the run controls and the nav are for visitors, not for a card.
+  await hero.addStyleTag({ content: `
+    .hero .copy, .deploy .bar, .site-header nav, .site-header .tools { display: none !important; }
+    .hero .grid { grid-template-areas: 'title scene' !important; grid-template-rows: 1fr !important; align-items: center; }
+    .hero h1 { align-self: center !important; }` });
+  await hero.evaluate(() => document.fonts.ready);
+  await hero.waitForTimeout(300);
+  await hero.screenshot({ path: out + file, type: 'jpeg', quality: 86 });
+  console.log(`wrote public/og/${file}`);
 }
 await browser.close();
