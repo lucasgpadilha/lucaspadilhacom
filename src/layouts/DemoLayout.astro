@@ -64,6 +64,12 @@ const credits = files[`../../public/sites/exemplos/${slug}/img/credits.json`] ??
 </html>
 
 <style is:global>
+  /* Same opt-in as the main site, so navigating /sites/ → demo transitions instead of being skipped. */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.28s; }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  }
   .demo-credits {
     padding: 20px 16px 28px; background: #141413; color: #a29f97;
     font: 400 12px/1.6 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

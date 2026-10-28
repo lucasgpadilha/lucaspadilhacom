@@ -76,10 +76,10 @@ export const migration = {
     },
     {
       key: 'off',
-      title: { en: 'Five VMs switched off', pt: 'Cinco VMs desligadas' },
+      title: { en: 'Five VMs switched off or emptied', pt: 'Cinco VMs desligadas ou esvaziadas' },
       body: {
-        en: 'When a VM had nothing left, it was emptied and shut down. Today 73 Argo CD applications describe everything that runs.',
-        pt: 'Quando uma VM ficava sem nada, era esvaziada e desligada. Hoje 73 aplicações no Argo CD descrevem tudo o que roda.',
+        en: 'As each VM ran out of services it was emptied, and switched off where it could be. Today 73 Argo CD applications describe what runs on the cluster.',
+        pt: 'Conforme cada VM ficava sem serviços, era esvaziada e, quando possível, desligada. Hoje 73 aplicações no Argo CD descrevem o que roda no cluster.',
       },
     },
     {
@@ -94,8 +94,8 @@ export const migration = {
       key: 'network',
       title: { en: 'Network and security as code', pt: 'Rede e segurança como código' },
       body: {
-        en: 'VCN, DRG, NSGs, NAT with a reserved IP, WAF, public and internal NLBs and NetworkPolicies per tenant, all in Terraform with automated static validation.',
-        pt: 'VCN, DRG, NSGs, NAT com IP reservado, WAF, NLB público e interno e NetworkPolicies por tenant, tudo em Terraform com validação estática automatizada.',
+        en: 'VCN, DRG, NSGs, NAT with a reserved IP, WAF and public and internal NLBs in Terraform with automated static validation, plus NetworkPolicies per tenant through GitOps.',
+        pt: 'VCN, DRG, NSGs, NAT com IP reservado, WAF e NLB público e interno em Terraform com validação estática automatizada, além de NetworkPolicies por tenant via GitOps.',
       },
     },
   ] satisfies MigrationStep[],
@@ -138,11 +138,11 @@ export const feats = {
     },
     {
       title: { en: '87% of telemetry traffic off the public path', pt: '87% da telemetria fora da rota pública' },
-      body: { en: 'About 380 thousand events a day rerouted from NAT, public load balancer and WAF to an internal path.', pt: 'Cerca de 380 mil envios por dia tirados da NAT, do load balancer público e do WAF para uma rota interna.' },
+      body: { en: 'Of about 380 thousand events a day, 87% went out through NAT, the public load balancer and WAF; they now take an internal path.', pt: 'De cerca de 380 mil envios por dia, 87% saíam pela NAT, pelo load balancer público e pelo WAF; agora seguem por uma rota interna.' },
     },
     {
-      title: { en: 'SQL Server 2022 to 2025', pt: 'SQL Server 2022 para 2025' },
-      body: { en: 'Migration with runbook, inventory and login control.', pt: 'Migração com runbook, inventário e controle de logins.' },
+      title: { en: 'SQL Server 2022 to 2025, prepared', pt: 'SQL Server 2022 para 2025, preparado' },
+      body: { en: 'Runbook, inventory and login control ready for the upgrade.', pt: 'Runbook, inventário e controle de logins prontos para a atualização.' },
     },
     {
       title: { en: 'Day-to-day automation in AWX', pt: 'Automação do dia a dia no AWX' },

@@ -47,7 +47,8 @@ async function portfolio(page, label) {
   check(facts.mail.length > 0 && facts.mail.every((m) => m.startsWith('mailto:ceo@lucaspadilha.com')), `${label}: contact e-mail is not ceo@lucaspadilha.com: ${facts.mail.join(', ')}`);
   for (const word of FORBIDDEN) check(!facts.text.includes(word), `${label}: mentions "${word}"`);
   for (const repo of facts.repos) check(PUBLIC_REPOS.has(repo), `${label}: links non-public repo "${repo}"`);
-  for (const stale of ['Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
+  check(/Wikimedia Commons/.test(facts.text), `${label}: demo thumbnails show CC BY/BY-SA photos without a credit line`);
+  for (const stale of ['it was emptied and shut down', 'era esvaziada e desligada', 'Tools I use every day', 'Ferramentas do dia a dia', 'About 380 thousand events a day rerouted', 'Cerca de 380 mil envios por dia tirados', 'Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
     check(!facts.text.includes(stale), `${label}: still says "${stale}"`);
   }
 }
@@ -192,6 +193,14 @@ try {
       if (width === 1440 && (await page.locator('[data-scene]').count())) {
         const host = page.locator('[data-scene]').first();
         await host.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(600);
+        if ((await host.getAttribute('data-scene')) === 'idle') {
+          const still = await page.evaluate(() => {
+            const fallback = document.querySelector('[data-scene] [data-fallback]');
+            return fallback ? Number(getComputedStyle(fallback).opacity) : -1;
+          });
+          check(still >= 0.9, `${label}: scene waits for interaction but its still is invisible (opacity ${still})`);
+        }
         await page.mouse.move(8, 8); // scenes may wait for the first interaction
         await page.waitForFunction(() => ['live', 'fallback'].includes(document.querySelector('[data-scene]')?.dataset.scene), null, { timeout: 15000 }).catch(() => {});
         const state = await host.getAttribute('data-scene');
@@ -327,9 +336,10 @@ try {
   }
 
   const noWebGL = await chromium.launch({ args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] });
+  const webgl1 = await chromium.launch({ args: ['--disable-webgl2'] });
   try {
     for (const route of routes) {
-      for (const [name, options] of [['reduced motion', { reducedMotion: 'reduce' }], ['no WebGL', { using: noWebGL }]]) {
+      for (const [name, options] of [['reduced motion', { reducedMotion: 'reduce' }], ['no WebGL', { using: noWebGL }], ['WebGL1 only', { using: webgl1 }]]) {
         const { context, page, errors } = await open(route.path, { viewport: { width: 1440, height: 900 }, ...options });
         if (await page.locator('[data-scene]').count()) {
           await page.locator('[data-scene]').first().scrollIntoViewIfNeeded();
@@ -338,9 +348,9 @@ try {
           const facts = await page.evaluate(() => {
             const host = document.querySelector('[data-scene]');
             const fallback = host.querySelector('[data-fallback]');
-            return { state: host.dataset.scene, canvas: Boolean(host.querySelector('canvas')), shown: Boolean(fallback && !fallback.hidden && fallback.getBoundingClientRect().height > 0) };
+            return { state: host.dataset.scene, canvas: Boolean(host.querySelector('canvas')), shown: Boolean(fallback && !fallback.hidden && fallback.getBoundingClientRect().height > 0), opacity: fallback ? Number(getComputedStyle(fallback).opacity) : -1 };
           });
-          check(facts.state === 'fallback' && !facts.canvas && facts.shown, `${route.path} (${name}): expected the static fallback, got ${JSON.stringify(facts)}`);
+          check(facts.state === 'fallback' && !facts.canvas && facts.shown && facts.opacity >= 0.9, `${route.path} (${name}): expected the static fallback, got ${JSON.stringify(facts)}`);
           check(errors.length === 0, `${route.path} (${name}): ${errors.join(' | ')}`);
         }
         await context.close();
@@ -348,6 +358,7 @@ try {
     }
   } finally {
     await noWebGL.close();
+    await webgl1.close();
   }
 
   if (!onlyDemo) {
@@ -360,6 +371,17 @@ try {
     const top = await theme();
     check(night === 'night' && paper === 'paper' && top === 'paper', `theme shift: infra=${night}, stack=${paper}, top=${top}`);
     await context.close();
+  }
+
+  // The sales funnel's main click: /sites/ → a concept site, with no errors along the way.
+  if (!onlyDemo) {
+    for (const slug of DEMOS) {
+      const { context, page, errors } = await open('/sites/', { viewport: { width: 1440, height: 900 } });
+      await Promise.all([page.waitForURL(`**/sites/exemplos/${slug}/`), page.locator(`#exemplos a[href="/sites/exemplos/${slug}/"]`).first().click()]);
+      await page.waitForTimeout(1200);
+      check(errors.length === 0, `navigate /sites/ → ${slug}: ${errors.join(' | ')}`);
+      await context.close();
+    }
   }
 
   // Video previews never start on their own under reduced motion.

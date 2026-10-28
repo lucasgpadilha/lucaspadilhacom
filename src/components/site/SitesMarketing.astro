@@ -31,6 +31,7 @@ const demos = [
             </li>
           ))}
         </ul>
+        <p class="credit">{locale === 'pt' ? 'Fotos dos sites conceito: Wikimedia Commons, com créditos em cada site.' : 'Concept-site photos: Wikimedia Commons, credited on each site.'}</p>
         <a class="btn" href="/sites/" hreflang="pt-BR">{t(websites.sitesCta, locale)} <Arrow /></a>
       </div>
       <div class="col">
@@ -59,6 +60,7 @@ const demos = [
   .demos a:hover img { transform: translateY(-3px); }
   .name { font-weight: 650; font-size: var(--step--1); line-height: 1.2; }
   .niche { font-size: 0.75rem; }
+  .credit { font-size: 0.75rem; max-width: none; }
   .btn { background: var(--on-signal); border-color: var(--on-signal); color: #fbfaf6; }
   .btn:hover { background: #fbfaf6; border-color: #fbfaf6; color: var(--on-signal); }
   .link { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px; font-weight: 650; text-decoration-color: currentColor; }

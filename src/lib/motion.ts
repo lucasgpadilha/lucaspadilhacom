@@ -9,7 +9,8 @@ export const saveData = () =>
 export function canUseWebGL(): boolean {
   try {
     const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    // three r186 and the custom shaders need WebGL2; WebGL1-only devices get the static version.
+    const gl = canvas.getContext('webgl2');
     if (!gl) return false;
     gl.getExtension('WEBGL_lose_context')?.loseContext();
     return true;
