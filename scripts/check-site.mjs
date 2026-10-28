@@ -28,10 +28,37 @@ async function portfolio(page, label) {
   }
 }
 
+async function demo(page, label) {
+  const facts = await page.evaluate(() => {
+    const banner = document.querySelector('.demo-banner');
+    const rect = banner?.getBoundingClientRect();
+    const resources = performance.getEntriesByType('resource');
+    const nav = performance.getEntriesByType('navigation')[0];
+    const nonImage = resources.filter((r) => r.initiatorType !== 'img' && !/\.(webp|avif|jpe?g|png)(\?|$)/.test(r.name));
+    return {
+      robots: document.querySelector('meta[name="robots"]')?.getAttribute('content') ?? '',
+      banner: Boolean(rect && rect.height > 0 && rect.top >= 0),
+      bannerLink: banner?.querySelector('a[href="/sites/#contato"]') !== null && banner !== null,
+      tel: document.querySelectorAll('a[href^="tel:"]').length,
+      badImages: [...document.images].filter((img) => !img.hasAttribute('alt') || !img.getAttribute('width') || !img.getAttribute('height')).map((img) => img.src),
+      bytes: (nav?.transferSize || nav?.encodedBodySize || 0) + nonImage.reduce((sum, r) => sum + (r.transferSize || r.encodedBodySize || 0), 0),
+    };
+  });
+  check(facts.robots.includes('noindex'), `${label}: robots "${facts.robots}"`);
+  check(facts.banner && facts.bannerLink, `${label}: concept-site banner missing or not linking to /sites/#contato`);
+  check(facts.tel === 0, `${label}: ${facts.tel} tel: links (no real phone numbers on concept sites)`);
+  check(facts.badImages.length === 0, `${label}: images without alt/width/height: ${facts.badImages.join(', ')}`);
+  check(facts.bytes < 300 * 1024, `${label}: ${Math.round(facts.bytes / 1024)} KB without images (limit 300 KB)`);
+}
+
+const DEMOS = ['advocacia', 'odontologia', 'cafe'];
+const onlyDemo = process.env.SITE_DEMO;
+
 const routes = [
   { path: '/', lang: 'en', extra: portfolio },
   { path: '/pt/', lang: 'pt-BR', extra: portfolio },
-];
+  ...DEMOS.map((slug) => ({ path: `/sites/exemplos/${slug}/`, lang: 'pt-BR', extra: demo })),
+].filter((route) => !onlyDemo || route.path === `/sites/exemplos/${onlyDemo}/`);
 
 const browser = await chromium.launch();
 
@@ -73,7 +100,7 @@ try {
   }
 
   // Locale resolution happens before first paint and must survive odd browsers.
-  const localeCases = [
+  const localeCases = onlyDemo ? [] : [
     { name: 'pt browser on /', path: '/', options: { locale: 'pt-BR' }, expect: '/pt/' },
     { name: '?lang=pt keeps the hash', path: '/?lang=pt#work', options: {}, expect: '/pt/#work' },
     { name: '/pt/?lang=en', path: '/pt/?lang=en', options: { locale: 'pt-BR' }, expect: '/' },
@@ -97,7 +124,7 @@ try {
 
   // Content must be visible without JavaScript and with reduced motion.
   for (const [name, options] of [['no-js', { javaScriptEnabled: false }], ['reduced-motion', { reducedMotion: 'reduce' }]]) {
-    for (const path of ['/', '/pt/']) {
+    for (const path of onlyDemo ? [] : ['/', '/pt/']) {
       const { context, page } = await open(path, options);
       await page.waitForTimeout(300);
       const opacities = await page.evaluate(() => [
