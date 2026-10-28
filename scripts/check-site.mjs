@@ -2,11 +2,15 @@
 // sites. Runs against a production preview: `npm run build && npm run preview`.
 import { chromium } from 'playwright';
 import sharp from 'sharp';
+import AxeBuilder from '@axe-core/playwright';
+import { mkdir } from 'node:fs/promises';
 
 const base = (process.env.SITE_PREVIEW_URL || 'http://127.0.0.1:4321').replace(/\/$/, '');
 const PROD = 'https://lucaspadilha.com';
 const widths = (process.env.SITE_WIDTHS || '320,360,390,768,1440,1920').split(',').map(Number);
 const local = (url) => url.replace(PROD, base);
+const shots = process.env.SITE_SHOTS; // optional folder for full-page evidence screenshots
+if (shots) await mkdir(shots, { recursive: true });
 
 const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
@@ -52,12 +56,34 @@ async function demo(page, label) {
   check(facts.bytes < 300 * 1024, `${label}: ${Math.round(facts.bytes / 1024)} KB without images (limit 300 KB)`);
 }
 
+async function sitesPage(page, label) {
+  const facts = await page.evaluate(() => {
+    const ld = [...document.querySelectorAll('script[type="application/ld+json"]')].map((el) => { try { return JSON.parse(el.textContent); } catch { return null; } });
+    const contacts = [...document.querySelectorAll('a[data-contact]')].map((a) => a.getAttribute('href'));
+    return {
+      examples: [...document.querySelectorAll('#exemplos a[href^="/sites/exemplos/"]')].map((a) => a.getAttribute('href')),
+      wa: document.querySelectorAll('a[href*="wa.me"]').length,
+      contacts,
+      contato: Boolean(document.getElementById('contato')),
+      ld: ld.flatMap((item) => (item?.['@graph'] ?? [item]).map((node) => node?.['@type'])),
+    };
+  });
+  const unique = new Set(facts.examples);
+  check(unique.size === 3, `${label}: #exemplos links ${unique.size} concept sites (expected 3)`);
+  check(facts.wa === 0, `${label}: links wa.me without a configured WhatsApp number`);
+  check(facts.contacts.length >= 2, `${label}: only ${facts.contacts.length} contact CTAs`);
+  for (const href of facts.contacts) check(/^mailto:[^?]+\?subject=/.test(href), `${label}: contact CTA "${href}" is not a mailto with subject`);
+  check(facts.contato, `${label}: #contato missing`);
+  check(facts.ld.includes('ProfessionalService'), `${label}: JSON-LD types ${facts.ld.join(', ')}`);
+}
+
 const DEMOS = ['advocacia', 'odontologia', 'cafe'];
 const onlyDemo = process.env.SITE_DEMO;
 
 const routes = [
   { path: '/', lang: 'en', extra: portfolio },
   { path: '/pt/', lang: 'pt-BR', extra: portfolio },
+  { path: '/sites/', lang: 'pt-BR', extra: sitesPage },
   ...DEMOS.map((slug) => ({ path: `/sites/exemplos/${slug}/`, lang: 'pt-BR', extra: demo })),
 ].filter((route) => !onlyDemo || route.path === `/sites/exemplos/${onlyDemo}/`)
   .filter((route) => !process.env.SITE_SKIP_DEMOS || !route.path.startsWith('/sites/exemplos/'));
@@ -97,6 +123,19 @@ try {
       check(facts.og.startsWith(`${PROD}/`), `${label}: og:image "${facts.og}"`);
       check(errors.length === 0, `${label}: ${errors.join(' | ')}`);
       if (width === 390 && route.extra) await route.extra(page, label);
+      if (width === 390 || width === 1440) {
+        // Scroll-reveal starts hidden; show everything so axe judges the final state.
+        await page.evaluate(() => document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-in')));
+        await page.waitForTimeout(800);
+        const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+        for (const v of axe.violations.filter((item) => item.impact === 'serious' || item.impact === 'critical')) {
+          check(false, `${label}: axe ${v.id} (${v.impact}) — ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')}`);
+        }
+        if (shots) {
+          const name = `${route.path.replace(/\W+/g, '-').replace(/^-|-$/g, '') || 'home-en'}-${width}.png`;
+          await page.screenshot({ path: `${shots}/${name}`, fullPage: true });
+        }
+      }
       await context.close();
     }
   }
