@@ -1,0 +1,175 @@
+---
+/**
+ * The authored moment: a dental arch that aligns as you scroll (scene.ts), in a sticky
+ * mint panel. The three beats are real HTML; the canvas sits beside them, never under them.
+ * Without JS, under reduced motion, Save-Data or without WebGL, the panel is a plain block
+ * and the fallback (a capture of the aligned scene) is shown instead.
+ */
+const beats = [
+  {
+    title: 'Primeiro, entender',
+    text: 'Na avaliação, a gente examina, faz a documentação e mostra o que vê antes de propor qualquer coisa.',
+  },
+  {
+    title: 'Um passo por vez',
+    text: 'O plano divide o tratamento em etapas pequenas. Você sabe o que esperar de cada consulta.',
+  },
+  {
+    title: 'No tempo do seu caso',
+    text: 'A duração estimada vem por escrito no plano e é revista com você nas consultas de acompanhamento.',
+  },
+];
+---
+<section class="arco" id="alinhamento" aria-labelledby="arco-title" data-arco>
+  <div class="arco__stage">
+    <div class="wrap arco__wrap">
+      <div class="arco__panel">
+        <div class="arco__copy">
+          <h2 id="arco-title" class="arco__title">É assim que um tratamento alinha: <strong>sem&nbsp;pressa<span class="dot">.</span></strong></h2>
+          <ol class="beats" role="list">
+            {beats.map((b, i) => (
+              <li class="beat" style={`--i:${i}`} data-beat={i}>
+                <h3 class="beat__title">{b.title}</h3>
+                <p class="beat__text">{b.text}</p>
+              </li>
+            ))}
+          </ol>
+          <p class="arco__note">Ilustração do processo. Indicação, etapas e duração dependem da avaliação de cada caso.</p>
+        </div>
+        <div class="arco__scene" data-arco-scene data-scene="pending">
+          <div class="arco__glow" aria-hidden="true"></div>
+          <div class="arco__fallback" data-fallback>
+            <img
+              src="/sites/exemplos/odontologia/arco-alinhado.webp"
+              width="1200"
+              height="1000"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .arco { position: relative; margin-top: 88px; }
+  .arco__panel {
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+    border-radius: var(--r-lg);
+    /* a pool of warm white where the arch stands, inside the mint panel */
+    background:
+      radial-gradient(75% 44% at 50% 76%, rgb(251 250 247 / 0.95), rgb(251 250 247 / 0) 72%),
+      var(--mint);
+  }
+  .arco__copy { position: relative; z-index: 1; padding: 32px 22px 8px; }
+  .arco__title {
+    font-size: clamp(1.875rem, 1.3rem + 2.6vw, 3.25rem); font-weight: 280;
+    line-height: 1.04; letter-spacing: -0.04em; color: var(--ink);
+  }
+  .arco__title strong { font-weight: 740; color: var(--teal); letter-spacing: -0.045em; }
+
+  .beats { display: grid; gap: 18px; margin-top: 26px; }
+  .beat { position: relative; }
+  .beat__title { position: relative; font-size: 1.0625rem; font-weight: 680; letter-spacing: -0.012em; line-height: 1.25; color: var(--ink); }
+  .beat__text { margin-top: 4px; max-width: 40ch; font-size: 0.9375rem; line-height: 1.55; color: var(--ink-2); }
+  .arco__note { margin-top: 22px; max-width: 44ch; font-size: 0.8125rem; line-height: 1.5; color: var(--ink-2); }
+
+  .arco__scene { position: relative; height: 340px; }
+  .arco__fallback { position: absolute; inset: 0; z-index: 1; }
+  /* the aurora light: the logo's four coral tones as a soft dawn rising from the panel's bottom edge
+     once the arch is aligned (--sun: 0 → 1, set by the scroll; 1 when static) */
+  .arco__glow {
+    position: absolute; left: -30%; right: -30%; bottom: 0; height: min(74%, 92vw);
+    /* coral → blush → warm white → mint: the warm white bridge keeps coral from going grey on mint;
+       the ellipse ends inside its box, so no edge ever shows */
+    background: radial-gradient(38% 100% at 50% 100%,
+      rgb(245 166 143 / 0.62), rgb(249 203 187 / 0.55) 26%, rgb(252 231 223 / 0.5) 48%,
+      rgb(251 250 247 / 0.42) 68%, rgb(251 250 247 / 0) 100%);
+    opacity: var(--sun, 1);
+    transform: translateY(calc((1 - var(--sun, 1)) * 34%));
+    transform-origin: 50% 100%;
+  }
+  .arco__fallback[hidden] { display: none; }
+  .arco__fallback img { width: 100%; height: 100%; object-fit: contain; }
+
+  /* ---- the scroll story (JS and motion allowed): a pinned panel, beats follow the progress ---- */
+  :global(.motion) .arco:not([data-story='off']) { height: 270vh; }
+  /* pinned under the concept-site banner (--bar is its height) */
+  :global(.motion) .arco:not([data-story='off']) .arco__stage {
+    position: sticky; top: var(--bar, 44px);
+    height: calc(100vh - var(--bar, 44px)); height: calc(100svh - var(--bar, 44px)); padding-block: 12px;
+  }
+  :global(.motion) .arco:not([data-story='off']) :is(.arco__wrap, .arco__panel) { height: 100%; }
+  :global(.motion) .arco:not([data-story='off']) .arco__scene { flex: 1; height: auto; min-height: 0; }
+  /* while the scene loads, the story starts from an empty panel (the teeth are set down by the intro) */
+  :global(.motion) .arco:not([data-story='off']) [data-scene='pending'] .arco__fallback { visibility: hidden; }
+
+  /* progress: one segment per beat, filled by --f (0…1) */
+  :global(.motion) .arco:not([data-story='off']) :is(.beat__title, .beat)::before,
+  :global(.motion) .arco:not([data-story='off']) :is(.beat__title, .beat)::after {
+    position: absolute; border-radius: 2px;
+  }
+
+  /* small screens: a three-step strip, titles in a row and the active text below them */
+  @media (max-width: 959px) {
+    :global(.motion) .arco:not([data-story='off']) .beats {
+      grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto; gap: 0 14px; margin-top: 22px;
+    }
+    :global(.motion) .arco:not([data-story='off']) .beat {
+      display: grid; grid-row: span 2; grid-template-rows: subgrid; grid-template-columns: minmax(0, 1fr);
+    }
+    :global(.motion) .arco:not([data-story='off']) .beat__title {
+      padding-bottom: 12px; font-size: 0.875rem; color: var(--ink-2); transition: color 0.3s ease;
+    }
+    :global(.motion) .arco:not([data-story='off']) .beat__title::before,
+    :global(.motion) .arco:not([data-story='off']) .beat__title::after {
+      content: ''; left: 0; right: 0; bottom: 0; height: 2px; background: var(--mint-line);
+    }
+    :global(.motion) .arco:not([data-story='off']) .beat__title::after {
+      background: var(--teal); transform-origin: 0 50%; transform: scaleX(var(--f, 0));
+    }
+    :global(.motion) .arco:not([data-story='off']) .beat__text {
+      width: calc(300% + 28px); margin-left: calc(var(--i) * -1 * (100% + 14px)); margin-top: 12px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    :global(.motion) .arco:not([data-story='off']) .beat.is-on .beat__title { color: var(--teal); }
+    :global(.motion) .arco:not([data-story='off']) .beat.is-on .beat__text { opacity: 1; pointer-events: auto; }
+  }
+
+  @media (min-width: 960px) {
+    .arco { margin-top: 128px; }
+    .arco__panel {
+      display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 32px; min-height: 640px;
+      background:
+        radial-gradient(46% 62% at 71% 60%, rgb(251 250 247 / 0.95), rgb(251 250 247 / 0) 72%),
+        var(--mint);
+    }
+    .arco__copy { grid-column: 1 / 6; grid-row: 1; align-self: center; padding: 56px 0 56px 56px; }
+    .arco__scene { grid-column: 6 / 13; grid-row: 1; height: auto; min-height: 520px; }
+    .beats { gap: 0; margin-top: 36px; }
+    .beat { padding: 14px 0; }
+    :global(.motion) .arco:not([data-story='off']) .beat { padding-left: 24px; }
+    .beat__text { max-width: 38ch; }
+    :global(.motion) .arco:not([data-story='off']) .arco__scene { min-height: 0; }
+    :global(.motion) .arco:not([data-story='off']) :is(.beat__title, .beat__text) { transition: color 0.3s ease; }
+    :global(.motion) .arco:not([data-story='off']) .beat:not(.is-on) .beat__title { color: var(--ink-2); }
+    :global(.motion) .arco:not([data-story='off']) .beat.is-on .beat__text { color: var(--ink); }
+    :global(.motion) .arco:not([data-story='off']) .beat::before,
+    :global(.motion) .arco:not([data-story='off']) .beat::after {
+      content: ''; left: 0; top: 18px; bottom: 16px; width: 2px; background: var(--mint-line);
+    }
+    :global(.motion) .arco:not([data-story='off']) .beat::after {
+      background: var(--teal); transform-origin: 50% 0; transform: scaleY(var(--f, 0));
+    }
+  }
+
+  /* short screens: no room to pin, so the panel scrolls with the page and the story follows it */
+  @media (max-height: 599px) {
+    :global(.motion) .arco:not([data-story='off']) { height: auto; }
+    :global(.motion) .arco:not([data-story='off']) .arco__stage { position: relative; height: auto; }
+    :global(.motion) .arco:not([data-story='off']) .arco__scene { flex: none; height: 320px; }
+  }
+</style>

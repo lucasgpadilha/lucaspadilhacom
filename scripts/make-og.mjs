@@ -11,20 +11,20 @@ const mono = await font('@fontsource-variable/jetbrains-mono/files/jetbrains-mon
 const out = fileURLToPath(new URL('../public/og/', import.meta.url));
 
 const cards = [
-  { file: 'home-en.jpg', label: 'lucaspadilha.com', title: 'I build software, websites and the infrastructure that keeps them online.', foot: 'Full-stack · DevOps · Web — Brazil' },
-  { file: 'home-pt.jpg', label: 'lucaspadilha.com', title: 'Construo software, sites e a infraestrutura que os mantém no ar.', foot: 'Full-stack · DevOps · Web — Brasil' },
+  { file: 'home-en.jpg', label: 'lucaspadilha.com', title: 'Infrastructure that holds up in production. Websites that bring in customers.', foot: 'DevOps · Cloud · Websites — Brazil', night: true },
+  { file: 'home-pt.jpg', label: 'lucaspadilha.com', title: 'Infraestrutura que aguenta produção. Sites que trazem cliente.', foot: 'DevOps · Cloud · Sites — Brasil', night: true },
   { file: 'sites.jpg', label: 'lucaspadilha.com/sites', title: 'Sites rápidos e bonitos para negócios que querem ser encontrados.', foot: 'Você vê a prévia antes de fechar', signal: true },
 ];
 
-const html = ({ label, title, foot, signal }) => `<!doctype html><html><head><style>
+const html = ({ label, title, foot, signal, night }) => `<!doctype html><html><head><style>
 @font-face { font-family: S; src: url('${sans}') format('woff2'); font-weight: 200 800; }
 @font-face { font-family: M; src: url('${mono}') format('woff2'); font-weight: 100 800; }
 * { margin: 0; box-sizing: border-box; }
-body { width: 1200px; height: 630px; background: ${signal ? '#ff5a1f' : '#f2efe8'}; color: ${signal ? '#1c0b02' : '#141413'};
+body { width: 1200px; height: 630px; background: ${signal ? '#ff5a1f' : night ? '#0d0d0c' : '#f2efe8'}; color: ${signal ? '#1c0b02' : night ? '#ece9e1' : '#141413'};
   font-family: S; padding: 64px 72px; display: grid; grid-template-rows: auto 1fr auto; }
 .top { display: flex; justify-content: space-between; align-items: center; font-family: M; font-size: 22px; font-weight: 600; letter-spacing: .04em; }
-.mark { width: 56px; height: 56px; display: grid; place-items: center; background: ${signal ? '#1c0b02' : '#141413'}; color: ${signal ? '#ff5a1f' : '#f2efe8'}; font-family: M; font-weight: 700; font-size: 20px; border-radius: 4px; }
-h1 { align-self: center; font-size: 76px; line-height: .98; letter-spacing: -.035em; font-weight: 680; max-width: 16ch; }
+.mark { width: 56px; height: 56px; display: grid; place-items: center; background: ${signal ? '#1c0b02' : night ? '#ece9e1' : '#141413'}; color: ${signal ? '#ff5a1f' : night ? '#0d0d0c' : '#f2efe8'}; font-family: M; font-weight: 700; font-size: 20px; border-radius: 4px; }
+h1 { align-self: center; font-size: 72px; line-height: .98; letter-spacing: -.035em; font-weight: 680; max-width: 16ch; }
 .foot { display: flex; justify-content: space-between; align-items: center; border-top: 3px solid currentColor; padding-top: 22px; font-family: M; font-size: 22px; text-transform: uppercase; letter-spacing: .06em; }
 .dot { width: 22px; height: 22px; border-radius: 50%; background: ${signal ? '#1c0b02' : '#ff5a1f'}; }
 </style></head><body>

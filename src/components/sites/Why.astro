@@ -3,13 +3,12 @@ import { reasons } from '../../data/sites';
 ---
 <section id="por-que" class="section" aria-labelledby="por-que-title">
   <div class="wrap">
-    <header class="section-head" data-reveal>
-      <p class="label">02 — Por que comigo</p>
+    <header class="section-head">
       <h2 id="por-que-title">Bonito é o mínimo. O resto é engenharia.</h2>
     </header>
     <ol class="grid" role="list">
       {reasons.map((reason, index) => (
-        <li data-reveal>
+        <li>
           <span class="n" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
           <h3>{reason.title}</h3>
           <p>{reason.body}</p>

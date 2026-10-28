@@ -1,4 +1,6 @@
 ---
+import Photo from './Photo.astro';
+
 const perguntas = [
   {
     q: 'O pão de queijo é sem glúten?',
@@ -33,9 +35,11 @@ const perguntas = [
 <section id="perguntas" class="faq" aria-labelledby="faq-title">
   <div class="cj-wrap faq-grid">
     <div class="faq-head">
-      <p class="cj-eyebrow">Perguntas frequentes</p>
       <h2 id="faq-title" class="cj-h2">Dúvidas de balcão</h2>
       <p class="cj-lead">O que mais perguntam enquanto o café está passando.</p>
+      <div class="faq-coin">
+        <Photo slot="cafe" sizes="(min-width: 1080px) 15rem, 9rem" tone="jabuticaba" />
+      </div>
     </div>
     <div class="faq-list">
       {perguntas.map((p) => (
@@ -54,6 +58,14 @@ const perguntas = [
 <style>
   .faq { padding-block: clamp(4.5rem, 10vw, 8rem); }
   .faq-grid { display: grid; gap: 2.5rem; }
+  .faq-head { position: relative; }
+  /* The coffee that is "passando" while people ask: a round crop, set like a jabuticaba. */
+  .faq-coin {
+    width: 9rem; aspect-ratio: 1; margin-top: 2rem; overflow: hidden; border-radius: 50%; rotate: -8deg;
+    background: #4a2a52; box-shadow: 0 0 0 7px var(--creme), 0 0 0 8.5px rgb(43 21 48 / 0.22), 0 20px 40px -18px rgb(43 21 48 / 0.5);
+  }
+  .faq-coin :global(img), .faq-coin :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
+  .faq-coin :global(img) { object-position: 58% 48%; transform: scale(1.12); }
   .faq-list { border-top: 2px solid var(--jabuticaba); }
   .qa { border-bottom: 1px solid rgb(43 21 48 / 0.22); }
   .qa summary {
@@ -83,6 +95,7 @@ const perguntas = [
   @media (min-width: 1080px) {
     .faq-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); column-gap: clamp(3rem, 7vw, 7rem); align-items: start; }
     .faq-head { position: sticky; top: 5rem; }
+    .faq-coin { width: 15rem; margin-top: 3rem; margin-left: 1rem; }
   }
   @media (prefers-reduced-motion: reduce) {
     .qa-mark, .qa-mark::after { transition: none; }

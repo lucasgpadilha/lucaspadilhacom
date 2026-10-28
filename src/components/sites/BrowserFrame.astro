@@ -1,23 +1,75 @@
 ---
-interface Props { url: string; src: string; srcset: string; alt: string; eager?: boolean }
-const { url, src, srcset, alt, eager = false } = Astro.props;
+interface Props {
+  url: string;
+  src: string;
+  srcset: string;
+  alt: string;
+  /** Short WebM preview; plays once when visible (never under reduced motion), with a pause button. */
+  video?: string;
+}
+const { url, src, srcset, alt, video } = Astro.props;
 ---
 <figure class="frame">
   <div class="bar" aria-hidden="true">
     <span class="dots"><i></i><i></i><i></i></span>
     <span class="url">{url}</span>
   </div>
-  <img
-    src={src}
-    srcset={srcset}
-    sizes="(min-width: 1100px) 760px, 94vw"
-    width="1280"
-    height="800"
-    alt={alt}
-    loading={eager ? 'eager' : 'lazy'}
-    decoding="async"
-  />
+  <div class="screen">
+    {video ? (
+      <video data-preview muted playsinline preload="none" poster={src} width="1280" height="800" aria-label={alt}>
+        <source src={video} type="video/webm" />
+      </video>
+    ) : (
+      <img src={src} srcset={srcset} sizes="(min-width: 1100px) 760px, 94vw" width="1280" height="800" alt={alt} loading="lazy" decoding="async" />
+    )}
+    {video && (
+      <button class="toggle" type="button" aria-pressed="false" data-toggle>
+        <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor" /></svg>
+        <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor" /></svg>
+        <span class="visually-hidden">Prévia em vídeo</span>
+      </button>
+    )}
+  </div>
 </figure>
+
+<script>
+  import { prefersReducedMotion } from '../../lib/motion';
+
+  for (const figure of document.querySelectorAll<HTMLElement>('figure.frame')) {
+    const video = figure.querySelector<HTMLVideoElement>('video[data-preview]');
+    const button = figure.querySelector<HTMLButtonElement>('[data-toggle]');
+    if (!video || !button) continue;
+    let userPaused = false;
+    let played = false;
+    const sync = () => button.setAttribute('aria-pressed', String(!video.paused));
+    video.addEventListener('play', sync);
+    video.addEventListener('pause', sync);
+    video.addEventListener('ended', sync);
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (video.paused) {
+        userPaused = false;
+        if (video.ended) video.currentTime = 0;
+        void video.play().catch(() => {});
+      } else {
+        userPaused = true;
+        video.pause();
+      }
+    });
+    if (prefersReducedMotion()) continue;
+    // Plays once when it is mostly on screen; pauses when it leaves. No loop (WCAG 2.2.2).
+    new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !userPaused && !played) {
+        played = true;
+        void video.play().catch(() => {});
+      } else if (!entry.isIntersecting && !video.paused) {
+        video.pause();
+        played = false;
+      }
+    }, { threshold: 0.6 }).observe(video);
+  }
+</script>
 
 <style>
   .frame {
@@ -33,5 +85,15 @@ const { url, src, srcset, alt, eager = false } = Astro.props;
     font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-2);
     background: var(--paper); border-radius: 4px; padding: 3px 10px;
   }
-  img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+  .screen { position: relative; }
+  img, video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: var(--paper); }
+  .toggle {
+    position: absolute; right: 12px; bottom: 12px;
+    display: grid; place-items: center; width: 44px; height: 44px;
+    border: 0; border-radius: 50%; background: rgb(20 20 19 / 0.78); color: #fbfaf6; cursor: pointer;
+  }
+  .toggle svg { width: 14px; height: 14px; }
+  .toggle .i-pause, .toggle[aria-pressed='true'] .i-play { display: none; }
+  .toggle[aria-pressed='true'] .i-pause { display: block; }
+  .toggle:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 </style>

@@ -20,16 +20,35 @@ const check = (ok, message) => { if (!ok) failures.push(message); };
 // Only these repositories are public; private work must never be linked.
 const PUBLIC_REPOS = new Set(['lucaspadilhacom', 'pynoc', 'floci-cloud-lab', 'tuildap', 'agent-benchmark']);
 
+// Never on the public site: employers, retired products, internal figures.
+const FORBIDDEN = ['MMTech', 'AquiCob', 'Korp', 'Viasoft', 'Comboio', 'Nexora', 'ERP', 'R$ 43', 'Vinhedo', 'process-4', 'apps-k8s'];
+
+/** Headings must carry their own weight: no eyebrow/kicker label right before one (Impeccable ban). */
+const eyebrows = () => [...document.querySelectorAll('.label, .kicker, .eyebrow')].filter((el) => {
+  const next = el.nextElementSibling;
+  return next && (next.matches('h1, h2, h3') || next.firstElementChild?.matches('h1, h2, h3'));
+}).length;
+
 async function portfolio(page, label) {
-  const facts = await page.evaluate(() => ({
-    work: document.querySelectorAll('#work article').length,
+  const facts = await page.evaluate((eyebrowsSrc) => ({
+    eyebrows: new Function(`return (${eyebrowsSrc})()`)(),
+    steps: document.querySelectorAll('#infra [data-step]').length,
+    feats: document.querySelectorAll('#feats li').length,
+    side: document.querySelectorAll('#side a[href]').length,
+    mail: [...document.querySelectorAll('a[href^="mailto:"]')].map((a) => a.getAttribute('href')),
     repos: [...document.querySelectorAll('a[href^="https://github.com/lucasgpadilha/"]')]
       .map((a) => new URL(a.href).pathname.split('/')[2]),
-    text: document.body.innerText,
-  }));
-  check(facts.work >= 6, `${label}: #work has ${facts.work} articles`);
+    text: document.body.textContent,
+  }), eyebrows.toString());
+  check(facts.eyebrows === 0, `${label}: ${facts.eyebrows} eyebrow labels above headings`);
+  check(facts.steps === 5, `${label}: #infra has ${facts.steps} migration steps (expected 5)`);
+  check(facts.feats >= 8, `${label}: #feats lists ${facts.feats} things done (expected ≥ 8)`);
+  check(facts.side >= 4, `${label}: #side links ${facts.side} side projects (expected ≥ 4)`);
+  check(facts.mail.length > 0 && facts.mail.every((m) => m.startsWith('mailto:ceo@lucaspadilha.com')), `${label}: contact e-mail is not ceo@lucaspadilha.com: ${facts.mail.join(', ')}`);
+  for (const word of FORBIDDEN) check(!facts.text.includes(word), `${label}: mentions "${word}"`);
   for (const repo of facts.repos) check(PUBLIC_REPOS.has(repo), `${label}: links non-public repo "${repo}"`);
-  for (const stale of ['Operational Stack', 'Available for opportunities', 'Nginx', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
+  check(/Wikimedia Commons/.test(facts.text), `${label}: demo thumbnails show CC BY/BY-SA photos without a credit line`);
+  for (const stale of ['it was emptied and shut down', 'era esvaziada e desligada', 'Tools I use every day', 'Ferramentas do dia a dia', 'About 380 thousand events a day rerouted', 'Cerca de 380 mil envios por dia tirados', 'Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
     check(!facts.text.includes(stale), `${label}: still says "${stale}"`);
   }
 }
@@ -54,7 +73,7 @@ async function demo(page, label) {
   check(facts.banner && facts.bannerLink, `${label}: concept-site banner missing or not linking to /sites/#contato`);
   check(facts.tel === 0, `${label}: ${facts.tel} tel: links (no real phone numbers on concept sites)`);
   check(facts.badImages.length === 0, `${label}: images without alt/width/height: ${facts.badImages.join(', ')}`);
-  check(facts.bytes < 300 * 1024, `${label}: ${Math.round(facts.bytes / 1024)} KB without images (limit 300 KB)`);
+  check(facts.bytes < 450 * 1024, `${label}: ${Math.round(facts.bytes / 1024)} KB without images (limit 450 KB)`);
   const text = await page.evaluate(() => ({ banner: document.querySelector('.demo-banner')?.innerText ?? '', body: document.body.textContent }));
   check(/fictícia/i.test(text.banner), `${label}: banner does not say the business is fictional ("${text.banner.replace(/\s+/g, ' ')}")`);
   if (label.includes('/advocacia/')) {
@@ -75,7 +94,9 @@ async function sitesPage(page, label) {
       wa: document.querySelectorAll('a[href*="wa.me"]').length,
       contacts,
       contato: Boolean(document.getElementById('contato')),
+      marketing: Boolean(document.getElementById('marketing')),
       text: document.body.innerText,
+      all: document.body.textContent,
       ld: ld.flatMap((item) => (item?.['@graph'] ?? [item]).map((node) => node?.['@type'])),
     };
   });
@@ -88,6 +109,18 @@ async function sitesPage(page, label) {
   for (const c of facts.contacts) check(pattern.test(c.href), `${label}: contact CTA "${c.href}" does not match its channel`);
   check(channels.has('whatsapp') || facts.wa === 0, `${label}: links wa.me while the channel is e-mail`);
   check(/Wikimedia Commons/.test(facts.text), `${label}: thumbnails show CC BY/BY-SA photos without a credit line`);
+  for (const price of ['R$ 470', 'R$ 960', 'R$ 87']) check(facts.all.includes(price), `${label}: missing price ${price}`);
+  check(facts.marketing, `${label}: #marketing section missing`);
+  if (channels.has('email')) for (const c of facts.contacts) check(c.href.startsWith('mailto:ceo@lucaspadilha.com'), `${label}: contact goes to ${c.href.slice(0, 40)}`);
+  for (const word of FORBIDDEN) check(!facts.all.includes(word), `${label}: mentions "${word}"`);
+  const previews = await page.evaluate(() => [...document.querySelectorAll('#exemplos video')].map((v) => ({
+    preload: v.getAttribute('preload'), poster: Boolean(v.getAttribute('poster')), loop: v.loop, muted: v.muted,
+    button: v.closest('figure')?.querySelector('button[aria-pressed]') !== null,
+  })));
+  check(previews.length === 3, `${label}: ${previews.length} video previews (expected 3)`);
+  for (const v of previews) check(v.preload === 'none' && v.poster && !v.loop && v.muted && v.button, `${label}: preview must be preload=none, poster, no loop, muted, with a pause button: ${JSON.stringify(v)}`);
+  const brows = await page.evaluate((src) => new Function(`return (${src})()`)(), eyebrows.toString());
+  check(brows === 0, `${label}: ${brows} eyebrow labels above headings`);
   check(facts.contato, `${label}: #contato missing`);
   check(facts.ld.includes('ProfessionalService'), `${label}: JSON-LD types ${facts.ld.join(', ')}`);
 }
@@ -106,8 +139,8 @@ const routes = [
 const browser = await chromium.launch();
 
 async function open(path, options = {}) {
-  const { init, ...contextOptions } = options;
-  const context = await browser.newContext({ locale: 'en-US', ...contextOptions });
+  const { init, using = browser, ...contextOptions } = options;
+  const context = await using.newContext({ locale: 'en-US', ...contextOptions });
   if (init) await context.addInitScript(init);
   const page = await context.newPage();
   const errors = [];
@@ -157,6 +190,35 @@ try {
         if (more.receiptJs !== null) check(Math.abs(more.receiptJs - more.realJsKb) <= 0.15, `${label}: receipt says ${more.receiptJs} KB of JS, page runs ${more.realJsKb.toFixed(2)} KB`);
       }
       if (width === 390 && route.extra) await route.extra(page, label);
+      if (width === 1440 && (await page.locator('[data-scene]').count())) {
+        const host = page.locator('[data-scene]').first();
+        await host.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(600);
+        if ((await host.getAttribute('data-scene')) === 'idle') {
+          const still = await page.evaluate(() => {
+            const fallback = document.querySelector('[data-scene] [data-fallback]');
+            return fallback ? Number(getComputedStyle(fallback).opacity) : -1;
+          });
+          check(still >= 0.9, `${label}: scene waits for interaction but its still is invisible (opacity ${still})`);
+        }
+        await page.mouse.move(8, 8); // scenes may wait for the first interaction
+        await page.waitForFunction(() => ['live', 'fallback'].includes(document.querySelector('[data-scene]')?.dataset.scene), null, { timeout: 15000 }).catch(() => {});
+        const state = await host.getAttribute('data-scene');
+        check(state === 'live', `${label}: scene is "${state}" (expected live where WebGL works)`);
+        if (state === 'live') {
+          const webgl = await page.evaluate(() => {
+            const canvas = document.querySelector('[data-scene] canvas');
+            return Boolean(canvas && (canvas.getContext('webgl2') || canvas.getContext('webgl')));
+          });
+          check(webgl, `${label}: scene canvas has no WebGL context`);
+          await page.mouse.move(1, 1);
+          await page.waitForTimeout(1500);
+          const before = await host.screenshot();
+          await page.waitForTimeout(6000);
+          const after = await host.screenshot();
+          check(before.equals(after), `${label}: the scene keeps moving on its own after 5 s (WCAG 2.2.2)`);
+        }
+      }
       if (width === 390 || width === 1440) {
         // Scroll-reveal starts hidden; show everything so axe judges the final state.
         await page.evaluate(() => document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-in')));
@@ -217,9 +279,10 @@ try {
     const sitemapResponse = await get('/sitemap.xml');
     const sitemap = await sitemapResponse.text();
     check(sitemapResponse.status === 200, `sitemap.xml: status ${sitemapResponse.status}`);
-    for (const path of ['/', '/pt/', '/sites/', '/startup/']) {
+    for (const path of ['/', '/pt/', '/sites/']) {
       check(sitemap.includes(`<loc>${PROD}${path}</loc>`), `sitemap.xml: missing ${path}`);
     }
+    check(!sitemap.includes('/startup/'), 'sitemap.xml: lists /startup/ (it stays online but unlisted)');
     check(!sitemap.includes('/sites/exemplos/'), 'sitemap.xml: lists concept sites (they are noindex)');
     const notFound = await get('/404.html');
     const notFoundHtml = await notFound.text();
@@ -257,7 +320,7 @@ try {
     const { context, page } = await open('/', { viewport: { width: 390, height: 844 } });
     const menu = page.locator('details.menu');
     await menu.locator('summary').click();
-    await menu.locator('nav a[href="#work"]').click();
+    await menu.locator('nav a[href="#infra"]').click();
     check(!(await menu.evaluate((el) => el.open)), 'mobile menu stays open after choosing a section');
     await menu.locator('summary').click();
     await page.keyboard.press('Escape');
@@ -270,6 +333,89 @@ try {
     contact.whatsapp = 'a definir';
     check(contactHref('oi').startsWith('mailto:'), `contactHref with an invalid number: ${contactHref('oi')}`);
     contact.whatsapp = saved;
+  }
+
+  const noWebGL = await chromium.launch({ args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] });
+  const webgl1 = await chromium.launch({ args: ['--disable-webgl2'] });
+  try {
+    for (const route of routes) {
+      for (const [name, options] of [['reduced motion', { reducedMotion: 'reduce' }], ['no WebGL', { using: noWebGL }], ['WebGL1 only', { using: webgl1 }]]) {
+        const { context, page, errors } = await open(route.path, { viewport: { width: 1440, height: 900 }, ...options });
+        if (await page.locator('[data-scene]').count()) {
+          await page.locator('[data-scene]').first().scrollIntoViewIfNeeded();
+          await page.mouse.move(8, 8);
+          await page.waitForTimeout(1200);
+          const facts = await page.evaluate(() => {
+            const host = document.querySelector('[data-scene]');
+            const fallback = host.querySelector('[data-fallback]');
+            return { state: host.dataset.scene, canvas: Boolean(host.querySelector('canvas')), shown: Boolean(fallback && !fallback.hidden && fallback.getBoundingClientRect().height > 0), opacity: fallback ? Number(getComputedStyle(fallback).opacity) : -1 };
+          });
+          check(facts.state === 'fallback' && !facts.canvas && facts.shown && facts.opacity >= 0.9, `${route.path} (${name}): expected the static fallback, got ${JSON.stringify(facts)}`);
+          check(errors.length === 0, `${route.path} (${name}): ${errors.join(' | ')}`);
+        }
+        await context.close();
+      }
+    }
+  } finally {
+    await noWebGL.close();
+    await webgl1.close();
+  }
+
+  if (!onlyDemo) {
+    const { context, page } = await open('/', { viewport: { width: 1440, height: 900 } });
+    const theme = () => page.evaluate(() => document.documentElement.dataset.theme || 'paper');
+    const at = async (selector) => { await page.evaluate((sel) => document.querySelector(sel).scrollIntoView({ block: 'center', behavior: 'instant' }), selector); await page.waitForTimeout(500); return theme(); };
+    const night = await at('#infra [data-step="migrate"]');
+    const paper = await at('#stack');
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(500);
+    const top = await theme();
+    check(night === 'night' && paper === 'paper' && top === 'paper', `theme shift: infra=${night}, stack=${paper}, top=${top}`);
+    await context.close();
+  }
+
+  // The sales funnel's main click: /sites/ → a concept site, with no errors along the way.
+  if (!onlyDemo) {
+    for (const slug of DEMOS) {
+      const { context, page, errors } = await open('/sites/', { viewport: { width: 1440, height: 900 } });
+      await Promise.all([page.waitForURL(`**/sites/exemplos/${slug}/`), page.locator(`#exemplos a[href="/sites/exemplos/${slug}/"]`).first().click()]);
+      await page.waitForTimeout(1200);
+      check(errors.length === 0, `navigate /sites/ → ${slug}: ${errors.join(' | ')}`);
+      await context.close();
+    }
+  }
+
+  // Video previews never start on their own under reduced motion.
+  if (!onlyDemo) {
+    const { context, page } = await open('/sites/', { viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+    await page.evaluate(() => document.querySelector('#exemplos').scrollIntoView({ behavior: 'instant' }));
+    await page.waitForTimeout(1500);
+    const playing = await page.evaluate(() => [...document.querySelectorAll('#exemplos video')].filter((v) => !v.paused).length);
+    check(playing === 0, `/sites/ (reduced motion): ${playing} previews playing on their own`);
+    await context.close();
+  }
+
+  // The hero headline reveal finishes fast and leaves the title readable; pages cross-fade natively.
+  if (!onlyDemo) {
+    for (const path of ['/', '/pt/']) {
+      const { context, page } = await open(path, { viewport: { width: 1440, height: 900 } });
+      await page.waitForTimeout(1500);
+      const hero = await page.evaluate(() => {
+        const h1 = document.querySelector('h1');
+        const parts = [...h1.querySelectorAll('*')];
+        const moved = parts.filter((el) => {
+          const t = getComputedStyle(el).transform;
+          return t !== 'none' && t !== 'matrix(1, 0, 0, 1, 0, 0)';
+        }).length;
+        const vt = [...document.styleSheets].some((sheet) => {
+          try { return [...sheet.cssRules].some((rule) => rule.cssText.includes('@view-transition')); } catch { return false; }
+        });
+        return { opacity: Number(getComputedStyle(h1).opacity), visibility: getComputedStyle(h1).visibility, moved, text: h1.textContent.trim().length, vt, reveals: document.querySelectorAll('[data-reveal]').length };
+      });
+      check(hero.opacity === 1 && hero.visibility === 'visible' && hero.moved === 0 && hero.text > 20, `hero ${path}: headline not settled after 1.5 s ${JSON.stringify(hero)}`);
+      check(hero.vt, `hero ${path}: no @view-transition rule`);
+      check(hero.reveals === 0, `hero ${path}: ${hero.reveals} blocks still use the generic scroll reveal`);
+      await context.close();
+    }
   }
 
   // Content must be visible without JavaScript and with reduced motion.

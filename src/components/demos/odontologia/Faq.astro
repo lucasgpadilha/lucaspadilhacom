@@ -29,7 +29,6 @@ const faq = [
 <section class="section faq" id="duvidas" aria-labelledby="faq-title">
   <div class="wrap faq__grid">
     <div class="faq__main">
-      <p class="label">Dúvidas</p>
       <h2 id="faq-title" class="h2">Perguntas que <strong>chegam sempre<span class="dot">.</span></strong></h2>
       <div class="faq__list">
         {faq.map((item) => (
@@ -45,7 +44,6 @@ const faq = [
     </div>
 
     <aside class="pay" aria-labelledby="pay-title">
-      <p class="pay__tag">Antes de começar</p>
       <h2 id="pay-title" class="pay__title">Tudo <strong>por escrito</strong>, antes de qualquer decisão.</h2>
       <ul role="list">
         <li>Plano de tratamento com as etapas explicadas</li>
@@ -88,11 +86,8 @@ const faq = [
     align-self: start; padding: 32px 26px 28px; border: 1px solid var(--line); border-radius: var(--r-lg);
     background: #fff;
   }
-  .pay__tag {
-    font-size: 0.8125rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal);
-  }
   .pay__title {
-    margin-top: 12px; font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem); font-weight: 320;
+    font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem); font-weight: 320;
     line-height: 1.2; letter-spacing: -0.025em; color: var(--ink);
   }
   .pay__title strong { font-weight: 700; color: var(--teal); }

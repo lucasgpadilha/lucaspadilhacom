@@ -1,0 +1,145 @@
+---
+import { migration } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const m = migration;
+---
+<section id="infra" class="zone-night migration" aria-labelledby="infra-title" data-theme-zone="night">
+  <div class="wrap">
+    <header class="section-head">
+      <h2 id="infra-title">{t(m.title, locale)}</h2>
+      <p class="lede">{t(m.intro, locale)}</p>
+    </header>
+    <div class="layout">
+      <div class="stage" data-stage>
+        <div class="stage-inner" data-stage-host>
+          <figure class="fallback" data-fallback aria-hidden="true">
+            <svg viewBox="0 0 640 400" role="presentation">
+              <g class="vms">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <g transform={`translate(40 ${40 + i * 66})`}>
+                    <rect width="150" height="52" rx="3" />
+                    {[0, 1, 2, 3, 4, 5].map((j) => <rect class="box" x={12 + j * 22} y="16" width="16" height="20" />)}
+                  </g>
+                ))}
+              </g>
+              <path class="flow" d="M210 200 C 300 200, 330 200, 400 200" />
+              <path class="flow-head" d="M392 192 L404 200 L392 208" />
+              <g class="cluster">
+                {Array.from({ length: 19 }, (_, i) => {
+                  const ring = [[0, 0], [1, 0], [0.5, 0.87], [-0.5, 0.87], [-1, 0], [-0.5, -0.87], [0.5, -0.87], [2, 0], [1.5, 0.87], [1, 1.73], [0, 1.73], [-1, 1.73], [-1.5, 0.87], [-2, 0], [-1.5, -0.87], [-1, -1.73], [0, -1.73], [1, -1.73], [1.5, -0.87]][i];
+                  return <polygon class="node" points="0,-26 22.5,-13 22.5,13 0,26 -22.5,13 -22.5,-13" transform={`translate(${520 + ring[0] * 46} ${200 + ring[1] * 52})`} />;
+                })}
+              </g>
+            </svg>
+          </figure>
+          <p class="counter" aria-live="off">
+            <strong data-counter>258</strong>
+            <span>{t(m.counter, locale)}</span>
+          </p>
+        </div>
+      </div>
+      <ol class="steps" role="list">
+        {m.steps.map((step) => (
+          <li class="step" data-step={step.key}>
+            <h3>{t(step.title, locale)}</h3>
+            <p>{t(step.body, locale)}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { mountScene } from '../../lib/three/mount';
+  import { ALREADY_ON_CLUSTER, landed, stepIndex } from './migration-timeline';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const root = document.getElementById('infra');
+  const host = root?.querySelector<HTMLElement>('[data-stage-host]');
+  if (root && host) {
+    const handle = mountScene(host, () => import('./migration-scene'));
+    const counter = root.querySelector<HTMLElement>('[data-counter]');
+    const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')];
+    const update = (progress: number) => {
+      handle.setProgress(progress);
+      if (counter) counter.textContent = String(ALREADY_ON_CLUSTER + landed(progress));
+      const active = stepIndex(progress);
+      steps.forEach((step, i) => step.toggleAttribute('data-active', i === active));
+    };
+    update(0);
+    ScrollTrigger.create({
+      trigger: root.querySelector('.steps'),
+      start: 'top 70%',
+      end: 'bottom 70%',
+      onUpdate: (self) => update(self.progress),
+    });
+
+    // Lights off for the infrastructure chapter, back on after it.
+    ScrollTrigger.create({
+      trigger: root,
+      endTrigger: '#how',
+      start: 'top 55%',
+      end: 'bottom 45%',
+      onToggle: (self) => { document.documentElement.dataset.theme = self.isActive ? 'night' : 'paper'; },
+    });
+  }
+</script>
+
+<style>
+  /* Inactive steps stay fully legible (AA); the active one gets the ink and a signal marker. */
+  .step h3 { color: var(--ink-2); transition: color 0.3s var(--ease-out); }
+  .step h3::before {
+    content: ''; display: block; width: 28px; height: 2px; margin-bottom: 0.9rem;
+    background: var(--line-strong); transition: background-color 0.3s var(--ease-out), width 0.3s var(--ease-out);
+  }
+  .step[data-active] h3 { color: var(--ink); }
+  .step[data-active] h3::before { background: var(--signal); width: 56px; }
+  html:not(.js) .step h3 { color: var(--ink); }
+  .migration { padding-block: clamp(5rem, 4rem + 6vw, 9rem) clamp(3rem, 2rem + 4vw, 6rem); }
+  .layout { display: grid; gap: 2rem; }
+  .stage { position: sticky; top: 64px; z-index: 3; height: min(44vh, 380px); }
+  .stage-inner {
+    position: relative; height: 100%;
+    border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+    background: radial-gradient(120% 90% at 70% 40%, #1b1a17 0%, var(--paper) 70%);
+  }
+  .fallback { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 1rem; }
+  .fallback[hidden] { display: none; }
+  .fallback svg { width: 100%; height: 100%; }
+  .fallback rect { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+  .fallback .box { fill: var(--signal); stroke: none; opacity: 0.25; }
+  .fallback .flow { fill: none; stroke: var(--signal); stroke-width: 2; stroke-dasharray: 4 6; }
+  .fallback .flow-head { fill: none; stroke: var(--signal); stroke-width: 2; }
+  .fallback .node { fill: color-mix(in srgb, var(--signal) 22%, transparent); stroke: var(--signal); stroke-width: 1.2; }
+  .counter {
+    position: absolute; left: 1rem; bottom: 0.9rem; z-index: 2; margin: 0;
+    display: flex; align-items: baseline; gap: 0.6rem;
+    font-family: var(--font-mono); color: var(--ink-2); font-size: 0.75rem;
+  }
+  .counter strong { font-family: var(--font-sans); font-size: var(--step-3); color: var(--ink); font-weight: 680; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .steps { display: grid; gap: 0; position: relative; z-index: 1; }
+  .step {
+    min-height: 62vh; display: grid; align-content: center; gap: 0.75rem;
+    padding: 1.5rem 0;
+  }
+  .step h3 { font-size: var(--step-2); max-width: 20ch; }
+  .step p { color: var(--ink-2); max-width: 46ch; font-size: var(--step-1); line-height: 1.45; }
+  /* Phones: the opaque stage stays on top; each step's text lives in the lower half and
+     slides under the stage as it leaves, so copy never sits on the canvas. */
+  @media (max-width: 959px) {
+    .stage { box-shadow: 0 18px 24px -12px var(--paper); }
+    .step { min-height: 72vh; align-content: end; padding-bottom: 10vh; }
+  }
+  @media (min-width: 960px) {
+    .layout { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 4rem; align-items: start; }
+    .stage { top: 88px; height: calc(100vh - 140px); max-height: 720px; }
+    .step { min-height: 80vh; }
+  }
+</style>

@@ -4,16 +4,15 @@ import Photo from './Photo.astro';
 <section class="hero" aria-labelledby="hero-title">
   <div class="cj-wrap hero-grid">
     <div class="hero-copy">
-      <p class="cj-eyebrow eyebrow"><span>Padaria artesanal e café</span><span class="sep" aria-hidden="true"></span><span>Barão Geraldo, Campinas</span></p>
       <h1 id="hero-title" class="hero-title">
-        <span style="--i: 0">Pão com tempo,</span>
-        <span style="--i: 1">café sem pressa</span>
-        <span style="--i: 2">e <span class="accent">bolo de vó</span><span class="cj-dot title-dot" aria-hidden="true"></span><span class="cj-sr">.</span></span>
+        <span>Pão com tempo,</span>
+        <span>café sem pressa</span>
+        <span>e <span class="accent">bolo de vó</span><span class="cj-dot title-dot" aria-hidden="true"></span><span class="cj-sr">.</span></span>
       </h1>
       <p class="hero-lead">
-        Uma padaria de bairro com o forno aceso desde cedo. Pão de fermentação natural,
-        pão de queijo com queijo de verdade, cafés especiais coados na hora e aqueles
-        bolos que lembram a casa da avó.
+        Uma padaria de bairro em Barão Geraldo, Campinas, com o forno aceso desde cedo.
+        Pão de fermentação natural, pão de queijo com queijo de verdade, cafés especiais
+        coados na hora e aqueles bolos que lembram a casa da avó.
       </p>
       <div class="hero-actions">
         <a class="cj-btn" href="/sites/#contato">
@@ -26,11 +25,11 @@ import Photo from './Photo.astro';
     </div>
 
     <div class="hero-media">
-      <div class="arch">
-        <Photo slot="pao-de-queijo" sizes="(min-width: 960px) 52vw, (min-width: 600px) 75vw, 125vw" priority tone="crosta" />
-      </div>
-      <div class="coin">
-        <Photo slot="cafe" sizes="(min-width: 960px) 27vw, 64vw" tone="jabuticaba" />
+      <!-- The arch is the mouth of the oven. With WebGL, the tray bakes in it as the page scrolls; otherwise the photo stays. -->
+      <div class="arch" data-oven>
+        <div class="arch-photo" data-fallback>
+          <Photo slot="pao-de-queijo" sizes="(min-width: 960px) 40vw, (min-width: 600px) 75vw, 110vw" tone="crosta" />
+        </div>
       </div>
       <svg class="stamp" viewBox="0 0 120 120" aria-hidden="true">
         <defs><path id="cj-ring" d="M60 60m-43 0a43 43 0 1 1 86 0a43 43 0 1 1-86 0" /></defs>
@@ -51,24 +50,18 @@ import Photo from './Photo.astro';
 </section>
 
 <style>
-  .hero { padding-block: clamp(1.75rem, 4vw, 3.5rem) clamp(3.5rem, 8vw, 6.5rem); overflow-x: clip; }
+  .hero { padding-block: clamp(1.75rem, 4vw, 3.5rem) clamp(3.5rem, 8vw, 6.5rem); overflow-x: clip; background: var(--creme); }
   .hero-grid { display: grid; gap: clamp(2.75rem, 6vw, 4rem); align-items: center; }
 
-  .eyebrow > span:not(.sep) { display: block; }
-  .sep { display: none; width: 0.42em; height: 0.42em; margin: 0 0.6em 0.1em; border-radius: 50%; background: var(--crosta); vertical-align: middle; }
-  @media (min-width: 600px) {
-    .eyebrow > span:not(.sep) { display: inline; }
-    .sep { display: inline-block; }
-  }
-
   .hero-title {
-    margin-top: 1rem;
     font-family: var(--display); font-weight: 620; color: var(--jabuticaba);
-    font-size: min(calc((100vw - 2 * var(--gutter)) / 7.25), 6.25rem);
+    font-size: min(calc((100vw - 2 * var(--gutter)) / 7.25), 6rem);
     line-height: 0.95; letter-spacing: -0.035em;
     font-variation-settings: 'SOFT' 100, 'WONK' 1;
   }
   .hero-title > span { display: block; }
+  /* Lines rise from under their own baseline; the mask keeps descenders and the accent dot. */
+  .hero-title :global(.hero-line-mask) { padding-bottom: 0.08em; margin-bottom: -0.08em; }
   .accent { color: var(--crosta); font-weight: 700; }
   .title-dot { width: 0.2em; height: 0.2em; margin-left: 0.06em; vertical-align: baseline; }
 
@@ -76,31 +69,37 @@ import Photo from './Photo.astro';
   .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; margin-top: 2rem; }
   .cj-demo-note { margin-top: 0.85rem; }
 
-  /* Photo composition: the arch is the mouth of the oven, the coin is a jabuticaba. */
-  .hero-media { position: relative; width: 100%; max-width: 34rem; margin-inline: auto; aspect-ratio: 1 / 1.08; }
-  .arch, .coin { position: absolute; overflow: hidden; background: var(--miolo); }
+  /* The arch is the mouth of the oven: a cream sweep lit warm from the back, where the tray bakes. */
+  .hero-media { position: relative; width: 100%; max-width: 34rem; margin-inline: auto; aspect-ratio: 1 / 1.1; }
   .arch {
-    top: 0; right: 2%; width: 72%; aspect-ratio: 4 / 5;
-    border-radius: 999px 999px 1.25rem 1.25rem; rotate: 2deg;
-    box-shadow: 0 0 0 7px var(--creme), 0 0 0 8.5px rgb(43 21 48 / 0.28), 0 28px 50px -24px rgb(43 21 48 / 0.45);
+    position: absolute; top: 0; right: 0; width: 88%; aspect-ratio: 4 / 5; overflow: hidden;
+    border-radius: 999px 999px 1.25rem 1.25rem; rotate: 1.5deg;
+    background:
+      radial-gradient(80% 55% at 30% 20%, #fffaf1 0%, rgb(255 250 241 / 0) 100%),
+      linear-gradient(180deg, #f1e3cb 0%, #f6eedf 48%, #f3e6cf 100%);
+    box-shadow: 0 0 0 7px var(--creme), 0 0 0 8.5px rgb(43 21 48 / 0.28), 0 30px 50px -24px rgb(43 21 48 / 0.45);
   }
-  .coin {
-    left: 0; bottom: 3%; width: 42%; aspect-ratio: 1; border-radius: 50%; rotate: -8deg;
-    box-shadow: 0 0 0 7px var(--creme), 0 20px 40px -18px rgb(43 21 48 / 0.5);
-  }
-  .arch :global(img), .coin :global(img), .arch :global(.cj-ph), .coin :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
+  .arch-photo { position: absolute; inset: 0; }
+  .arch-photo[hidden] { display: none; }
+  .arch :global(img), .arch :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
   .arch :global(img) { object-position: 30% 62%; }
-  .coin :global(img) { object-position: 58% 48%; transform: scale(1.12); }
+  /* While the oven warms up, keep the arch empty instead of flashing the photo before the tray.
+     If the script never runs at all (the arch never gets a state), the photo appears after 4 s. */
+  :global(.cj-motion) .arch:not([data-scene='fallback']) .arch-photo { opacity: 0; }
+  :global(.cj-motion) .arch:not([data-scene]) .arch-photo { animation: cj-reveal 0.4s ease-out 4s forwards; }
+  :global(.cj-motion) .arch.is-slow:not([data-scene='fallback']) .arch-photo { opacity: 1; transition: opacity 0.4s ease-out; }
+  .arch :global(canvas) { animation: cj-fade 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  @keyframes cj-reveal { to { opacity: 1; } }
+  @keyframes cj-fade { from { opacity: 0; } }
 
-  .stamp { position: absolute; left: 3%; top: 6%; width: 27%; max-width: 8.5rem; overflow: visible; }
+  .stamp { position: absolute; left: 0; top: 7%; width: 26%; max-width: 8.5rem; overflow: visible; rotate: -8deg; }
   .stamp-bg { fill: var(--jabuticaba); }
   .stamp-core { fill: var(--crosta); }
   .stamp-shine { fill: var(--creme); opacity: 0.9; }
   .stamp text { fill: var(--creme); font: 600 10.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; }
-  .stamp-ring { transform-origin: 60px 60px; }
 
   .tag {
-    position: absolute; right: 0; bottom: 7%; rotate: -5deg;
+    position: absolute; right: -0.25rem; bottom: -3.5%; rotate: -5deg;
     display: grid; gap: 0.1rem; padding: 0.6rem 1rem 0.65rem 1.85rem;
     background: var(--papel); color: var(--jabuticaba);
     border-radius: 0.4rem 1.1rem 1.1rem 0.4rem;
@@ -112,20 +111,26 @@ import Photo from './Photo.astro';
   .tag-v b { margin-left: 0.35rem; font-weight: 700; color: var(--crosta-texto); }
   .tag-v small { font: 600 0.65em var(--sans); margin-right: 0.15em; vertical-align: 0.25em; }
 
+  /* On phones the tag hangs lower and smaller, below the front of the tray. */
+  @media (max-width: 599px) {
+    .tag { bottom: -9%; padding: 0.45rem 0.8rem 0.5rem 1.6rem; }
+    .tag-hole { left: 0.6rem; }
+    .tag-k { font-size: 0.6875rem; }
+    .tag-v { font-size: 1rem; }
+  }
   @media (min-width: 600px) {
     .hero-media { max-width: 36rem; }
   }
 
   @media (min-width: 960px) {
-    .hero-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 2rem; }
-    .hero-title { font-size: min(calc(min(100vw - 2 * var(--gutter), var(--maxw)) * 0.57 / 6.6), 7.25rem); }
-    .hero-media { max-width: none; margin-right: calc(var(--gutter) * -0.25); }
+    .hero-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 2.5rem; }
+    .hero-title { font-size: min(calc(min(100vw - 2 * var(--gutter), var(--maxw)) * 0.57 / 6.6), 6rem); }
+    .hero-media { max-width: 33rem; margin-right: 0; }
+    /* The first screen holds still while the bake scrolls by, so the hero fills it below the banner and header. */
+    :global(.cj-motion) .hero { min-height: calc(100svh - 7.3rem); display: flex; flex-direction: column; justify-content: center; }
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .hero-title > span { animation: cj-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i) * 90ms); }
-    .arch { animation: cj-settle 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both; }
-  }
-  @keyframes cj-rise { from { opacity: 0; transform: translateY(0.25em); } }
-  @keyframes cj-settle { from { opacity: 0; rotate: 6deg; translate: 0 1.5rem; } }
+  /* Hidden until SplitText has cut the lines, so they never flash. A finite fallback reveals them if the script never runs. */
+  :global(.cj-motion) .hero-title { visibility: hidden; animation: cj-show 0s linear 2.5s forwards; }
+  @keyframes cj-show { to { visibility: visible; } }
 </style>

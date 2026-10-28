@@ -1,7 +1,7 @@
 // Everything the /sites/ showcase says about the offer lives here.
 
 export const contact = {
-  email: 'lucasgpadilhatec@gmail.com',
+  email: 'ceo@lucaspadilha.com',
   /** Digits only with country code, e.g. '5519999999999'. While null, CTAs fall back to e-mail. */
   whatsapp: null as string | null,
 };
@@ -30,7 +30,6 @@ export const defaultMessage =
   'Olá, Lucas! Tenho um negócio e quero uma prévia do meu site.\n\nNome do negócio:\nCidade:\nO que vendemos ou fazemos:\nJá temos site ou Instagram? (link):\n';
 
 export const hero = {
-  kicker: 'Sites para pequenos negócios · Lucas Padilha',
   title: 'Sites rápidos e bonitos para negócios que querem ser encontrados.',
   lede: 'Eu desenho, construo, publico e cuido do seu site. E você vê a prévia funcionando antes de fechar.',
   primary: 'Pedir minha prévia',
@@ -96,32 +95,29 @@ export const steps = [
   { title: 'Cuidado', body: 'Se quiser, eu sigo cuidando: atualizações, backups e pequenas alterações todo mês.' },
 ];
 
-/** Suggested reference prices. The owner confirms them before publishing. */
+/** Reference prices set by the owner. */
 export const plans = [
   {
     name: 'Página única',
     from: 'a partir de',
-    price: 'R$ 790',
+    price: 'R$ 470',
     cadence: 'pagamento único',
     items: ['Uma página com até 6 seções', 'Botão de WhatsApp e rota no mapa', 'Pronto para celular e Google', 'Publicação no seu domínio'],
-    pending: true,
   },
   {
     name: 'Site completo',
     from: 'a partir de',
-    price: 'R$ 1.490',
+    price: 'R$ 960',
     cadence: 'pagamento único',
     items: ['Até 5 páginas', 'SEO local e Perfil da Empresa no Google', 'Galeria, cardápio ou lista de serviços', 'Estatísticas de visita sem rastreadores invasivos'],
-    pending: true,
     featured: true,
   },
   {
     name: 'Cuidado mensal',
-    from: '',
-    price: 'R$ 89',
+    from: 'a partir de',
+    price: 'R$ 87',
     cadence: 'por mês',
     items: ['Hospedagem, domínio e HTTPS', 'Backups e monitoramento', 'Pequenas alterações todo mês', 'Atendimento direto comigo'],
-    pending: true,
   },
 ];
 
@@ -151,3 +147,15 @@ export const faq = [
     a: 'Não. São sites conceito de empresas fictícias, feitos para mostrar o que dá para construir para o seu negócio.',
   },
 ];
+
+export const marketing = {
+  title: 'Marketing digital',
+  lede: 'Site no ar é metade do caminho. A outra metade é gente chegando nele.',
+  items: [
+    { title: 'Instagram e redes sociais', body: 'Calendário, posts, stories e atendimento, no tom do seu negócio.' },
+    { title: 'Tráfego pago', body: 'Campanhas no Meta, Google, TikTok e Kwai Ads, com orçamento que você controla.' },
+    { title: 'TikTok Shop', body: 'Catálogo, vitrine e operação da loja dentro do TikTok.' },
+    { title: 'Automação de conteúdo', body: 'Fluxos que preparam e agendam publicações para você postar com constância.' },
+  ],
+  note: 'Sob consulta, sozinho ou junto com o site.',
+};

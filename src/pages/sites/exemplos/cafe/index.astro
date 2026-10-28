@@ -4,7 +4,9 @@
  * Palette: jabuticaba #2B1530 (dark grounds, display ink) · creme #F6EEDF (paper) · crosta #C8582F (terracotta, large type and dots only)
  *   · crosta-texto #A8461F (small terracotta text, 5.1:1 on creme) · folha #3F6B3A (leaf-green ground, cream text 5.4:1) · tinta #2A1A1F (body, 14.4:1).
  * Type: Fraunces Variable with all axes, SOFT 100 + WONK 1 + optical sizing, for a doughy, slightly wonky display; DM Sans Variable for body and UI.
- * Layout: an oversized three-line headline beside an arch-framed photo (the mouth of the oven), overlapped by a round coffee crop, a spinning stamp and a price tag.
+ * Layout: an oversized three-line headline beside the arch (the mouth of the oven), a stamp and a price tag.
+ * Authored moment (v3): inside the arch, a tray of pão de queijo bakes as the page scrolls (Three.js, scene.ts);
+ *   the real photo is the fallback. Supporting motion: the headline arrives by line, menu prices tick once.
  * Signature: the jabuticaba dot, a glossy purple-black circle used as full stop, brand mark, bullet, "queridinho" marker and photo frame;
  *   carried by a hand-set paper menu with round dotted leaders.
  * Rhythm: creme hero, terracotta ribbon, paper menu, leaf-green bake times, cake orders, jabuticaba visit, FAQ, jabuticaba footer.
@@ -30,6 +32,10 @@ import Footer from '../../../../components/demos/cafe/Footer.astro';
   themeColor="#2B1530"
 >
   <link slot="head" rel="preload" as="font" type="font/woff2" href={frauncesLatin} crossorigin />
+  <script slot="head" is:inline>
+    // Set before first paint: motion is welcome, so the headline and the oven can prepare their first frame.
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('cj-motion');
+  </script>
   <a class="cj-skip" href="#conteudo">Pular para o conteúdo</a>
   <div id="topo" class="cj-page">
     <Header />
@@ -45,6 +51,10 @@ import Footer from '../../../../components/demos/cafe/Footer.astro';
     <Footer />
   </div>
 </DemoLayout>
+
+<script>
+  import '../../../../components/demos/cafe/motion';
+</script>
 
 <style is:global>
   :root {
@@ -84,6 +94,11 @@ import Footer from '../../../../components/demos/cafe/Footer.astro';
   main { overflow-x: clip; }
 
   .cj-page :focus-visible { outline: 3px solid var(--crosta-texto); outline-offset: 3px; border-radius: 3px; }
+
+  /* Browser surfaces in the house colours. */
+  html { scrollbar-color: #8a6f78 var(--miolo); accent-color: var(--crosta-texto); caret-color: var(--crosta-texto); }
+  ::selection { background: var(--jabuticaba); color: var(--creme); }
+  .cj-dark ::selection { background: var(--crosta-clara); color: var(--jabuticaba); }
   .cj-dark :focus-visible { outline-color: var(--creme) !important; }
 
   .cj-skip {
@@ -103,9 +118,7 @@ import Footer from '../../../../components/demos/cafe/Footer.astro';
     background: radial-gradient(circle at 33% 30%, rgb(255 255 255 / 0.7) 0 7%, rgb(255 255 255 / 0) 15%) var(--dot);
   }
 
-  .cj-eyebrow { font: 650 0.8125rem/1.35 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--folha); }
   .cj-h2 {
-    margin-top: 0.75rem;
     font-family: var(--display); font-weight: 620; color: var(--jabuticaba);
     font-size: clamp(2.75rem, 1.5rem + 5.2vw, 5.75rem); line-height: 0.95; letter-spacing: -0.035em;
     font-variation-settings: 'SOFT' 100, 'WONK' 1;
@@ -147,6 +160,14 @@ import Footer from '../../../../components/demos/cafe/Footer.astro';
     white-space: nowrap; font-family: var(--display); font-weight: 640; font-size: 1.25rem; line-height: 1.2; color: var(--crosta-texto);
     font-variant-numeric: lining-nums tabular-nums; font-variation-settings: 'SOFT' 100, 'WONK' 0;
   }
+  /* Prices tick into place once: a strip of digits rolls over the real (transparent) number. */
+  .cj-num { position: relative; display: inline-block; }
+  .cj-num.is-rolling { color: transparent; }
+  .odo { position: absolute; inset: 0; display: flex; color: var(--crosta-texto); clip-path: inset(0.16em -0.2em 0.14em); }
+  .cj-dark .odo, .estacao .odo { color: var(--creme); }
+  .odo-d { display: block; height: 1.2em; }
+  .odo-c { display: block; }
+  .odo-c > span { display: block; height: 1.2em; line-height: 1.2em; }
   .cj-price small { margin-right: 0.12em; font: 650 0.6em/1 var(--sans); vertical-align: 0.32em; color: var(--tinta-2); }
   .cj-from { font: 500 0.8125rem/1 var(--sans); color: var(--tinta-2); }
   .cj-dark .cj-from, .cj-dark .cj-price small { color: var(--lilas); }

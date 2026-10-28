@@ -1,84 +1,33 @@
 ---
-import { sections } from '../../data/home';
 import { stackGroups } from '../../data/stack';
 import { t, type Locale } from '../../lib/locale';
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
-const s = sections.stack;
-const visible = stackGroups
-  .map((group) => ({ ...group, tools: group.tools.filter((tool) => tool.level !== 'exposure') }))
-  .filter((group) => group.tools.length);
-const explored = stackGroups.flatMap((group) => group.tools.filter((tool) => tool.level === 'exposure'));
 ---
-<section id="stack" class="section" aria-labelledby="stack-title">
+<section id="stack" class="section stack" aria-labelledby="stack-title">
   <div class="wrap">
-    <header class="section-head" data-reveal>
-      <p class="label">{t(s.label, locale)}</p>
-      <div class="head-copy">
-        <h2 id="stack-title">{t(s.title, locale)}</h2>
-        <p class="lede">{t(s.intro, locale)}</p>
-        <ul class="legend" role="list">
-          <li><span class="mark core" aria-hidden="true"></span>{t(s.levels.core, locale)}</li>
-          <li><span class="mark hands-on" aria-hidden="true"></span>{t(s.levels['hands-on'], locale)}</li>
-          <li><span class="mark exposure" aria-hidden="true"></span>{t(s.levels.exposure, locale)}</li>
-        </ul>
-      </div>
+    <header class="section-head">
+      <h2 id="stack-title">{locale === 'pt' ? 'Ferramentas com que trabalho' : 'Tools I work with'}</h2>
     </header>
-
-    <div class="groups">
-      {visible.map((group) => (
-        <section class="group" aria-labelledby={`stack-${group.id}`} data-reveal>
-          <h3 id={`stack-${group.id}`}>{t(group.title, locale)}</h3>
-          <ul role="list">
-            {group.tools.map((tool) => (
-              <li>
-                <span class={`mark ${tool.level}`} aria-hidden="true"></span>
-                <span class="name">{tool.name}</span>
-                <span class="visually-hidden">({tool.level === 'core' ? 'core' : 'hands-on'})</span>
-                <span class="evidence">{tool.evidence}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+    <dl class="groups">
+      {stackGroups.map((group) => (
+        <div class="group">
+          <dt>{t(group.title, locale)}</dt>
+          <dd><ul role="list">{group.tools.map((tool) => <li>{tool}</li>)}</ul></dd>
+        </div>
       ))}
-    </div>
-
-    <details class="explored" data-reveal>
-      <summary>{t(s.more, locale)} <span aria-hidden="true">({explored.length})</span></summary>
-      <ul role="list">
-        {explored.map((tool) => <li><span class="name">{tool.name}</span><span class="evidence">{tool.evidence}</span></li>)}
-      </ul>
-    </details>
+    </dl>
   </div>
 </section>
 
 <style>
-  .head-copy { display: grid; gap: 1.25rem; }
-  .legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: var(--step--1); color: var(--ink-2); }
-  .legend li { display: inline-flex; align-items: center; gap: 0.5rem; }
-  .mark { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
-  .mark.core { background: var(--signal); }
-  .mark.hands-on { border: 1.5px solid var(--ink); }
-  .mark.exposure { border: 1.5px dashed var(--ink-2); }
-  .groups { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
-  @media (min-width: 720px) { .groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (min-width: 1100px) { .groups { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  .group { border-top: 2px solid var(--ink); padding-top: 1rem; }
-  .group h3 { font-size: var(--step-1); margin-bottom: 0.75rem; }
-  .group li, .explored li {
-    display: grid; grid-template-columns: auto 1fr; column-gap: 0.65rem; align-items: center;
-    padding: 0.6rem 0; border-bottom: 1px solid var(--line);
+  .groups { display: grid; gap: 0; border-top: 2px solid var(--ink); }
+  .group { display: grid; gap: 0.6rem; padding: 1.25rem 0; border-bottom: 1px solid var(--line); }
+  dt { font-weight: 640; font-size: var(--step-0); }
+  dd { margin: 0; }
+  ul { display: flex; flex-wrap: wrap; gap: 0.35rem 1.4rem; font-size: var(--step-1); color: var(--ink-2); }
+  @media (min-width: 900px) {
+    .group { grid-template-columns: minmax(0, 3fr) minmax(0, 9fr); align-items: baseline; padding: 1.5rem 0; }
   }
-  .group li .evidence { grid-column: 2; }
-  .name { font-weight: 600; }
-  .evidence { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-2); }
-  .explored { margin-top: 2rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
-  .explored summary {
-    cursor: pointer; min-height: 52px; display: flex; align-items: center; gap: 0.5rem; padding: 0 1.25rem;
-    font-weight: 600;
-  }
-  .explored ul { padding: 0 1.25rem 0.75rem; display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 2rem; }
-  @media (min-width: 720px) { .explored ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .explored li { grid-template-columns: 1fr auto; }
 </style>

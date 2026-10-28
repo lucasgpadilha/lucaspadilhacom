@@ -6,7 +6,6 @@ const pages = [
   { path: '/', alternates: { en: '/', 'pt-BR': '/pt/' } },
   { path: '/pt/', alternates: { en: '/', 'pt-BR': '/pt/' } },
   { path: '/sites/' },
-  { path: '/startup/' },
 ];
 
 export const GET: APIRoute = () => {

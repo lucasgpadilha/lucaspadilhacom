@@ -14,7 +14,7 @@ const pt = locale === 'pt';
 const builtAt = `${build.builtAt.slice(0, 10)} ${build.builtAt.slice(11, 16)} UTC`;
 const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 'Recibo desta página';
 ---
-<div class="receipt-shell" data-reveal>
+<div class="receipt-shell">
   <figure class="receipt" data-receipt data-locale={pt ? 'pt-BR' : 'en'}>
     <p class="head">
       <span>{title}</span>
@@ -91,6 +91,11 @@ const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 
 </script>
 
 <style>
+  /* The receipt prints out once, like paper feeding from a slot. */
+  @media (prefers-reduced-motion: no-preference) {
+    .receipt-shell { animation: feed 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+    @keyframes feed { from { clip-path: inset(0 0 100% 0); transform: translateY(-14px); } to { clip-path: inset(0 0 -40px 0); transform: none; } }
+  }
   .receipt-shell {
     filter: drop-shadow(0 0 0.5px var(--line-strong)) drop-shadow(0 22px 28px rgb(20 20 19 / 0.12));
   }

@@ -8,6 +8,7 @@ import Examples from '../../components/sites/Examples.astro';
 import Why from '../../components/sites/Why.astro';
 import Process from '../../components/sites/Process.astro';
 import Plans from '../../components/sites/Plans.astro';
+import Marketing from '../../components/sites/Marketing.astro';
 import Faq from '../../components/sites/Faq.astro';
 import ContactBlock from '../../components/sites/ContactBlock.astro';
 import { contact, contactChannel, contactHref, defaultMessage, faq, hero } from '../../data/sites';
@@ -46,6 +47,7 @@ const jsonLd = {
       { href: '#exemplos', label: 'Exemplos' },
       { href: '#como-funciona', label: 'Como funciona' },
       { href: '#planos', label: 'Planos' },
+      { href: '#marketing', label: 'Marketing' },
       { href: '#duvidas', label: 'Dúvidas' },
     ]}
     cta={{ href: '#contato', label: 'Pedir prévia' }}
@@ -54,7 +56,6 @@ const jsonLd = {
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap grid">
         <div class="copy">
-          <p class="label">{hero.kicker}</p>
           <h1 id="hero-title">{hero.title}</h1>
           <p class="lede">{hero.lede}</p>
           <div class="actions">
@@ -71,6 +72,7 @@ const jsonLd = {
     <Why />
     <Process />
     <Plans />
+    <Marketing />
     <Faq />
     <ContactBlock />
   </main>

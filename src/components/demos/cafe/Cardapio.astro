@@ -50,10 +50,9 @@ const groups: Group[] = [
 <section id="cardapio" class="cardapio" aria-labelledby="cardapio-title">
   <div class="cj-wrap cardapio-grid">
     <div class="cardapio-head">
-      <p class="cj-eyebrow">Feito aqui, todo dia</p>
       <h2 id="cardapio-title" class="cj-h2">Cardápio</h2>
       <p class="cj-lead">
-        Tudo sai da nossa cozinha em fornadas pequenas. A massa do pão descansa de um dia
+        Feito aqui, todo dia, em fornadas pequenas. A massa do pão descansa de um dia
         para o outro, o pão de queijo é enrolado à mão e o café é moído na hora de passar.
       </p>
       <p class="legend"><span class="cj-dot" aria-hidden="true"></span> Os queridinhos da casa</p>
@@ -78,7 +77,7 @@ const groups: Group[] = [
                     <span class="cj-leader" aria-hidden="true"></span>
                     <span class="cj-price">
                       {it.from && <span class="cj-from">a partir de </span>}
-                      {it.price.startsWith('+') ? <>+<small>R$</small>{it.price.slice(1)}</> : <><small>R$</small>{it.price}</>}
+                      {it.price.startsWith('+') ? <>+<small>R$</small><span class="cj-num">{it.price.slice(1)}</span></> : <><small>R$</small><span class="cj-num">{it.price}</span></>}
                     </span>
                   </p>
                   {it.desc && <p class="cj-desc">{it.desc}</p>}
@@ -94,7 +93,6 @@ const groups: Group[] = [
       <div class="estacao-photo">
         <Photo slot="jabuticaba" sizes="15rem" tone="jabuticaba" />
       </div>
-      <p class="cj-eyebrow">Da estação</p>
       <h3 id="estacao-title" class="estacao-title">Jabuticaba, só enquanto tem no pé</h3>
       <p class="estacao-text">
         Chega com a primavera e vai embora sem avisar. Enquanto a safra durar, a fruta entra no forno,
@@ -102,15 +100,15 @@ const groups: Group[] = [
       </p>
       <ul class="cj-menu" role="list">
         <li class="cj-item">
-          <p class="cj-line"><span class="cj-name">Torta de jabuticaba</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small>19</span></p>
+          <p class="cj-line"><span class="cj-name">Torta de jabuticaba</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small><span class="cj-num">19</span></span></p>
           <p class="cj-desc">Creme de baunilha e a fruta em calda. Fatia.</p>
         </li>
         <li class="cj-item">
-          <p class="cj-line"><span class="cj-name">Soda de jabuticaba</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small>14</span></p>
+          <p class="cj-line"><span class="cj-name">Soda de jabuticaba</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small><span class="cj-num">14</span></span></p>
           <p class="cj-desc">Xarope feito aqui, água com gás e limão.</p>
         </li>
         <li class="cj-item">
-          <p class="cj-line"><span class="cj-name">Geleia da casa</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small>29</span></p>
+          <p class="cj-line"><span class="cj-name">Geleia da casa</span><span class="cj-leader" aria-hidden="true"></span><span class="cj-price"><small>R$</small><span class="cj-num">29</span></span></p>
           <p class="cj-desc">Pote de 220 g, com pedacinhos da casca.</p>
         </li>
       </ul>
@@ -163,9 +161,8 @@ const groups: Group[] = [
   }
   .estacao-photo :global(img), .estacao-photo :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
   .estacao-photo :global(img) { object-position: 32% 64%; }
-  .estacao .cj-eyebrow { color: var(--crosta-clara); }
   .estacao-title {
-    margin-top: 0.6rem; font-family: var(--display); font-weight: 620; line-height: 1.02;
+    font-family: var(--display); font-weight: 620; line-height: 1.02;
     font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.375rem); letter-spacing: -0.02em; font-variation-settings: 'SOFT' 100, 'WONK' 1;
   }
   .estacao-text { margin-top: 0.85rem; color: var(--lilas); }
