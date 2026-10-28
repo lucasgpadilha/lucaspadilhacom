@@ -1,0 +1,80 @@
+[
+  {
+    "name": "pao-de-queijo",
+    "file_prefix": "pao-de-queijo-",
+    "title": "Pão de Queijo - cheese bread.jpg",
+    "author": "Jonathan Wilkins",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:P%C3%A3o_de_Queijo_-_cheese_bread.jpg",
+    "width": 1600,
+    "height": 1067,
+    "alt_pt": "Pães de queijo dourados em uma tigela de cerâmica, com queijos curados ao fundo e uma xícara de café com leite ao lado.",
+    "changes": "Redimensionada e convertida para WebP."
+  },
+  {
+    "name": "cafe",
+    "file_prefix": "cafe-",
+    "title": "A cup of cappuccino.jpg",
+    "author": "Vee Satayamas",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:A_cup_of_cappuccino.jpg",
+    "width": 1600,
+    "height": 1067,
+    "alt_pt": "Xícara branca de cappuccino com desenho de folha na espuma cremosa, sobre pires em uma mesa de madeira escura.",
+    "changes": "Redimensionada e convertida para WebP."
+  },
+  {
+    "name": "paes",
+    "file_prefix": "paes-",
+    "title": "Münster, Domplatz, Wochenmarkt -- 2019 -- 2716.jpg",
+    "author": "Dietmar Rabich",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:M%C3%BCnster,_Domplatz,_Wochenmarkt_--_2019_--_2716.jpg",
+    "width": 1600,
+    "height": 1067,
+    "alt_pt": "Pães rústicos de fermentação natural, com casca enfarinhada e rachada, empilhados em formas de papel.",
+    "changes": "Redimensionada e convertida para WebP."
+  },
+  {
+    "name": "interior",
+    "file_prefix": "interior-",
+    "title": "Party Cake Bakery Little Havana, Miami FL August 2023.jpg",
+    "author": "Phillip Pessar",
+    "license": "CC BY 2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Party_Cake_Bakery_Little_Havana,_Miami_FL_August_2023.jpg",
+    "width": 1600,
+    "height": 1200,
+    "alt_pt": "Balcão de confeitaria com vitrine de doces e tortas, luminárias de palha e parede de azulejos azul-petróleo.",
+    "changes": "Recortada, redimensionada e convertida para WebP."
+  },
+  {
+    "name": "bolo",
+    "file_prefix": "bolo-",
+    "title": "Small Bundt Cake with slice removed.jpg",
+    "author": "Katrin Morenz",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Small_Bundt_Cake_with_slice_removed.jpg",
+    "width": 1600,
+    "height": 1068,
+    "alt_pt": "Bolo caseiro de massa escura em forma de anel, polvilhado com açúcar, com uma fatia cortada mostrando o miolo macio.",
+    "changes": "Redimensionada e convertida para WebP."
+  },
+  {
+    "name": "jabuticaba",
+    "file_prefix": "jabuticaba-",
+    "title": "Plinia cauliflora 5.jpg",
+    "author": "Bruno.karklis",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Plinia_cauliflora_5.jpg",
+    "width": 1600,
+    "height": 1060,
+    "alt_pt": "Jabuticabas maduras, redondas e brilhantes, presas diretamente aos galhos da jabuticabeira.",
+    "changes": "Redimensionada e convertida para WebP."
+  }
+]
