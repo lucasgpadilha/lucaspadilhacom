@@ -83,7 +83,10 @@ export function mountScene(host: HTMLElement, load: () => Promise<SceneModule>, 
     canvas = null;
     host.dataset.scene = 'fallback';
     const fallback = host.querySelector<HTMLElement>('[data-fallback]');
-    if (fallback) fallback.hidden = false;
+    if (fallback) {
+      fallback.hidden = false;
+      fallback.style.removeProperty('display');
+    }
   };
 
   const start = async () => {
@@ -103,7 +106,11 @@ export function mountScene(host: HTMLElement, load: () => Promise<SceneModule>, 
       instance.render();
       host.dataset.scene = 'live';
       const fallback = host.querySelector<HTMLElement>('[data-fallback]');
-      if (fallback) fallback.hidden = true;
+      if (fallback) {
+        // hidden alone loses to author CSS such as display: grid
+        fallback.hidden = true;
+        fallback.style.display = 'none';
+      }
 
       const resize = new ResizeObserver(([entry]) => {
         const { width: w, height: h } = entry.contentRect;

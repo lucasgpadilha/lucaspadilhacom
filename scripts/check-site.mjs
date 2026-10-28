@@ -345,10 +345,10 @@ try {
   if (!onlyDemo) {
     const { context, page } = await open('/', { viewport: { width: 1440, height: 900 } });
     const theme = () => page.evaluate(() => document.documentElement.dataset.theme || 'paper');
-    const at = async (selector) => { await page.evaluate((sel) => document.querySelector(sel).scrollIntoView({ block: 'center' }), selector); await page.waitForTimeout(700); return theme(); };
+    const at = async (selector) => { await page.evaluate((sel) => document.querySelector(sel).scrollIntoView({ block: 'center', behavior: 'instant' }), selector); await page.waitForTimeout(500); return theme(); };
     const night = await at('#infra [data-step="migrate"]');
     const paper = await at('#stack');
-    await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(700);
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(500);
     const top = await theme();
     check(night === 'night' && paper === 'paper' && top === 'paper', `theme shift: infra=${night}, stack=${paper}, top=${top}`);
     await context.close();
