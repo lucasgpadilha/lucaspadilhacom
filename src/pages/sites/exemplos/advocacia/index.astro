@@ -62,7 +62,7 @@ import Rodape from '../../../../components/demos/advocacia/Rodape.astro';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   import { SplitText } from 'gsap/SplitText';
   import { mountScene } from '../../../../lib/three/mount';
-  import { prefersReducedMotion } from '../../../../lib/motion';
+  import { prefersReducedMotion, wantsStatic } from '../../../../lib/motion';
 
   gsap.registerPlugin(ScrollTrigger, SplitText);
   const root = document.documentElement;
@@ -72,7 +72,21 @@ import Rodape from '../../../../components/demos/advocacia/Rodape.astro';
   const host = document.querySelector<HTMLElement>('[data-ink-host]');
   const hero = host?.closest<HTMLElement>('.hero');
   if (host && hero) {
-    const scene = mountScene(host, () => import('../../../../components/demos/advocacia/scene'), { pointer: true });
+    // The still of the ink shows at once; the live shader takes over on the first interaction, starting
+    // settled on that same frame. Compiling the shader at load blocked the main thread for ~0.8 s.
+    let scene: ReturnType<typeof mountScene> = { setProgress() {}, dispose() {} };
+    let pending: number | null = null;
+    const events = ['pointermove', 'pointerdown', 'wheel', 'touchstart', 'keydown', 'scroll'] as const;
+    const wake = () => {
+      events.forEach((type) => window.removeEventListener(type, wake));
+      scene = mountScene(host, () => import('../../../../components/demos/advocacia/scene'), { pointer: true, context: { startSettled: true } });
+      if (pending !== null) scene.setProgress(pending);
+    };
+    if (wantsStatic()) wake(); // marks the fallback at once, nothing to compile
+    else {
+      host.dataset.scene = 'idle';
+      events.forEach((type) => window.addEventListener(type, wake, { passive: true, once: true }));
+    }
     // As the hero scrolls away the ink thins and draws back toward the corner.
     // Each new value costs a frame, so only real changes are sent.
     const ink = { p: 0 };
@@ -83,6 +97,7 @@ import Rodape from '../../../../components/demos/advocacia/Rodape.astro';
       onUpdate: () => {
         if (Math.abs(ink.p - sent) < 1e-4) return;
         sent = ink.p;
+        pending = ink.p;
         scene.setProgress(ink.p);
       },
       scrollTrigger: { trigger: hero, start: 0, end: 'center top', scrub: 0.6 },

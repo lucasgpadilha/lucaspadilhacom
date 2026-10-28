@@ -14,6 +14,8 @@ import { wantsStatic } from '../motion';
 
 export interface SceneContext {
   reducedMotion: boolean;
+  /** The scene replaces a still of its final state: skip any intro and start settled. */
+  startSettled?: boolean;
 }
 
 export interface SceneInstance {
@@ -40,6 +42,8 @@ interface MountOptions {
   pointer?: boolean;
   /** How early to load, as an IntersectionObserver rootMargin. */
   rootMargin?: string;
+  /** Extra context for the scene's create(). */
+  context?: Partial<SceneContext>;
 }
 
 const NOOP: SceneHandle = { setProgress() {}, dispose() {} };
@@ -99,7 +103,7 @@ export function mountScene(host: HTMLElement, load: () => Promise<SceneModule>, 
       Object.assign(canvas.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', display: 'block' });
       canvas.addEventListener('webglcontextlost', (event) => { event.preventDefault(); fail(); }, { once: true });
       host.append(canvas);
-      instance = await module.create(canvas, { reducedMotion: false });
+      instance = await module.create(canvas, { reducedMotion: false, ...options.context });
       const { width, height } = host.getBoundingClientRect();
       instance.resize(width, height, dprFor(width));
       if (pendingProgress !== null) instance.setProgress?.(pendingProgress);

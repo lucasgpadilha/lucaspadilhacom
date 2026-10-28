@@ -217,7 +217,7 @@ function softwareRenderer(gl: WebGL2RenderingContext): boolean {
   return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
 }
 
-export async function create(canvas: HTMLCanvasElement, _ctx: SceneContext): Promise<SceneInstance> {
+export async function create(canvas: HTMLCanvasElement, ctx: SceneContext): Promise<SceneInstance> {
   const gl = canvas.getContext('webgl2', {
     alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power',
   });
@@ -225,7 +225,8 @@ export async function create(canvas: HTMLCanvasElement, _ctx: SceneContext): Pro
 
   const program = await link(gl);
   const vao = gl.createVertexArray();
-  const software = softwareRenderer(gl);
+  // Settled start: no bloom intro (software renderers, or when the live ink replaces its own still).
+  const software = softwareRenderer(gl) || Boolean(ctx.startSettled);
   // Start once the webfonts have set the headline, so the first frame is measured on the final
   // layout and the bloom opens beside the real type (never waits more than 1.5 s).
   await Promise.race([document.fonts?.ready, new Promise((resolve) => setTimeout(resolve, 1500))]);

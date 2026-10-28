@@ -192,6 +192,7 @@ try {
       if (width === 1440 && (await page.locator('[data-scene]').count())) {
         const host = page.locator('[data-scene]').first();
         await host.scrollIntoViewIfNeeded();
+        await page.mouse.move(8, 8); // scenes may wait for the first interaction
         await page.waitForFunction(() => ['live', 'fallback'].includes(document.querySelector('[data-scene]')?.dataset.scene), null, { timeout: 15000 }).catch(() => {});
         const state = await host.getAttribute('data-scene');
         check(state === 'live', `${label}: scene is "${state}" (expected live where WebGL works)`);
@@ -332,6 +333,7 @@ try {
         const { context, page, errors } = await open(route.path, { viewport: { width: 1440, height: 900 }, ...options });
         if (await page.locator('[data-scene]').count()) {
           await page.locator('[data-scene]').first().scrollIntoViewIfNeeded();
+          await page.mouse.move(8, 8);
           await page.waitForTimeout(1200);
           const facts = await page.evaluate(() => {
             const host = document.querySelector('[data-scene]');
