@@ -117,15 +117,15 @@ void main() {
   vec2 rel = (uu - centre) + 0.55 * s;
   float al = dot(rel, axis);
   float ac = dot(rel, perp);
-  float stem = smoothstep(0.05, -0.9, al);
+  float stem = 1.0 - smoothstep(-0.9, 0.05, al);
   float d = length(vec2(al * mix(0.92, 0.56, stem), ac * mix(1.12, 2.3, stem))) / grow;
 
   // Paper at the front: random, wriggly hairs where the ink wicks into the fibres.
   // Each patch of fibres lies along the local flow, so they read as hairs, not grain.
   float ang = 3.1 * (q.x + s.y);
   mat2 along = mat2(cos(ang), sin(ang), -sin(ang), cos(ang));
-  float hair = pow(1.0 - abs(noise(along * u * vec2(9.0, 64.0) + 3.0 * s)), 8.0)
-             + 0.7 * pow(1.0 - abs(noise(along * u * vec2(6.0, 38.0) + 7.0)), 8.0);
+  float hair = pow(clamp(1.0 - abs(noise(along * u * vec2(9.0, 64.0) + 3.0 * s)), 0.0, 1.0), 8.0)
+             + 0.7 * pow(clamp(1.0 - abs(noise(along * u * vec2(6.0, 38.0) + 7.0)), 0.0, 1.0), 8.0);
   float fine = fbm(u * 12.0 + s * 3.0, 2);
   float front = d + 0.12 * n + 0.05 * fine - 0.09 * hair * smoothstep(0.55, 0.95, d) + 0.3 * f;
 
@@ -243,11 +243,17 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
     host.querySelectorAll<HTMLElement>('[data-ink-calm]').forEach((el) => {
       const limit = parseFloat(el.dataset.inkCalm || '0') || 0;
       if (limit === 0) return push(el.getBoundingClientRect(), 0);
-      // Large type: one box per line, so the ink can come close to the ragged right edge.
+      // Large type: one box per line, from the glyphs only (not the split line boxes), so the
+      // ink can come close to the ragged right edge.
       const range = document.createRange();
-      range.selectNodeContents(el);
+      const glyphs: DOMRect[] = [];
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        range.selectNodeContents(node);
+        glyphs.push(...range.getClientRects());
+      }
       const lines: { left: number; top: number; right: number; bottom: number }[] = [];
-      for (const r of range.getClientRects()) {
+      for (const r of glyphs) {
         if (r.width < 1) continue;
         const line = lines.find((l) => Math.abs(l.top - r.top) < r.height * 0.5);
         if (line) {
