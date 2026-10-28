@@ -5,16 +5,15 @@ Data: 2026-10-28 · Branch: `feat/site-v2` · Status: aprovado por delegação
 ## 1. Entendimento
 
 **O que o dono pediu.** Reformular lucaspadilha.com para servir ao mesmo tempo como portfólio
-profissional e como exemplo para vender sites, usando a estratégia do quadro no Figma
-("EU ME FIZ DE INICIANTE E FIZ R$7.500,00 EM 9 DIAS VENDENDO SITES") e a experiência real
+profissional e como exemplo para vender sites, usando um quadro de referências no Figma
+e a experiência real
 mostrada no GitHub. O dono pediu explicitamente que nenhuma pergunta fosse feita e delegou as
 decisões. Merge na `main` dispara deploy em produção e continua dependendo da aprovação dele.
 
-**O que o Figma traz.** É uma estratégia de venda, não um layout:
-- prospecção de negócios locais (advocacia, clínicas), fria, ativa e presencial;
-- tática central: chegar no cliente com o site **já pronto**, e ele paga para publicar;
-- ticket de R$500–1.200 na prospecção e de R$5–20 mil via conteúdo orgânico;
-- "você só precisa ter alguns sites de exemplo pra mostrar a sua capacidade";
+**O que o Figma traz.** Referências de venda e de qualidade, não um layout:
+- o público são negócios locais (advocacia, clínicas, comércio);
+- a ideia central é mostrar ao cliente uma prévia do site antes da contratação;
+- alguns sites de exemplo bastam para mostrar a capacidade de entrega;
 - barra de qualidade: boas animações, botões, imagens, ícones, bento grid; referências
   Awwwards (landonorris.com, huly.io, buttermax.net).
 
@@ -120,14 +119,14 @@ decisões. Merge na `main` dispara deploy em produção e continua dependendo da
 
 **Vitrine (`/sites/`, só PT)**
 1. Hero: "Sites rápidos e bonitos para negócios que querem ser encontrados." Promessa central do
-   Figma: "Você vê a prévia do seu site antes de fechar." CTA para WhatsApp (se configurado) ou
+   quadro: "Você vê a prévia do seu site antes de fechar." CTA para WhatsApp (se configurado) ou
    e-mail com assunto preenchido.
 2. Exemplos: três sites conceito em moldura de navegador, com nicho e o que cada um demonstra.
 3. Por que comigo: velocidade medida (o recibo ao vivo), hospedagem e manutenção por quem opera
    servidores, SEO local e Google, WhatsApp, celular primeiro.
 4. Como funciona: conversa → prévia → ajustes → no ar no seu domínio → cuidado mensal.
 5. Planos: valores em `src/data/sites.ts`. **Os valores iniciais são sugestões baseadas nos
-   tickets do Figma e precisam da confirmação do dono antes do merge.**
+   referências de mercado e precisam da confirmação do dono antes do merge.**
 6. Perguntas frequentes.
 7. Contato.
 
@@ -152,5 +151,5 @@ abaixo de 300 KB sem contar as imagens, com imagens responsivas e lazy.
 
 ## 7. Fora do escopo
 
-Prospecção automatizada (scraping do Google Maps/CNPJ do quadro do Figma), formulário com
+Ferramentas de prospecção, formulário com
 backend, blog, CMS, mudanças de DNS ou do servidor Caddy, e alterações na `/startup/`.

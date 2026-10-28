@@ -96,7 +96,7 @@ export const steps = [
   { title: 'Cuidado', body: 'Se quiser, eu sigo cuidando: atualizações, backups e pequenas alterações todo mês.' },
 ];
 
-/** Suggested prices from the Figma strategy (tickets of R$500–1.200). Confirm before publishing. */
+/** Suggested reference prices. The owner confirms them before publishing. */
 export const plans = [
   {
     name: 'Página única',
