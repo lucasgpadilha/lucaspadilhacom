@@ -1,0 +1,361 @@
+---
+// The hero drawing: a deploy runs from a commit to the cluster in under five seconds,
+// then holds. Geometry is built here at build time; the run itself is CSS, so it starts
+// on first paint, needs no JS, and reduced motion simply shows the finished state.
+import { Iso, percent, type P3 } from '../../lib/iso';
+import { deploy } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+
+const iso = new Iso(22);
+
+// The run climbs a switchback: each leg turns 90°, so the drawing grows upward and
+// fits a phone as well as the right half of a desktop. Stages sit on the floor (world units).
+const at = {
+  commit: [0, 0],
+  ci: [-5, 0],
+  policy: [-5, -3.3],
+  image: [-5, -6.6],
+  sync: [-10.6, -6.6],
+  prod: [-10.6, -13.6],
+} as const;
+
+const commit = iso.boxAt(...at.commit, 0, 1.7, 1.7, 0.32);
+
+const ci = iso.boxAt(...at.ci, 0, 2.6, 3.2, 0.9);
+const jobs = [-0.95, 0, 0.95].map((dy) => iso.boxAt(at.ci[0], at.ci[1] + dy, 0.9, 1.9, 0.62, 0.16));
+
+// The gate is a frame across the path: two posts, a lintel and a scanning plane.
+const [gx, gy] = at.policy;
+const postL = iso.boxAt(gx - 1.45, gy, 0, 0.34, 0.34, 1.9);
+const postR = iso.boxAt(gx + 1.45, gy, 0, 0.34, 0.34, 1.9);
+const lintel = iso.box(gx - 1.62, gy - 0.17, 1.9, 3.24, 0.34, 0.26);
+const plane = iso.poly([[gx - 1.28, gy, 0], [gx + 1.28, gy, 0], [gx + 1.28, gy, 1.9], [gx - 1.28, gy, 1.9]]);
+const scan = iso.line([[gx - 1.28, gy, 0.05], [gx + 1.28, gy, 0.05]]);
+const check = iso.line([[gx - 0.32, gy, 1.0], [gx - 0.06, gy, 0.72], [gx + 0.42, gy, 1.35]]);
+const cross = iso.line([[gx - 0.36, gy, 1.35], [gx + 0.36, gy, 0.65]]) + iso.line([[gx - 0.36, gy, 0.65], [gx + 0.36, gy, 1.35]]);
+
+const layers = [0, 0.42, 0.84].map((z) => iso.boxAt(...at.image, z, 2.1, 2.1, 0.24));
+const fresh = iso.boxAt(...at.image, 1.26, 2.1, 2.1, 0.24);
+
+const plinth = iso.boxAt(...at.sync, 0, 2.7, 2.7, 0.3);
+const ring = iso.circle(...at.sync, 0.3, 0.92, 64);
+const arrow = iso.poly([
+  [at.sync[0] + 0.92, at.sync[1] - 0.32, 0.3],
+  [at.sync[0] + 1.22, at.sync[1] + 0.1, 0.3],
+  [at.sync[0] + 0.62, at.sync[1] + 0.1, 0.3],
+]);
+
+// Production: a platform with three node pools, six pods each.
+const [px, py] = at.prod;
+const platform = iso.boxAt(px, py, 0, 7.4, 6.2, 0.42);
+const nodeX = [-2.35, 0, 2.35];
+const nodes = nodeX.map((dx) => iso.boxAt(px + dx, py, 0.42, 1.8, 4.6, 0.34));
+const pods = nodeX.flatMap((dx, n) =>
+  [-1.35, 0, 1.35].flatMap((dy, r) =>
+    [-0.4, 0.4].map((ddx, c) => ({ order: r * 6 + n * 2 + c, ...iso.boxAt(px + dx + ddx, py + dy, 0.76, 0.54, 0.54, 0.48) })),
+  ),
+);
+// Rolling update order: back rows first, so the change sweeps toward the viewer.
+pods.sort((a, b) => a.order - b.order);
+
+// Connectors on the floor, from stage to stage, following the switchback.
+const route: P3[][] = [
+  [[-0.85, 0, 0], [-3.7, 0, 0]],
+  [[-5, -1.6, 0], [-5, -3.3, 0]],
+  [[-5, -3.3, 0], [-5, -5.55, 0]],
+  [[-6.05, -6.6, 0], [-9.25, -6.6, 0]],
+  [[-10.6, -7.95, 0], [-10.6, py + 3.1, 0]],
+];
+const links = route.map((pts) => iso.line(pts));
+
+const box = iso.viewBox(10);
+
+// The floor grid is drawn after the bounds are fixed, so it never widens the drawing.
+const floor = iso.grid(-16, 4, -19, 4, 1);
+
+// Labels sit beside each stage, alternating sides of the switchback.
+const anchors: Record<string, P3> = {
+  commit: [0.85, 0.85, 0],
+  ci: [-6.3, 1.6, 0],
+  policy: [gx + 1.62, gy + 0.17, 0],
+  image: [-3.95, -5.55, 0],
+  sync: [-11.95, -5.25, 0],
+  // Wide screens: left of the platform, so no label leaves the right edge of the page.
+  prod: [px - 3.7, py + 3.1, 0.42],
+};
+// Narrow screens show names only, inside the drawing: production goes by its right corner.
+const narrow: Record<string, P3> = { prod: [px + 3.7, py - 3.1, 0.42] };
+const labels = deploy.stages.map((stage) => ({
+  ...stage,
+  pos: percent(iso, box, anchors[stage.key]),
+  narrow: narrow[stage.key] && percent(iso, box, narrow[stage.key]),
+}));
+
+// The run, in seconds. Five links, each pulse lands where the next stage starts.
+const T = {
+  commit: 0.35,
+  links: [[0.5, 0.82], [1.52, 1.84], [2.28, 2.56], [2.92, 3.2], [3.62, 3.98]],
+  jobs: [0.84, 1.04, 1.24],
+  gate: 1.84,
+  image: 2.56,
+  sync: 3.2,
+  pods: 3.98,
+  podStep: 0.04,
+};
+const doneAt = T.pods + T.podStep * pods.length;
+const stageDone = { commit: T.commit + 0.2, ci: T.jobs[2] + 0.2, policy: T.gate + 0.4, image: T.image + 0.3, sync: T.sync + 0.42, prod: doneAt };
+const s = (n: number) => `${n.toFixed(2)}s`;
+---
+<figure class="deploy is-clean is-boot" data-deploy aria-label={t(deploy.figure, locale)} style={`--done:${s(doneAt)}`}>
+  <div class="stage" style={`aspect-ratio:${box.w} / ${box.h};--ratio:${(box.w / box.h).toFixed(4)}`}>
+    <svg viewBox={box.attr} aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id="floor-fade" cx="50%" cy="55%" r="55%">
+          <stop offset="0.35" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </radialGradient>
+        <mask id="floor-mask"><rect x={box.x} y={box.y} width={box.w} height={box.h} fill="url(#floor-fade)" /></mask>
+      </defs>
+      <path class="floor" d={floor} mask="url(#floor-mask)" />
+      {links.map((d, i) => (
+        <g>
+          <path class="link" d={d} />
+          <path class="pulse" d={d} pathLength="100" style={`--at:${s(T.links[i][0])};--dur:${s(T.links[i][1] - T.links[i][0])}`} data-link={i} />
+        </g>
+      ))}
+
+      <g class="obj prod" style="--i:5">
+        <path class="l" d={platform.left} /><path class="r" d={platform.right} /><path class="t" d={platform.top} />
+        {nodes.map((node) => (
+          <g><path class="l" d={node.left} /><path class="r" d={node.right} /><path class="t" d={node.top} /></g>
+        ))}
+        {pods.map((pod, i) => (
+          <g class="pod" style={`--at:${s(T.pods + i * T.podStep)}`}>
+            <path class="l" d={pod.left} /><path class="r" d={pod.right} /><path class="t" d={pod.top} />
+          </g>
+        ))}
+      </g>
+      <g class="obj sync" style="--i:4">
+        <path class="l" d={plinth.left} /><path class="r" d={plinth.right} /><path class="t" d={plinth.top} />
+        <path class="ring" d={ring} pathLength="100" style={`--at:${s(T.sync)}`} />
+        <path class="arrow" d={arrow} style={`--at:${s(T.sync + 0.38)}`} />
+      </g>
+
+      <g class="obj image" style="--i:3">
+        {layers.map((layer) => (
+          <g><path class="l" d={layer.left} /><path class="r" d={layer.right} /><path class="t" d={layer.top} /></g>
+        ))}
+        <g class="fresh" style={`--at:${s(T.image)}`}>
+          <path class="l" d={fresh.left} /><path class="r" d={fresh.right} /><path class="t" d={fresh.top} />
+        </g>
+      </g>
+
+      <g class="obj gate" style="--i:2">
+        <path class="l" d={postL.left} /><path class="r" d={postL.right} /><path class="t" d={postL.top} />
+        <path class="plane" d={plane} style={`--at:${s(T.gate)}`} />
+        <path class="scan" d={scan} style={`--at:${s(T.gate)}`} />
+        <path class="mark ok" d={check} style={`--at:${s(T.gate + 0.3)}`} />
+        <path class="mark no" d={cross} style={`--at:${s(T.gate + 0.3)}`} />
+        <path class="l" d={postR.left} /><path class="r" d={postR.right} /><path class="t" d={postR.top} />
+        <path class="l" d={lintel.left} /><path class="r" d={lintel.right} /><path class="t" d={lintel.top} />
+      </g>
+
+      <g class="obj ci" style="--i:1">
+        <path class="l" d={ci.left} /><path class="r" d={ci.right} /><path class="t" d={ci.top} />
+        {jobs.map((job, i) => (
+          <g class="job" style={`--at:${s(T.jobs[i])}`}>
+            <path class="l" d={job.left} /><path class="r" d={job.right} /><path class="t" d={job.top} />
+          </g>
+        ))}
+      </g>
+
+      <g class="obj commit" style="--i:0">
+        <path class="l" d={commit.left} /><path class="r" d={commit.right} /><path class="t hot" d={commit.top} style={`--at:${s(T.commit)}`} />
+      </g>
+
+    </svg>
+
+    <ol class="labels" role="list" aria-hidden="true">
+      {labels.map((label) => (
+        <li class:list={['label-pin', label.key]} style={`--x:${label.pos.left};--y:${label.pos.top};${label.narrow ? `--nx:${label.narrow.left};--ny:${label.narrow.top};` : ''}--at:${s(stageDone[label.key as keyof typeof stageDone])}`}>
+          <strong>{t(label.name, locale)}</strong>
+          <span>{t(label.tools, locale)}</span>
+          {label.proof && <em>{t(label.proof, locale)}</em>}
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <figcaption class="bar">
+    <ol role="list" class="visually-hidden">
+      {deploy.stages.map((stage) => <li>{t(stage.name, locale)}: {t(stage.tools, locale)}{stage.proof && ` (${t(stage.proof, locale)})`}</li>)}
+    </ol>
+    <span class="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="msg clean">{t(deploy.status.clean, locale)}</span>
+      <span class="msg blocked">{t(deploy.status.blocked, locale)}</span>
+    </span>
+
+  <div class="controls" role="group" aria-label={t(deploy.controls.label, locale)}>
+    <button type="button" data-run="clean" data-active>{t(deploy.controls.clean, locale)}</button>
+    <button type="button" data-run="blocked">{t(deploy.controls.blocked, locale)}</button>
+  </div>
+  </figcaption>
+</figure>
+
+<script>
+  // Replays the CSS run: drop the mode class, force a style flush, put the new one back.
+  for (const fig of document.querySelectorAll<HTMLElement>('[data-deploy]')) {
+    const buttons = [...fig.querySelectorAll<HTMLButtonElement>('[data-run]')];
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        fig.classList.remove('is-boot', 'is-clean', 'is-blocked');
+        void fig.offsetWidth;
+        fig.classList.add(button.dataset.run === 'blocked' ? 'is-blocked' : 'is-clean');
+        // Replays, not toggles: the last run is marked for the eye; the status line announces it.
+        for (const other of buttons) other.toggleAttribute('data-active', other === button);
+      });
+    }
+  }
+</script>
+
+<style>
+  .deploy {
+    --face-t: #23221f;
+    --face-l: #141412;
+    --face-r: #1a1917;
+    --edge: #5a574f;
+    --alert: #ff5c57;
+    margin: 0;
+    display: grid;
+    gap: 1.6rem;
+  }
+  /* Sized by height on wide screens so the whole run fits the first screen. */
+  .stage { position: relative; width: 100%; max-width: 620px; margin-inline: auto; }
+  /* Wide screens: as tall as the first screen allows, right-aligned, leaving room on the
+     left for the labels that hang off the CI and GitOps stages. */
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  @media (min-width: 1080px) {
+    .stage {
+      --h: clamp(340px, calc(100svh - 64px - 13rem), 600px);
+      width: min(calc(100% - 10.5rem), calc(var(--h) * var(--ratio)));
+      max-width: none; margin-inline: auto 0;
+    }
+  }
+
+  .floor { fill: none; stroke: var(--line); stroke-width: 0.6; opacity: 0.7; }
+  .link { fill: none; stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 4; }
+  .pulse { fill: none; stroke: var(--signal); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 26 200; stroke-dashoffset: -110; }
+
+  .t, .l, .r { stroke: var(--edge); stroke-width: 0.8; stroke-linejoin: round; }
+  .t { fill: var(--face-t); }
+  .l { fill: var(--face-l); }
+  .r { fill: var(--face-r); }
+  /* Finished state is the default; the animations only describe how it got there. */
+  .commit .hot, .fresh .t { fill: var(--signal); stroke: var(--signal); }
+  .fresh .l { fill: #b8461c; stroke: #b8461c; }
+  .fresh .r { fill: #d9521f; stroke: #d9521f; }
+  .job .t { fill: #d9d5cb; stroke: #d9d5cb; }
+  .job .l { fill: #8d897f; stroke: #8d897f; }
+  .job .r { fill: #b3afa5; stroke: #b3afa5; }
+  .pod .t { fill: var(--signal); stroke: #ffb08f; }
+  .pod .l { fill: #a8401a; stroke: #a8401a; }
+  .pod .r { fill: #cf4e1e; stroke: #cf4e1e; }
+
+  .plane { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: none; }
+  .scan { fill: none; stroke: var(--signal); stroke-width: 1.6; opacity: 0; }
+  .mark { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .mark.ok { stroke: var(--ink); }
+  .mark.no { stroke: var(--alert); opacity: 0; }
+  .ring { fill: none; stroke: var(--signal); stroke-width: 2; }
+  .arrow { fill: var(--signal); }
+
+  .labels { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .label-pin {
+    position: absolute; left: var(--x); top: var(--y); transform: translate(10px, -2px);
+    display: grid; gap: 1px; width: max-content; max-width: 24ch;
+    font-size: 0.75rem; line-height: 1.3; color: var(--ink-2);
+    transition: opacity 0.3s var(--ease-out);
+  }
+  .label-pin strong { color: var(--ink); font-size: 0.8125rem; font-weight: 620; }
+  .label-pin em { font-style: normal; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--signal); }
+  .label-pin:is(.ci, .sync, .prod) { transform: translate(calc(-100% - 10px), -2px); text-align: right; }
+  .label-pin.prod { transform: translate(calc(-100% - 12px), -50%); }
+  @media (max-width: 1079px) {
+    .label-pin { font-size: 0.6875rem; }
+    .label-pin :is(span, em) { display: none; }
+    .label-pin.prod { left: var(--nx); top: var(--ny); transform: translate(-100%, -130%); text-align: left; }
+    .label-pin:is(.ci, .sync) { transform: translate(2px, 6px); text-align: left; }
+  }
+
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
+  .status { min-height: 1.5rem; max-width: 46ch; }
+  @media (min-width: 1080px) {
+    .deploy { width: 100%; }
+  }
+  .status { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); flex: none; }
+  .msg.blocked { display: none; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .controls button {
+    min-height: 40px; padding: 0 0.9rem; cursor: pointer;
+    background: transparent; color: var(--ink-2);
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    font-size: 0.8125rem; font-weight: 560;
+  }
+  .controls button:hover { color: var(--ink); border-color: var(--ink); }
+  .controls button[data-active] { color: var(--ink); border-color: var(--ink); }
+  /* The runs are replayed by script; without it the finished drawing stands alone. */
+  :global(html:not(.js)) .controls { display: none; }
+
+  /* Blocked run: the gate holds, the later stages never ran. */
+  .is-blocked .mark.ok, .is-blocked .fresh { opacity: 0; }
+  .is-blocked .mark.no { opacity: 1; }
+  .is-blocked .plane { fill: color-mix(in srgb, var(--alert) 16%, transparent); }
+  .is-blocked .dot { background: var(--alert); }
+  .is-blocked .msg.clean { display: none; }
+  .is-blocked .msg.blocked { display: inline; }
+  .is-blocked .label-pin:is(.image, .sync, .prod) :is(strong, em) { color: var(--ink-2); }
+  .is-blocked .label-pin.policy strong { color: var(--alert); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .is-boot .obj { animation: rise 0.5s var(--ease-out) calc(var(--i) * 0.04s) both; }
+    .is-boot .floor { animation: fade 0.6s ease both; }
+
+    .is-clean .pulse { animation: pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
+    .is-clean .commit .hot { animation: heat 0.3s ease var(--at) both; }
+    .is-clean .job { animation: heat-g 0.2s ease var(--at) both; }
+    .is-clean .scan { animation: scan 0.36s ease-in-out var(--at) both; }
+    .is-clean .mark.ok { animation: fade 0.2s ease var(--at) both; }
+    .is-clean .fresh { animation: drop 0.32s cubic-bezier(0.3, 1.25, 0.5, 1) var(--at) both; }
+    .is-clean .ring { animation: draw 0.4s ease-in-out var(--at) both; }
+    .is-clean .arrow { animation: fade 0.15s ease var(--at) both; }
+    .is-clean .pod { animation: roll 0.22s ease var(--at) both; }
+    .is-clean .label-pin { animation: lit 0.25s ease var(--at) both; }
+    .is-clean .status { animation: fade 0.25s ease var(--done) both; }
+
+    .is-blocked .pulse:is([data-link='0'], [data-link='1']) { animation: pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
+    .is-blocked .commit .hot { animation: heat 0.3s ease var(--at) both; }
+    .is-blocked .job { animation: heat-g 0.2s ease var(--at) both; }
+    .is-blocked .scan { animation: scan-fail 0.36s ease-in-out var(--at) both; }
+    .is-blocked .plane { animation: alarm 0.5s ease var(--at) both; }
+    .is-blocked .mark.no { animation: fade 0.2s ease var(--at) both; }
+    .is-blocked .status { animation: fade 0.3s ease 2.3s both; }
+  }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes pulse { from { stroke-dashoffset: 26; } to { stroke-dashoffset: -110; } }
+  @keyframes heat { from { fill: var(--face-t); stroke: var(--edge); } }
+  @keyframes heat-g { from { opacity: 0.25; filter: grayscale(1); } }
+  @keyframes scan { 0% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(-50px); } 100% { opacity: 0; transform: translateY(-50px); } }
+  @keyframes scan-fail { 0% { opacity: 1; transform: translateY(0); stroke: var(--signal); } 60% { opacity: 1; transform: translateY(-30px); stroke: var(--alert); } 100% { opacity: 0; transform: translateY(-30px); stroke: var(--alert); } }
+  @keyframes alarm { from { fill: color-mix(in srgb, var(--ink) 5%, transparent); } 30% { fill: color-mix(in srgb, var(--alert) 40%, transparent); } }
+  @keyframes drop { from { opacity: 0; transform: translateY(-18px); } }
+  @keyframes draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes roll { from { opacity: 0.35; filter: grayscale(1) brightness(0.7); } }
+  @keyframes lit { from { opacity: 0.35; } }
+</style>

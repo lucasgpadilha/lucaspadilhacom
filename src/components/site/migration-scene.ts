@@ -1,18 +1,14 @@
 // The migration, as a technical drawing in the dark: five VMs hand ~250 containers
-// to a Kubernetes cluster, switch off, the cluster gets rightsized and a network
-// boundary is drawn around it. Every frame is a pure function of one progress value.
+// to a Kubernetes cluster and switch off. Every frame is a pure function of one progress value.
 import {
   AmbientLight,
   BoxGeometry,
-  BufferGeometry,
   Color,
   CylinderGeometry,
   DirectionalLight,
   EdgesGeometry,
-  Float32BufferAttribute,
   Group,
   InstancedMesh,
-  Line,
   LineBasicMaterial,
   LineSegments,
   Mesh,
@@ -114,38 +110,6 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
   }
   const lift = Array.from({ length: MIGRATED }, (_, j) => 2.1 + rand(j + 7) * 1.4);
 
-  // --- network boundary (VCN) + subnet lines (NSG) + WAF gate ------------
-  const ring: Vector3[] = [];
-  const rx = 4.1, rz = 3.8, corner = 0.9;
-  const pts = [
-    [-rx + corner, -rz], [rx - corner, -rz], [rx, -rz + corner], [rx, rz - corner],
-    [rx - corner, rz], [-rx + corner, rz], [-rx, rz - corner], [-rx, -rz + corner], [-rx + corner, -rz],
-  ];
-  for (let i = 0; i < pts.length - 1; i++) {
-    for (let s = 0; s < 24; s++) {
-      const t = s / 24;
-      ring.push(new Vector3(CLUSTER.x + pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, -0.2, CLUSTER.z + pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t));
-    }
-  }
-  ring.push(ring[0].clone());
-  const ringGeo = new BufferGeometry().setFromPoints(ring);
-  const ringMat = new LineBasicMaterial({ color: C.lineHot, transparent: true, opacity: 0.85 });
-  const boundary = new Line(ringGeo, ringMat);
-  scene.add(boundary);
-
-  const subnetPos: number[] = [];
-  for (const z of [-1.3, 1.3]) subnetPos.push(CLUSTER.x - rx, -0.2, CLUSTER.z + z, CLUSTER.x + rx, -0.2, CLUSTER.z + z);
-  const subnetGeo = new BufferGeometry();
-  subnetGeo.setAttribute('position', new Float32BufferAttribute(subnetPos, 3));
-  const subnetMat = new LineBasicMaterial({ color: C.line, transparent: true, opacity: 0 });
-  scene.add(new LineSegments(subnetGeo, subnetMat));
-
-  const gateGeo = new BoxGeometry(0.18, 0.9, 1.6);
-  const gate = new Group();
-  gate.add(new LineSegments(new EdgesGeometry(gateGeo), new LineBasicMaterial({ color: C.signal, transparent: true })));
-  gate.position.set(CLUSTER.x - rx, 0.25, CLUSTER.z);
-  scene.add(gate);
-
   // --- state --------------------------------------------------------------
   const dummy = new Object3D();
   const target = new Vector3();
@@ -159,8 +123,8 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
   // Everything the drawing can occupy, including the top of the flight arcs.
   const bounds = [
     [-7, 0, -5], [-7, 0, 5.2], [-3.9, 0, -5], [-3.9, 0, 5.2], [-3.9, 0.6, -5],
-    [CLUSTER.x - 4.3, 0, CLUSTER.z - 4], [CLUSTER.x + 4.3, 0, CLUSTER.z - 4],
-    [CLUSTER.x - 4.3, 0, CLUSTER.z + 4], [CLUSTER.x + 4.3, 0, CLUSTER.z + 4],
+    [CLUSTER.x - 3.6, 0, CLUSTER.z - 3.4], [CLUSTER.x + 3.6, 0, CLUSTER.z - 3.4],
+    [CLUSTER.x - 3.6, 0, CLUSTER.z + 3.4], [CLUSTER.x + 3.6, 0, CLUSTER.z + 3.4],
     [-0.5, 3.6, -1], [0.5, 3.6, 1],
   ].map(([x, y, z]) => new Vector3(x, y, z));
   focus.set(0.6, 0, 0);
@@ -191,9 +155,6 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
     const s0 = stepProgress(p, 0); // VMs light up
     const m = stepProgress(p, 1); // containers fly
     const off = stepProgress(p, 2); // VMs switch off
-    const fin = easeInOut(stepProgress(p, 3)); // rightsizing
-    const net = stepProgress(p, 4); // boundary drawn
-
 
     // VMs: brighten, then switch off one after another.
     vms.forEach((vm, i) => {
@@ -205,18 +166,12 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       vm.group.position.y = -fade * 0.12;
     });
 
-    // Cluster: rightsized during FinOps (nodes shrink and pull together).
-    const squeeze = 1 - 0.24 * fin;
-    nodes.forEach((node, n) => {
-      node.position.copy(nodeHome[n]).multiplyScalar(squeeze).add(CLUSTER);
-      const scale = 1 - 0.18 * fin;
-      node.scale.set(scale, 1, scale);
-    });
+    nodes.forEach((node, n) => node.position.copy(nodeHome[n]).add(CLUSTER));
 
     // Containers.
     for (let i = 0; i < total; i++) {
       const slot = slots[i];
-      target.copy(slot.offset).multiplyScalar(1 - 0.18 * fin).add(nodes[slot.node].position);
+      target.copy(slot.offset).add(nodes[slot.node].position);
       target.y = 0.24;
       if (i < ALREADY_ON_CLUSTER) {
         pos.copy(target);
@@ -241,11 +196,6 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       boxes.setMatrixAt(i, dummy.matrix);
     }
     boxes.instanceMatrix.needsUpdate = true;
-
-    // Network: boundary drawn as a line, then subnets and the WAF gate appear.
-    boundary.geometry.setDrawRange(0, Math.floor(ring.length * easeOut(net)));
-    subnetMat.opacity = easeOut(Math.max(0, net * 2 - 1)) * 0.9;
-    gate.visible = net > 0.55;
   }
 
   setProgress(0);

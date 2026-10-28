@@ -162,7 +162,9 @@ html { accent-color: var(--signal); caret-color: var(--signal); scrollbar-color:
   .section-head .lede { padding-bottom: 0.4rem; }
 }
 
-/* The night chapter: dark even without JS; with JS the whole page follows (html[data-theme=night]). */
+/* The home opens at night (engineering) and turns to paper for the business half.
+   Zones carry their own palette, so contrast never depends on JS; the header follows
+   html[data-theme], which a small script flips as the paper zone reaches it. */
 .zone-night, html[data-theme='night'] {
   --paper: #0d0d0c;
   --surface: #161614;
@@ -173,8 +175,19 @@ html { accent-color: var(--signal); caret-color: var(--signal); scrollbar-color:
   --signal: #ff6b35;
   --on-signal: #1c0b02;
 }
-.zone-night { background: var(--paper); color: var(--ink); }
+.zone-paper, html[data-theme='paper'] {
+  --paper: #f2efe8;
+  --surface: #fbfaf6;
+  --ink: #141413;
+  --ink-2: #55534d;
+  --line: #d8d3c8;
+  --line-strong: #bdb7aa;
+  --signal: #ff5a1f;
+  --on-signal: #1c0b02;
+}
+.zone-night, .zone-paper { background: var(--paper); color: var(--ink); }
 html[data-theme='night'] { color-scheme: dark; }
+html[data-theme='paper'] { color-scheme: light; }
 body { transition: background-color 0.5s var(--ease-out), color 0.5s var(--ease-out); }
 @media (prefers-reduced-motion: reduce) { body { transition: none; } }
 
@@ -200,5 +213,7 @@ body { transition: background-color 0.5s var(--ease-out), color 0.5s var(--ease-
 
 
 @media print {
-  .site-header { position: static; }
+  .site-header { position: static !important; }
+  /* Drawings print finished: their resting styles are the final state. */
+  [data-deploy] *, [data-cloud] *, [data-finops] * { animation: none !important; }
 }

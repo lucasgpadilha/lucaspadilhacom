@@ -1,0 +1,505 @@
+---
+// The cloud drawing: an OCI network assembles in dependency order, the way
+// `terraform apply` creates it, then holds. A toggle replays the route telemetry took
+// before (out through NAT, round the internet, back in through the WAF) and takes now
+// (the internal NLB). Geometry is built here at build time and motion is CSS, so
+// without JS, or with reduced motion, the finished drawing is all there is.
+import { Iso, percent, type P3 } from '../../lib/iso';
+import { cloud } from '../../data/cloud';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+
+const iso = new Iso(28);
+const r2 = (n: number) => Math.round(n * 100) / 100;
+type Faces = { top: string; left: string; right: string };
+type Piece = { faces: Faces[]; detail?: string; at: number; hop?: 'before' | 'after'; lit?: number };
+
+// World layout, in floor units. The public subnet runs along the VCN's back edge and
+// the private subnet along its front; gateways sit on the left edge. The internet is a
+// plane raised above them, so the old route visibly climbs out and comes back down.
+const vcn = { x: 0, y: 0, w: 16, d: 8.6 };
+const region = { x: -1, y: -0.8, w: 18, d: 11.2 };
+const pub = { x: 0.7, y: 0.5, w: 14.6, d: 2 };
+const pri = { x: 0.7, y: 3, w: 14.6, d: 5.1 };
+const sky = { x: -1.8, y: 0.5, w: 3.2, d: 4.4, z: 5.2 };
+const lane = { pub: 1.5, out: 3.9, side: 5.6, front: 7.2 };
+
+const prod = { x: 2.4, y: 3.4, w: 5, d: 2.8 };
+const mgmt = { x: 9.2, y: 3.4, w: 2.4, d: 2 };
+const at = {
+  igw: [0, lane.pub],
+  nat: [0, lane.out],
+  drg: [0, 6.8],
+  waf: [3.8, lane.pub],
+  pnlb: [8, lane.pub],
+  inlb: [10.2, lane.front],
+  collector: [14, 7],
+  kms: [6, 9.5],
+} as const;
+const elbow = 8.4; // where the new route turns toward the front lane
+
+// Plates and outlines.
+const plates = {
+  region: iso.rect(region.x, region.y, 0, region.w, region.d),
+  vcn: iso.rect(vcn.x, vcn.y, 0, vcn.w, vcn.d),
+  pub: iso.rect(pub.x, pub.y, 0, pub.w, pub.d),
+  pri: iso.rect(pri.x, pri.y, 0, pri.w, pri.d),
+  sky: iso.rect(sky.x, sky.y, sky.z, sky.w, sky.d),
+};
+const drgOut = iso.line([[-0.5, at.drg[1], 0], [-2.6, at.drg[1], 0]]);
+// NSGs: dashed footprints around what they guard.
+const nsg = (x: number, y: number, w: number, d: number, m = 0.28) => iso.rect(x - m, y - m, 0, w + m * 2, d + m * 2);
+
+const boxAt = (c: readonly [number, number], z: number, w: number, d: number, h: number) => iso.boxAt(c[0], c[1], z, w, d, h);
+
+// Gateways. The NAT's reserved public IP is a ring on the way out.
+const igw = boxAt(at.igw, 0, 0.9, 0.9, 0.5);
+const nat = boxAt(at.nat, 0, 1, 1, 0.7);
+const reservedIp = iso.circle(at.nat[0], at.nat[1], 1.4, 0.36, 32);
+const drg = boxAt(at.drg, 0, 1, 1, 0.7);
+
+// The WAF is a slab across the public lane; NLBs are low wide boxes with a fan on top.
+const waf = iso.box(at.waf[0] - 0.21, lane.pub - 0.9, 0, 0.42, 1.8, 1.3);
+const wafRibs = [0.43, 0.86].map((z) => iso.line([[at.waf[0] + 0.21, lane.pub - 0.9, z], [at.waf[0] + 0.21, lane.pub + 0.9, z]])).join('');
+const fan = (cx: number, cy: number, z: number) => [-0.36, 0, 0.36].map((dy) => iso.line([[cx - 0.55, cy, z], [cx + 0.5, cy + dy, z]])).join('');
+const pnlb = boxAt(at.pnlb, 0, 1.8, 1.2, 0.45);
+const inlb = boxAt(at.inlb, 0, 1.8, 1.2, 0.45);
+
+// OKE PROD: two node pools of three nodes, two pods per node.
+const prodBase = iso.box(prod.x, prod.y, 0, prod.w, prod.d, 0.32);
+const prodPools = [4.1, 5.5];
+const prodNodeX = [3.25, 4.9, 6.55];
+const prodNodes = prodPools.flatMap((y) => prodNodeX.map((x) => iso.boxAt(x, y, 0.32, 1.45, 1.1, 0.26)));
+const prodPods = prodPools.flatMap((y) => prodNodeX.flatMap((x) => [-0.36, 0.36].map((dx) => iso.boxAt(x + dx, y, 0.58, 0.44, 0.44, 0.4))));
+
+// OKE MGMT: smaller, one pool of two nodes.
+const mgmtBase = iso.box(mgmt.x, mgmt.y, 0, mgmt.w, mgmt.d, 0.3);
+const mgmtNodeX = [9.8, 11];
+const mgmtNodes = mgmtNodeX.map((x) => iso.boxAt(x, mgmt.y + mgmt.d / 2, 0.3, 1, 1.5, 0.24));
+const mgmtPods = mgmtNodeX.flatMap((x) => [-0.36, 0.36].map((dy) => iso.boxAt(x, mgmt.y + mgmt.d / 2 + dy, 0.54, 0.42, 0.42, 0.38)));
+
+const collector = boxAt(at.collector, 0, 2, 1.4, 0.9);
+const intake = [-0.3, 0.3].map((dy) => iso.line([[at.collector[0] + 1, at.collector[1] + dy, 0.26], [at.collector[0] + 1, at.collector[1] + dy, 0.62]])).join('');
+const kms = boxAt(at.kms, 0, 1.2, 0.9, 0.95);
+const keyhole = iso.line([[at.kms[0] + 0.6, at.kms[1] - 0.05, 0.62], [at.kms[0] + 0.6, at.kms[1] - 0.05, 0.32]]);
+
+// Telemetry routes, on the floor except where the old one climbs to the internet.
+const routePts = {
+  before: [
+    [prod.x, lane.out, 0],
+    [0, lane.out, 0],
+    [0, lane.out, sky.z],
+    [0, lane.pub, sky.z],
+    [0, lane.pub, 0],
+    [at.collector[0], lane.pub, 0],
+    [at.collector[0], at.collector[1] - 0.7, 0],
+  ],
+  after: [
+    [prod.x + prod.w, lane.side, 0],
+    [elbow, lane.side, 0],
+    [elbow, lane.front, 0],
+    [at.collector[0] - 1, lane.front, 0],
+  ],
+} satisfies Record<string, P3[]>;
+
+// The apply, in seconds: each piece appears after what it depends on.
+const T = {
+  region: 0,
+  vcn: 0.3,
+  subnets: 0.6,
+  igw: 0.9,
+  nat: 1.0,
+  drg: 1.15,
+  ip: 1.2,
+  nsg: 1.4,
+  nlb: 1.65,
+  waf: 1.85,
+  kms: 1.98, // the cluster encrypts with these keys, so they come first
+  prod: 2.1,
+  mgmt: 2.25,
+  pools: 2.35,
+  pods: 2.5,
+  podStep: 0.03,
+  tracks: 3.1,
+  collector: 3.15,
+  route: 3.35, // the new route draws in, its NLB lights, the caption shows
+  lit: 3.5,
+  status: 3.6,
+};
+const done = 3.75;
+const logAt = [T.vcn, T.subnets, T.nat, T.drg, T.nsg, T.nlb, T.waf, T.kms, T.prod, T.pools];
+
+// Screen length of a polyline, for dash patterns in real SVG units.
+const screenLength = (pts: readonly P3[]) =>
+  pts.slice(1).reduce((sum, pt, i) => {
+    const [ax, ay] = iso.at(pts[i]);
+    const [bx, by] = iso.at(pt);
+    return sum + Math.hypot(bx - ax, by - ay);
+  }, 0);
+
+// Dots: a stream of N beads S apart, then a gap longer than the path, slid along it at
+// one speed on both routes, so the long way round visibly takes longer. Each box on a
+// route lights up when the first bead reaches it.
+const SPEED = 265; // SVG units per second
+const N = 6;
+const S = 16;
+const reach = (pts: readonly P3[], k: number, p: P3 = pts[k]) => (4 + screenLength([...pts.slice(0, k + 1), p])) / SPEED;
+const B = routePts.before;
+
+// Painter's order, back to front.
+const pieces: Piece[] = [
+  { faces: [igw], at: T.igw, hop: 'before', lit: reach(B, 4) },
+  { faces: [nat], at: T.nat, hop: 'before', lit: reach(B, 1, [0.5, lane.out, 0]) },
+  { faces: [waf], detail: wafRibs, at: T.waf, hop: 'before', lit: reach(B, 4, [at.waf[0] - 0.21, lane.pub, 0]) },
+  { faces: [drg], at: T.drg },
+  { faces: [pnlb], detail: fan(...at.pnlb, 0.45), at: T.nlb, hop: 'before', lit: reach(B, 4, [at.pnlb[0] - 0.9, lane.pub, 0]) },
+];
+const inlbLit = reach(routePts.after, 2, [at.inlb[0] - 0.9, lane.front, 0]);
+const inlbFan = fan(...at.inlb, 0.45);
+
+const stream = (pts: readonly P3[]) => {
+  const len = screenLength(pts);
+  const gap = len + N * S + 10;
+  const dash = [...Array.from({ length: N - 1 }, () => `0 ${S}`), `0 ${r2(gap)}`].join(' ');
+  const from = (N - 1) * S + 4;
+  const to = -(len + 4);
+  return {
+    d: iso.line(pts),
+    dots: `stroke-dasharray:${dash};--from:${from};--to:${r2(to)};--dur:${((from - to) / SPEED).toFixed(2)}s`,
+    trace: `--dur:${(len / SPEED).toFixed(2)}s`,
+  };
+};
+const route = { before: stream(routePts.before), after: stream(routePts.after) };
+const s = (n: number) => `${n.toFixed(2)}s`;
+
+// Everything is drawn: fix the bounds, then lay the floor grid without widening them.
+const vb = iso.viewBox(14);
+const floor = iso.grid(-6, 21, -6, 15, 1);
+
+// Labels: anchor in world space, the side the text sits on, and when it appears.
+// `md` moves a label when the log sits below the drawing (figure under 790px), so the
+// top right is free and the right edge is not; `sm` moves or hides it on phones.
+type Place = { pt: P3; side: string };
+type Anchor = Place & { at: number; md?: Place; sm?: Place | 'hide' };
+const anchors: Record<string, Anchor> = {
+  region: { pt: [11.2, region.y + region.d, 0], side: 'below-l', at: T.region },
+  vcn: { pt: [vcn.x + vcn.w, vcn.y, 0], side: 'right', at: T.vcn, md: { pt: [vcn.x + vcn.w, vcn.y, 0], side: 'above-l' } },
+  public: { pt: [vcn.x + vcn.w + 0.3, lane.pub, 0], side: 'right', at: T.subnets, md: { pt: [11.6, vcn.y, 0], side: 'above-r' }, sm: 'hide' },
+  private: { pt: [vcn.x + vcn.w + 0.3, 4.6, 0], side: 'right', at: T.subnets, sm: 'hide' },
+  internet: { pt: [sky.x, sky.y + sky.d, sky.z], side: 'left', at: T.igw },
+  nat: { pt: [-0.5, at.nat[1] + 0.5, 0.35], side: 'left', at: T.ip },
+  drg: { pt: [-0.5, at.drg[1] + 0.5, 0], side: 'below-l', at: T.drg, md: { pt: [0, at.drg[1] + 0.5, 0], side: 'below' } },
+  waf: { pt: [at.waf[0] - 0.21, lane.pub - 0.9, 1.3], side: 'left', at: T.waf },
+  pnlb: { pt: [at.pnlb[0] + 0.9, at.pnlb[1] - 0.6, 0.45], side: 'right', at: T.nlb, sm: { pt: [at.pnlb[0] + 0.9, at.pnlb[1] - 0.6, 0.45], side: 'above' } },
+  inlb: { pt: [at.inlb[0], at.inlb[1] + 0.6, 0], side: 'below', at: T.nlb + 0.1 },
+  prod: { pt: [prod.x + 1.6, prod.y + prod.d, 0], side: 'below', at: T.pods },
+  mgmt: { pt: [mgmt.x + mgmt.w, mgmt.y + mgmt.d / 2, 0.3], side: 'right', at: T.mgmt },
+  kms: { pt: [at.kms[0] - 0.6, at.kms[1] + 0.45, 0.45], side: 'left', at: T.kms, md: { pt: [at.kms[0], at.kms[1] + 0.45, 0], side: 'below' } },
+  collector: { pt: [at.collector[0] + 1, at.collector[1] + 0.7, 0.2], side: 'below', at: T.collector },
+};
+const labels = cloud.pieces.map((piece) => {
+  const a = anchors[piece.key];
+  const place = (p: Place | undefined, tier: string) => {
+    if (!p) return { vars: [], cls: undefined };
+    const pos = percent(iso, vb, p.pt);
+    return { vars: [`--x${tier}:${pos.left}`, `--y${tier}:${pos.top}`], cls: tier ? `${tier}-${p.side}` : p.side };
+  };
+  const base = place(a, '');
+  const md = place(a.md, 'm');
+  const sm = place(a.sm === 'hide' ? undefined : a.sm, 's');
+  const style = [...base.vars, ...md.vars, ...sm.vars, `--at:${s(a.at)}`].join(';');
+  return { ...piece, classes: [base.cls, md.cls, sm.cls, a.sm === 'hide' && 'hide-sm'].filter(Boolean), style };
+});
+const maxStageW = Math.round((560 * vb.w) / vb.h);
+const faceList = (b: Faces) => [['l', b.left], ['r', b.right], ['t', b.top]] as const;
+---
+<figure class="cloud is-after" data-cloud aria-label={t(cloud.figure, locale)} style={`--tracks:${s(T.tracks)};--route:${s(T.route)};--lit-in:${s(T.lit)};--status:${s(T.status)}`}>
+  <div class="plot">
+    <div class="stage" style={`aspect-ratio:${vb.w} / ${vb.h};max-width:${maxStageW}px`}>
+      <svg viewBox={vb.attr} aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="cloud-floor-fade" cx="45%" cy="58%" r="58%">
+            <stop offset="0.3" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </radialGradient>
+          <mask id="cloud-floor-mask"><rect x={vb.x} y={vb.y} width={vb.w} height={vb.h} fill="url(#cloud-floor-fade)" /></mask>
+        </defs>
+        <path class="floor" d={floor} mask="url(#cloud-floor-mask)" />
+
+        <path class="plate region" d={plates.region} style={`--at:${s(T.region)}`} />
+        <path class="plate vcn" d={plates.vcn} style={`--at:${s(T.vcn)}`} />
+        <path class="plate subnet" d={plates.pub} style={`--at:${s(T.subnets)}`} />
+        <path class="plate subnet" d={plates.pri} style={`--at:${s(T.subnets + 0.08)}`} />
+        <path class="plate nsg" d={[nsg(prod.x, prod.y, prod.w, prod.d), nsg(mgmt.x, mgmt.y, mgmt.w, mgmt.d), nsg(at.collector[0] - 1, at.collector[1] - 0.7, 2, 1.4)].join('')} style={`--at:${s(T.nsg)}`} />
+        <path class="plate link" d={drgOut} style={`--at:${s(T.drg)}`} />
+        <path class="plate sky" d={plates.sky} style={`--at:${s(T.igw)}`} />
+
+        {(['before', 'after'] as const).map((key) => (
+          <g class:list={['route', key]}>
+            <path class="track" d={route[key].d} />
+            <path class="live" d={route[key].d} pathLength="100" style={route[key].trace} />
+            <path class="dots" d={route[key].d} style={route[key].dots} />
+          </g>
+        ))}
+        <path class="ring" d={reservedIp} style={`--at:${s(T.ip)}`} />
+
+        {pieces.map((piece) => (
+          <g class:list={['obj', piece.hop && `hop-${piece.hop}`]} style={`--at:${s(piece.at)}${piece.lit ? `;--lit:${s(piece.lit)}` : ''}`}>
+            {piece.faces.flatMap((b) => faceList(b).map(([cls, d]) => <path class={cls} d={d} />))}
+            {piece.detail && <path class="rib" d={piece.detail} />}
+          </g>
+        ))}
+
+        <g class="obj" style={`--at:${s(T.prod)}`}>
+          {faceList(prodBase).map(([cls, d]) => <path class={cls} d={d} />)}
+          <g class="pool" style={`--at:${s(T.pools)}`}>
+            {prodNodes.flatMap((node) => faceList(node).map(([cls, d]) => <path class={cls} d={d} />))}
+          </g>
+          {prodPods.map((pod, i) => (
+            <g class="pod" style={`--at:${s(T.pods + i * T.podStep)}`}>{faceList(pod).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+          ))}
+        </g>
+
+        <g class="obj" style={`--at:${s(T.mgmt)}`}>
+          {faceList(mgmtBase).map(([cls, d]) => <path class={cls} d={d} />)}
+          <g class="pool" style={`--at:${s(T.pools + 0.1)}`}>
+            {mgmtNodes.flatMap((node) => faceList(node).map(([cls, d]) => <path class={cls} d={d} />))}
+          </g>
+          {mgmtPods.map((pod, i) => (
+            <g class="pod quiet" style={`--at:${s(T.pods + 0.25 + i * T.podStep)}`}>{faceList(pod).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+          ))}
+        </g>
+
+        <g class="obj hop-after" style={`--at:${s(T.nlb + 0.1)};--lit:${s(inlbLit)}`}>
+          {faceList(inlb).map(([cls, d]) => <path class={cls} d={d} />)}
+          <path class="rib" d={inlbFan} />
+        </g>
+
+        <g class="obj collector" style={`--at:${s(T.collector)}`}>
+          {faceList(collector).map(([cls, d]) => <path class={cls} d={d} />)}
+          <path class="rib" d={intake} />
+        </g>
+
+        <g class="obj" style={`--at:${s(T.kms)}`}>
+          {faceList(kms).map(([cls, d]) => <path class={cls} d={d} />)}
+          <path class="rib" d={keyhole} />
+        </g>
+      </svg>
+
+      <ul class="labels" role="list" aria-hidden="true">
+        {labels.map((label) => (
+          <li class:list={['label-pin', label.key, ...label.classes]} style={label.style}>
+            <strong>{t(label.name, locale)}</strong>
+            {label.detail && <span>{t(label.detail, locale)}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <ol class="log" role="list" aria-hidden="true">
+      <li class="cmd" style="--at:0s">$ terraform apply</li>
+      {cloud.log.map((type, i) => <li style={`--at:${s(logAt[i])}`}><span class="plus">+</span>&nbsp;<Fragment set:html={type.replaceAll('_', '_<wbr>')} /></li>)}
+      <li class="end" style={`--at:${s(done)}`}>{cloud.logDone}</li>
+    </ol>
+  </div>
+
+  <figcaption class="bar">
+    <div class="caption">
+      <ol role="list" class="visually-hidden">
+        {cloud.pieces.map((piece) => <li>{t(piece.name, locale)}{piece.detail && ` (${t(piece.detail, locale)})`}</li>)}
+      </ol>
+      <span class="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="msg" aria-live="polite" data-before={t(cloud.status.before, locale)} data-after={t(cloud.status.after, locale)}>{t(cloud.status.after, locale)}</span>
+      </span>
+    </div>
+
+    <div class="controls" role="group" aria-labelledby="cloud-route-label">
+      <span id="cloud-route-label" class="controls-label">{t(cloud.route.label, locale)}</span>
+      <button type="button" data-route="before" aria-pressed="false">{t(cloud.route.before, locale)}</button>
+      <button type="button" data-route="after" aria-pressed="true">{t(cloud.route.after, locale)}</button>
+    </div>
+  </figcaption>
+</figure>
+
+<script is:inline>
+  // The apply starts when the drawing scrolls into view. Inline, right after the figure,
+  // so it is armed (paused on its first frame) before first paint and the finished state
+  // never flashes first. Without JS the finished state shows.
+  (function () {
+    var fig = document.currentScript.previousElementSibling;
+    if (!fig || !fig.matches('[data-cloud]')) return;
+    var stage = fig.querySelector('.stage');
+    var msg = fig.querySelector('.msg');
+    var buttons = Array.prototype.slice.call(fig.querySelectorAll('[data-route]'));
+    var play = function () { fig.classList.add('is-playing'); };
+
+    fig.classList.add('is-armed');
+    if ('IntersectionObserver' in window && stage) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (entry) { return entry.isIntersecting; })) { play(); io.disconnect(); }
+      }, { threshold: 0.35 });
+      io.observe(stage);
+    } else {
+      play();
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var mode = button.dataset.route === 'before' ? 'before' : 'after';
+        fig.classList.remove('is-routing', 'is-before', 'is-after');
+        void fig.offsetWidth;
+        fig.classList.add('is-routing', 'is-' + mode);
+        play();
+        buttons.forEach(function (other) { other.setAttribute('aria-pressed', String(other === button)); });
+        if (msg) msg.textContent = msg.dataset[mode] || msg.textContent;
+      });
+    });
+  })();
+</script>
+
+<style>
+  .cloud {
+    --face-t: #23221f;
+    --face-l: #141412;
+    --face-r: #1a1917;
+    --edge: #5a574f;
+    --alert: #ff5c57;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+    container-type: inline-size;
+  }
+  .plot { position: relative; display: grid; gap: 1rem; }
+  .stage { position: relative; width: 100%; margin-inline: auto; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+  .floor { fill: none; stroke: var(--line); stroke-width: 0.6; opacity: 0.7; }
+  .plate { fill: none; stroke: var(--line-strong); stroke-width: 1; stroke-linejoin: round; }
+  .plate.region { stroke-dasharray: 6 5; }
+  .plate.vcn { fill: color-mix(in srgb, var(--ink) 2.5%, transparent); stroke-width: 1.1; }
+  .plate.subnet { fill: color-mix(in srgb, var(--ink) 3%, transparent); stroke-width: 0.8; }
+  .plate.nsg { stroke-dasharray: 1.5 3; stroke-width: 0.8; }
+  .plate.link { stroke-dasharray: 2 4; }
+  .plate.sky { stroke-dasharray: 6 5; fill: color-mix(in srgb, var(--ink) 2.5%, transparent); }
+  .ring { fill: none; stroke: #b3afa5; stroke-width: 1.2; }
+
+  .track { fill: none; stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 4; stroke-linejoin: round; }
+  .live { fill: none; stroke: var(--signal); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+  .dots { fill: none; stroke: var(--signal); stroke-width: 5; stroke-linecap: round; opacity: 0; }
+  /* Only the chosen route stays lit, with the boxes it passes through; After is the default. */
+  .cloud:not(.is-before) .route.before .live,
+  .cloud.is-before .route.after .live { opacity: 0; }
+  .cloud:not(.is-before) .hop-after .t,
+  .cloud.is-before .hop-before .t { stroke: var(--signal); }
+
+  .t, .l, .r { stroke: var(--edge); stroke-width: 0.8; stroke-linejoin: round; }
+  .t { fill: var(--face-t); }
+  .l { fill: var(--face-l); }
+  .r { fill: var(--face-r); }
+  .rib { fill: none; stroke: var(--edge); stroke-width: 0.8; stroke-linecap: round; }
+  .collector .t, .pod.quiet .t { fill: #d9d5cb; stroke: #d9d5cb; }
+  .collector .l, .pod.quiet .l { fill: #8d897f; stroke: #8d897f; }
+  .collector .r, .pod.quiet .r { fill: #b3afa5; stroke: #b3afa5; }
+  .collector .rib { stroke: #5a574f; stroke-width: 1.2; }
+  .pod .t { fill: var(--signal); stroke: #ffb08f; }
+  .pod .l { fill: #a8401a; stroke: #a8401a; }
+  .pod .r { fill: #cf4e1e; stroke: #cf4e1e; }
+
+  .labels { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .label-pin {
+    --gap: 10px;
+    position: absolute; left: var(--x); top: var(--y); transform: translate(var(--gap), -50%);
+    display: grid; gap: 1px; width: max-content; max-width: 26ch;
+    font-size: 0.75rem; line-height: 1.3; color: var(--ink-2);
+  }
+  .label-pin strong { color: var(--ink); font-size: 0.8125rem; font-weight: 620; }
+  .label-pin.region { max-width: 36ch; }
+  .label-pin.left { transform: translate(calc(-100% - var(--gap)), -50%); text-align: right; }
+  .label-pin.above { transform: translate(-50%, calc(-100% - 8px)); text-align: center; }
+  .label-pin.below { transform: translate(-50%, 8px); text-align: center; }
+  .label-pin.below-l { transform: translate(calc(-100% + 8px), 8px); text-align: right; }
+  .label-pin:is(.public, .private, .vcn, .region) strong { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; color: var(--ink-2); letter-spacing: 0.02em; }
+  @container (max-width: 789px) {
+    .label-pin { left: var(--xm, var(--x)); top: var(--ym, var(--y)); }
+    .label-pin.m-above-l { transform: translate(-100%, calc(-100% - 4px)); text-align: right; }
+    .label-pin.m-above-r { transform: translate(4px, calc(-100% - 4px)); text-align: left; }
+    .label-pin.m-below { transform: translate(-50%, 6px); text-align: center; }
+    .label-pin.vcn span { display: none; }
+  }
+  @media (max-width: 699px) {
+    .label-pin { --gap: 6px; left: var(--xs, var(--xm, var(--x))); top: var(--ys, var(--ym, var(--y))); }
+    .label-pin, .label-pin strong { font-size: 0.6875rem; }
+    .label-pin span, .label-pin.hide-sm { display: none; }
+    .label-pin.s-above { transform: translate(-50%, calc(-100% - 6px)); text-align: center; }
+  }
+  /* The smallest phones: the region and VCN outlines speak for themselves. */
+  @media (max-width: 359px) {
+    .label-pin:is(.region, .vcn) { display: none; }
+  }
+
+  .log {
+    margin: 0; padding: 0; list-style: none;
+    font-family: var(--font-mono); font-size: 0.6875rem; line-height: 1.6; color: var(--ink-2);
+  }
+  .log li { padding-left: 2ch; text-indent: -2ch; }
+  .log .plus { color: var(--signal); }
+  .log .end { color: var(--ink); }
+  /* The log fills the empty top right of the drawing when there is room for it, and
+     sits below the drawing otherwise. */
+  @container (min-width: 600px) {
+    .log { display: grid; grid-template-rows: repeat(6, auto); grid-auto-flow: column; justify-content: start; column-gap: 1.75rem; }
+  }
+  @container (min-width: 790px) {
+    .stage { margin-inline: 0; }
+    .log { display: block; position: absolute; top: 0; right: 0; }
+  }
+
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
+  .caption { display: flex; align-items: center; min-height: 1.5rem; flex: 1 1 22rem; max-width: 30rem; }
+  .status { display: inline-flex; align-items: baseline; gap: 0.55rem; font-size: 0.8125rem; color: var(--ink); line-height: 1.45; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); flex: none; transform: translateY(-1px); }
+  .is-before .dot { background: var(--alert); }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+  .controls-label { font-size: 0.8125rem; color: var(--ink-2); margin-right: 0.25rem; }
+  .controls button {
+    min-height: 40px; padding: 0 0.9rem; cursor: pointer;
+    background: transparent; color: var(--ink-2);
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    font-size: 0.8125rem; font-weight: 560;
+  }
+  .controls button:hover { color: var(--ink); border-color: var(--ink); }
+  .controls button[aria-pressed='true'] { color: var(--ink); border-color: var(--ink); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cloud.is-armed { --play: paused; }
+    .cloud.is-armed.is-playing { --play: running; }
+
+    .is-armed :is(.plate, .ring) { animation: fade 0.45s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .obj { animation: rise 0.42s var(--ease-out) var(--at) both; animation-play-state: var(--play); }
+    .is-armed .pool { animation: drop 0.32s var(--ease-out) var(--at) both; animation-play-state: var(--play); }
+    .is-armed .pod { animation: fade 0.22s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .label-pin { animation: fade 0.3s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .log li { animation: fade 0.18s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .track { animation: fade 0.3s ease var(--tracks) both; animation-play-state: var(--play); }
+    .is-armed:not(.is-routing) .route.after .live { animation: draw 0.4s ease-in-out var(--route) both; animation-play-state: var(--play); }
+    .is-armed:not(.is-routing) .hop-after .t { animation: unlit 0.2s ease var(--lit-in) both; animation-play-state: var(--play); }
+    .is-armed:not(.is-routing) .status { animation: fade 0.3s ease var(--status) both; animation-play-state: var(--play); }
+
+    .is-routing.is-before .route.before .live,
+    .is-routing.is-after .route.after .live { animation: draw var(--dur) linear both; }
+    .is-routing.is-before .route.before .dots,
+    .is-routing.is-after .route.after .dots { animation: stream var(--dur) linear both; }
+    .is-routing.is-before .hop-before .t,
+    .is-routing.is-after .hop-after .t { animation: unlit 0.15s ease var(--lit) both; }
+  }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes drop { from { opacity: 0; transform: translateY(-10px); } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes unlit { from { stroke: var(--edge); } }
+  @keyframes draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes stream { from { opacity: 1; stroke-dashoffset: var(--from); } to { opacity: 1; stroke-dashoffset: var(--to); } }
+</style>

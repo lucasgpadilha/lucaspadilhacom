@@ -1,42 +1,66 @@
 ---
 import Arrow from './Arrow.astro';
-import { about, contact, email } from '../../data/home';
+import { about, contact, email, side } from '../../data/home';
 import { t, type Locale } from '../../lib/locale';
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
+const pt = locale === 'pt';
 ---
-<section id="contact" class="section" aria-labelledby="contact-title">
-  <div class="wrap">
-    <header class="section-head">
+<section id="contact" class="contact" aria-labelledby="contact-title">
+  <div class="wrap grid">
+    <div class="talk">
       <h2 id="contact-title">{t(contact.title, locale)}</h2>
       <p class="lede">{t(contact.body, locale)}</p>
-    </header>
-    <div class="cta">
       <a class="mail" href={`mailto:${email}`}>{email}</a>
       <ul role="list" class="links">
         <li><a href="https://www.linkedin.com/in/lucasgpadilha/">LinkedIn <Arrow dir="up-right" size={14} /></a></li>
         <li><a href="https://github.com/lucasgpadilha">GitHub <Arrow dir="up-right" size={14} /></a></li>
       </ul>
+      <dl class="about">
+        <div><dt>{pt ? 'Formação' : 'Education'}</dt><dd>{t(about.education, locale)}</dd></div>
+        <div><dt>{pt ? 'Idiomas' : 'Languages'}</dt><dd>{t(about.languages, locale)}</dd></div>
+        <div><dt>{pt ? 'Base' : 'Based in'}</dt><dd>{t(about.place, locale)}</dd></div>
+      </dl>
     </div>
-    <dl class="about">
-      <div><dt>{locale === 'pt' ? 'Formação' : 'Education'}</dt><dd>{t(about.education, locale)}</dd></div>
-      <div><dt>{locale === 'pt' ? 'Idiomas' : 'Languages'}</dt><dd>{t(about.languages, locale)}</dd></div>
-      <div><dt>{locale === 'pt' ? 'Base' : 'Based in'}</dt><dd>{t(about.place, locale)}</dd></div>
-    </dl>
+    <div id="side" class="side">
+      <h3>{t(contact.sideTitle, locale)}</h3>
+      <ul role="list">
+        {side.items.map((item) => (
+          <li>
+            <a href={item.href}><span class="name">{item.name}</span> <Arrow dir="up-right" size={13} /></a>
+            <p>{t(item.body, locale)}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
   </div>
 </section>
 
 <style>
-  .cta { display: grid; gap: 1.25rem; }
+  .contact { padding-block: clamp(3.5rem, 2.5rem + 3vw, 6rem); border-top: 1px solid var(--line); }
+  .grid { display: grid; gap: 3rem; }
+  .talk { display: grid; gap: 1rem; align-content: start; }
+  h2 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem); letter-spacing: -0.03em; }
+  .lede { font-size: var(--step-1); color: var(--ink-2); max-width: 44ch; }
   .mail {
-    font-size: clamp(1.4rem, 0.6rem + 4vw, 4rem); font-weight: 650; letter-spacing: -0.035em; line-height: 1.05;
-    overflow-wrap: anywhere; text-decoration-thickness: 2px; text-underline-offset: 0.14em;
+    font-size: clamp(1.5rem, 1rem + 2.2vw, 2.5rem); font-weight: 650; letter-spacing: -0.03em; line-height: 1.1;
+    text-decoration-color: var(--signal); text-decoration-thickness: 2px; overflow-wrap: anywhere; width: fit-content;
   }
-  .links { display: flex; gap: 0.5rem 1.5rem; flex-wrap: wrap; }
-  .links a { display: inline-flex; gap: 0.35rem; min-height: 44px; align-items: center; font-weight: 600; }
-  .about { display: grid; gap: 1rem; margin-top: clamp(3rem, 2rem + 3vw, 5rem); padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: var(--step--1); }
+  .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; }
+  .links a { display: inline-flex; align-items: center; gap: 0.35em; min-height: 44px; font-weight: 560; }
+  .about { display: grid; gap: 0.6rem; margin: 0.5rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.875rem; }
+  .about div { display: grid; grid-template-columns: 7.5rem 1fr; gap: 1rem; }
   .about dt { color: var(--ink-2); }
-  .about dd { margin: 0.15rem 0 0; }
-  @media (min-width: 900px) { .about { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; } }
+  .about dd { margin: 0; }
+  .side h3 { font-size: 1rem; font-weight: 620; margin-bottom: 0.5rem; }
+  .side ul { display: grid; border-top: 1px solid var(--line); }
+  .side li { padding: 0.8rem 0; border-bottom: 1px solid var(--line); display: grid; gap: 0.15rem; }
+  .side a { display: inline-flex; align-items: center; gap: 0.35em; min-height: 32px; width: fit-content; text-decoration: none; font-weight: 620; }
+  .side a:hover .name { text-decoration: underline; text-decoration-color: var(--signal); }
+  .side p { font-size: 0.875rem; color: var(--ink-2); }
+  @media (min-width: 1080px) {
+    .grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: 3.5rem; }
+  }
+  @media (max-width: 420px) { .about div { grid-template-columns: 1fr; gap: 0.1rem; } }
 </style>

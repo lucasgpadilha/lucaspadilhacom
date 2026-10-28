@@ -1,7 +1,7 @@
 // Pure timeline math shared by the page script (counter, active step) and the 3D scene.
 // One progress value (0..1) from the scroll drives everything, so both always agree.
 
-export const STEPS = 5;
+export const STEPS = 3;
 export const ALREADY_ON_CLUSTER = 10;
 export const MIGRATED = 248; // 10 + 248 = 258 workloads at the end
 
@@ -11,7 +11,7 @@ export const span = (p: number, a: number, b: number) => clamp01((p - a) / (b - 
 export const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 export const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-/** Step i owns [i/5, (i+1)/5]. */
+/** Step i owns [i/STEPS, (i+1)/STEPS]. */
 export const stepIndex = (p: number) => Math.min(STEPS - 1, Math.floor(clamp01(p) * STEPS));
 export const stepProgress = (p: number, i: number) => span(p, i / STEPS, (i + 1) / STEPS);
 
