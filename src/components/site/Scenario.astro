@@ -1,0 +1,415 @@
+---
+// The hero: a whole reference platform as one isometric map, and a legend beside it.
+// Opening a part in the legend (or clicking it on the map) lights that part and dims the
+// rest; each part links to the section that details it. The map assembles once on first
+// paint (CSS, under 5 s) and then holds; without JS or with reduced motion it is simply
+// finished, and the legend still works as native <details>.
+import Arrow from './Arrow.astro';
+import { Iso, percent, type P3 } from '../../lib/iso';
+import { scenario as sc } from '../../data/scenario';
+import { email } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const L = (v: string | { en: string; pt: string }) => (typeof v === 'string' ? v : t(v, locale));
+
+const iso = new Iso(20);
+type Faces = ReturnType<Iso['box']>;
+const faces = (b: Faces) => [['l', b.left], ['r', b.right], ['t', b.top]] as const;
+
+// Four networks in a diamond around the hub (world units on the floor).
+const vcn = {
+  mgmt: { c: [-5, -5], w: 6.4, d: 5.2 },
+  hml: { c: [5, -5], w: 5.2, d: 4.4 },
+  dev: { c: [-5, 5], w: 5.2, d: 4.4 },
+  prod: { c: [5.5, 5.5], w: 7, d: 6 },
+} as const;
+type Env = keyof typeof vcn;
+
+const plate = (e: Env, pad = 0, z = 0) => {
+  const { c, w, d } = vcn[e];
+  return iso.rect(c[0] - w / 2 - pad, c[1] - d / 2 - pad, z, w + pad * 2, d + pad * 2);
+};
+const nearCorner: Record<Env, [number, number]> = {
+  mgmt: [vcn.mgmt.c[0] + vcn.mgmt.w / 2, vcn.mgmt.c[1] + vcn.mgmt.d / 2],
+  hml: [vcn.hml.c[0] - vcn.hml.w / 2, vcn.hml.c[1] + vcn.hml.d / 2],
+  dev: [vcn.dev.c[0] + vcn.dev.w / 2, vcn.dev.c[1] - vcn.dev.d / 2],
+  prod: [vcn.prod.c[0] - vcn.prod.w / 2, vcn.prod.c[1] - vcn.prod.d / 2],
+};
+const envs: Env[] = ['mgmt', 'hml', 'dev', 'prod'];
+
+// Clusters: a platform per network, pods on top (MGMT carries the platform services instead).
+const clusterAt: Record<Env, { c: [number, number]; w: number; d: number; pods: [number, number][] }> = {
+  mgmt: { c: [-5, -4.7], w: 4.8, d: 3.6, pods: [] },
+  hml: { c: [5, -5], w: 3.4, d: 2.6, pods: [[-0.7, -0.5], [0.7, -0.5], [-0.7, 0.5], [0.7, 0.5]] },
+  dev: { c: [-5.4, 4.3], w: 3.2, d: 2.4, pods: [[-0.65, -0.45], [0.65, -0.45], [-0.65, 0.45]] },
+  prod: { c: [4.7, 4.6], w: 4.6, d: 3.4, pods: [[-1.5, -0.7], [-0.5, -0.7], [0.5, -0.7], [1.5, -0.7], [-1.5, 0.7], [-0.5, 0.7], [0.5, 0.7], [1.5, 0.7]] },
+};
+const clusters = envs.map((e) => {
+  const k = clusterAt[e];
+  return {
+    env: e,
+    base: iso.boxAt(k.c[0], k.c[1], 0, k.w, k.d, 0.34),
+    pods: k.pods.map(([dx, dy]) => iso.boxAt(k.c[0] + dx, k.c[1] + dy, 0.34, 0.6, 0.6, 0.5)),
+  };
+});
+
+// MGMT services on its platform: Argo CD, the observability stack, ARC runners on a virtual pool.
+const argo = { c: [-6.4, -5.6] as const };
+const argoRing = iso.circle(argo.c[0], argo.c[1], 0.34, 0.75, 56);
+const argoArrow = iso.poly([[argo.c[0] + 0.75, argo.c[1] - 0.26, 0.34], [argo.c[0] + 1.0, argo.c[1] + 0.1, 0.34], [argo.c[0] + 0.5, argo.c[1] + 0.1, 0.34]]);
+const obsBars = [0.5, 0.95, 0.7].map((h, i) => iso.boxAt(-4.4 + i * 0.55, -5.6, 0.34, 0.4, 0.9, h));
+const pool = iso.rect(-6.9, -4.2, 0.35, 3.6, 1.3);
+const runners = [-6.3, -5.4, -4.5].map((x) => iso.boxAt(x, -3.55, 0.34, 0.55, 0.55, 0.42));
+
+// The hub and its spokes.
+const drg = iso.hex(0, 0, 0, 0.95, 0.5);
+const spokes = envs.map((e) => iso.line([[0, 0, 0], [nearCorner[e][0], nearCorner[e][1], 0]]));
+
+// Pipeline outside the cloud, top left: commit → CI → registry, then into Argo CD.
+const commit = iso.boxAt(-12.6, 0.2, 0, 1.3, 1.3, 0.3);
+const ci = iso.boxAt(-12.1, -3, 0, 2, 1.7, 0.7);
+const reg = [0, 0.32, 0.64].map((z) => iso.boxAt(-10.6, -6.1, z, 1.5, 1.5, 0.22));
+const lane = iso.line([[-12.6, 0.2, 0], [-12.6, -3, 0], [-10.6, -3, 0], [-10.6, -6.1, 0], [argo.c[0] - 0.8, -6.1, 0]]);
+
+// GitOps: Argo CD in MGMT syncs every environment; telemetry flows back to MGMT.
+const gitops = (['hml', 'dev', 'prod'] as Env[]).map((e) => {
+  const k = clusterAt[e];
+  return iso.line([[argo.c[0], argo.c[1], 0.36], [argo.c[0], k.c[1], 0.02], [k.c[0], k.c[1], 0.02]]);
+});
+const telemetry = (['hml', 'dev', 'prod'] as Env[]).map((e) => {
+  const k = clusterAt[e];
+  return iso.line([[k.c[0] - 0.4, k.c[1] - 0.4, 0.02], [k.c[0] - 0.4, -5.6, 0.02], [-3.8, -5.6, 0.36]]);
+});
+
+// Data in PROD, agents in DEV, legacy VMs migrating in, the cost ledger between MGMT and HML.
+const sql = [0, 0.45].map((z) => iso.hex(7.6, 7.3, z, 0.75, 0.36));
+const sandbox = iso.rect(-6.6, 5.9, 0.02, 2.6, 1.0);
+const agents = [-6, -5.2, -4.4].map((x) => iso.boxAt(x, 6.4, 0.02, 0.5, 0.5, 0.38));
+const vms = [[-1.2, 11.2], [1.6, 11.2]].map(([x, y]) => ({
+  slab: iso.boxAt(x, y, 0, 2.2, 1.6, 0.32),
+  boxes: [-0.5, 0.5].map((dx) => iso.boxAt(x + dx, y, 0.32, 0.5, 0.5, 0.4)),
+}));
+const migrate = iso.line([[1.6, 10.4, 0], [1.6, 8.8, 0], [3.2, 8.8, 0]]);
+const cost = [1, 0.7, 0.45].map((h, i) => iso.boxAt(0.4 + i * 0.6, -9.6, 0, 0.45, 0.9, h));
+
+const box = iso.viewBox(14);
+const floor = iso.grid(-15, 12, -11, 14, 1);
+const pin = (pt: P3) => percent(iso, box, pt);
+
+// Labels: networks always; parts on wide screens only.
+const labels = [
+  { key: 'mgmt', part: 'clusters', env: true, at: pin([vcn.mgmt.c[0] - vcn.mgmt.w / 2, vcn.mgmt.c[1] - vcn.mgmt.d / 2, 0]) },
+  { key: 'hml', part: 'clusters', env: true, at: pin([vcn.hml.c[0] + vcn.hml.w / 2, vcn.hml.c[1] - vcn.hml.d / 2, 0]) },
+  { key: 'dev', part: 'clusters', env: true, at: pin([vcn.dev.c[0] - vcn.dev.w / 2, vcn.dev.c[1] + vcn.dev.d / 2, 0]) },
+  { key: 'prod', part: 'clusters', env: true, at: pin([vcn.prod.c[0] + vcn.prod.w / 2, vcn.prod.c[1] + vcn.prod.d / 2, 0]) },
+  { key: 'drg', part: 'network', at: pin([0.95, 0.95, 0]) },
+  { key: 'ci', part: 'delivery', at: pin([-11.1, -2.15, 0]) },
+  { key: 'argo', part: 'delivery', at: pin([argo.c[0] - 0.55, argo.c[1] + 0.55, 0.34]) },
+  { key: 'obs', part: 'observability', at: pin([-3.1, -6.05, 0.34]) },
+  { key: 'runners', part: 'delivery', at: pin([-3.3, -2.9, 0.34]) },
+  { key: 'sql', part: 'data', at: pin([8.15, 6.75, 0.6]) },
+  { key: 'agents', part: 'agents', at: pin([-4.0, 6.9, 0]) },
+  { key: 'vms', part: 'migration', at: pin([-2.3, 12.0, 0]) },
+  { key: 'cost', part: 'finops', at: pin([2.4, -10.05, 0]) },
+] as const;
+
+const s = (n: number) => `${n.toFixed(2)}s`;
+const T = { floor: 0, plates: 0.2, hub: 0.75, spokes: 0.95, clusters: 1.25, pods: 1.55, mgmt: 1.85, pipe: 2.2, lane: 2.45, gitops: 2.95, tele: 3.35, rest: 3.6, labels: 3.9 };
+const proof = sc.proof.map((item) => ({ value: locale === 'pt' && item.pt ? item.pt : item.value, text: t(item.text, locale) }));
+---
+<div class="wrap grid">
+  <h1 id="hero-title">{t(sc.title, locale).map((line) => <span class="line">{line}</span>)}</h1>
+  <div class="copy">
+    <p class="lede">{t(sc.lede, locale)}</p>
+    <div class="actions">
+      <a class="btn btn--light" href={`mailto:${email}`}>{t(sc.project, locale)} <Arrow /></a>
+      <a class="btn btn--ghost" href="https://www.linkedin.com/in/lucasgpadilha/">{t(sc.hiring, locale)} <Arrow dir="up-right" size={14} /></a>
+    </div>
+    <ul class="proof" role="list">
+      {proof.map((item) => <li><b>{item.value}</b> {item.text}</li>)}
+    </ul>
+    <a class="sites-link" href="/sites/" hreflang="pt-BR">{t(sc.sites, locale)}<Arrow size={14} /></a>
+  </div>
+  <div class="explorer">
+  <figure class="map" data-scenario aria-label={t(sc.figure, locale)}>
+    <div class="stage" style={`aspect-ratio:${box.w} / ${box.h};--ratio:${(box.w / box.h).toFixed(4)}`}>
+      <svg viewBox={box.attr} aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="scenario-floor-fade" cx="50%" cy="50%" r="55%">
+            <stop offset="0.3" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </radialGradient>
+          <mask id="scenario-floor-mask"><rect x={box.x} y={box.y} width={box.w} height={box.h} fill="url(#scenario-floor-fade)" /></mask>
+        </defs>
+        <path class="floor" d={floor} mask="url(#scenario-floor-mask)" style={`--at:${s(T.floor)}`} />
+
+        <g class="part" data-part="network">
+          {envs.map((e, i) => <path class="compartment" d={plate(e, 0.45)} style={`--at:${s(T.plates + i * 0.06)}`} />)}
+          {envs.map((e, i) => <path class="vcn" d={plate(e)} style={`--at:${s(T.plates + 0.1 + i * 0.06)}`} />)}
+          {spokes.map((d, i) => <path class="spoke" d={d} pathLength="100" style={`--at:${s(T.spokes + i * 0.07)}`} />)}
+        </g>
+
+        <g class="part" data-part="delivery">
+          <path class="lane" d={lane} pathLength="100" style={`--at:${s(T.lane)}`} />
+          {gitops.map((d, i) => <path class="sync" d={d} pathLength="100" style={`--at:${s(T.gitops + i * 0.1)}`} />)}
+        </g>
+        <g class="part" data-part="observability">
+          {telemetry.map((d, i) => <path class="tele" d={d} pathLength="100" style={`--at:${s(T.tele + i * 0.1)}`} />)}
+        </g>
+        <g class="part" data-part="finops">
+          <g class="obj" style={`--at:${s(T.rest)}`}>{cost.map((b) => faces(b).map(([cls, d]) => <path class={cls} d={d} />))}</g>
+        </g>
+
+        <g class="part" data-part="delivery">
+          <g class="obj" style={`--at:${s(T.pipe)}`}>{reg.map((b) => faces(b).map(([cls, d]) => <path class={cls} d={d} />))}</g>
+          <g class="obj ci" style={`--at:${s(T.pipe - 0.1)}`}>{faces(ci).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+        </g>
+
+        {clusters.map((cl, n) => (
+          <g class="part" data-part="clusters">
+            <g class="obj" style={`--at:${s(T.clusters + n * 0.08)}`}>{faces(cl.base).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+            {cl.pods.map((pod, i) => (
+              <g class="pod" style={`--at:${s(T.pods + n * 0.08 + i * 0.03)}`}>{faces(pod).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+            ))}
+          </g>
+        ))}
+
+        <g class="part" data-part="delivery">
+          <path class="pool" d={pool} />
+          {runners.map((b, i) => <g class="runner" style={`--at:${s(T.mgmt + 0.1 + i * 0.05)}`}>{faces(b).map(([cls, d]) => <path class={cls} d={d} />)}</g>)}
+          <path class="ring" d={argoRing} pathLength="100" style={`--at:${s(T.mgmt)}`} />
+          <path class="arrow" d={argoArrow} style={`--at:${s(T.mgmt + 0.3)}`} />
+        </g>
+        <g class="part" data-part="observability">
+          {obsBars.map((b, i) => <g class="bar" style={`--at:${s(T.mgmt + 0.15 + i * 0.06)}`}>{faces(b).map(([cls, d]) => <path class={cls} d={d} />)}</g>)}
+        </g>
+        <g class="part" data-part="agents">
+          <path class="sandbox" d={sandbox} style={`--at:${s(T.rest)}`} />
+          {agents.map((b, i) => <g class="agent" style={`--at:${s(T.rest + 0.05 + i * 0.05)}`}>{faces(b).map(([cls, d]) => <path class={cls} d={d} />)}</g>)}
+        </g>
+        <g class="part" data-part="data">
+          {sql.map((h, i) => <g class="disk" style={`--at:${s(T.rest + i * 0.08)}`}>{h.sides.map((d) => <path class="r" d={d} />)}<path class="t" d={h.top} /></g>)}
+        </g>
+
+        <g class="part" data-part="network">
+          <g class="obj hub" style={`--at:${s(T.hub)}`}>{drg.sides.map((d) => <path class="r" d={d} />)}<path class="t" d={drg.top} /></g>
+        </g>
+
+        <g class="part" data-part="delivery">
+          <g class="obj hot" style={`--at:${s(T.pipe - 0.2)}`}>{faces(commit).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+        </g>
+
+        <g class="part" data-part="migration">
+          <path class="mig" d={migrate} pathLength="100" style={`--at:${s(T.rest + 0.1)}`} />
+          {vms.map((vm) => (
+            <g class="obj legacy" style={`--at:${s(T.rest)}`}>
+              {faces(vm.slab).map(([cls, d]) => <path class={cls} d={d} />)}
+              {vm.boxes.map((b) => faces(b).map(([cls, d]) => <path class={`${cls} ctr`} d={d} />))}
+            </g>
+          ))}
+        </g>
+      </svg>
+
+      <ul class="labels" role="list" aria-hidden="true">
+        {labels.map((label) => (
+          <li class:list={['tag', label.key, { env: 'env' in label }]} data-for={label.part} style={`left:${label.at.left};top:${label.at.top};--at:${s(T.labels)}`}>
+            {L(sc.labels[label.key])}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </figure>
+  <div class="legend" data-legend>
+      <h2 class="legend-title">{t(sc.legend, locale)}</h2>
+      <p class="hint">{t(sc.hint, locale)}</p>
+      <ul role="list">
+        {sc.parts.map((part) => (
+          <li>
+            <details name="scenario" data-part={part.key}>
+              <summary><span class="tick" aria-hidden="true"></span>{t(part.name, locale)}</summary>
+              <div class="detail">
+                <p class="pain">“{t(part.pain, locale)}”</p>
+                <p>{t(part.build, locale)}</p>
+                <a href={part.href}>{t(sc.more, locale)}<Arrow size={14} /></a>
+              </div>
+            </details>
+          </li>
+        ))}
+      </ul>
+  </div>
+
+  </div>
+</div>
+
+<script is:inline>
+  // The legend drives the map: the open part is lit, the rest dims. Clicking the map opens
+  // the part under the pointer; hovering a legend entry previews it.
+  (function () {
+    var fig = document.querySelector('[data-scenario]');
+    var legend = document.querySelector('[data-legend]');
+    if (!fig || !legend) return;
+    var items = Array.prototype.slice.call(legend.querySelectorAll('details[data-part]'));
+    var open = function () { var d = items.filter(function (i) { return i.open; })[0]; return d ? d.dataset.part : ''; };
+    var show = function (key) { if (key) fig.dataset.focus = key; else delete fig.dataset.focus; };
+    items.forEach(function (item) {
+      item.addEventListener('toggle', function () {
+        if (item.open) items.forEach(function (other) { if (other !== item) other.open = false; });
+        show(open());
+      });
+      var summary = item.querySelector('summary');
+      summary.addEventListener('mouseenter', function () { show(item.dataset.part); });
+      summary.addEventListener('mouseleave', function () { show(open()); });
+    });
+    fig.addEventListener('click', function (event) {
+      var target = event.target.closest('[data-part]');
+      if (!target) return;
+      var item = items.filter(function (i) { return i.dataset.part === target.dataset.part; })[0];
+      if (item) { item.open = !item.open; if (item.open) item.querySelector('summary').focus({ preventScroll: true }); }
+    });
+  })();
+</script>
+
+<style>
+  /* Phones: title, the map with its legend, then the rest. Wide: copy left, map and legend right. */
+  .grid { display: grid; gap: 1.5rem; grid-template-areas: 'title' 'explorer' 'copy'; }
+  h1 { grid-area: title; }
+  .copy { grid-area: copy; display: grid; gap: 1.1rem; align-content: start; }
+  .explorer { grid-area: explorer; display: grid; gap: 1.25rem; min-width: 0; }
+  .map { margin: 0; min-width: 0; }
+  /* On a phone the map stays in view while the legend scrolls under it. */
+  @media (max-width: 1079px) {
+    .map { position: sticky; top: 64px; z-index: 2; background: var(--paper); padding-block: 0.5rem; }
+  }
+  @media (max-width: 699px) {
+    .map .tag.dev { transform: translate(4px, 4px); }
+    .map .tag.hml { transform: translate(-100%, -120%); }
+  }
+  h1 { font-size: clamp(2.125rem, 1.4rem + 2.6vw, 3.5rem); font-weight: 680; letter-spacing: -0.035em; line-height: 0.98; }
+  h1 .line { display: block; }
+  h1 .line + .line { color: var(--signal); }
+  .lede { font-size: var(--step-0); max-width: 48ch; color: var(--ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .btn--light { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn--light:hover { background: var(--signal); border-color: var(--signal); color: var(--on-signal); }
+
+  .legend { display: grid; gap: 0.35rem; align-content: start; }
+  .legend-title { font-size: 0.9375rem; font-weight: 620; letter-spacing: -0.01em; }
+  .hint { font-size: 0.8125rem; color: var(--ink-2); max-width: 52ch; }
+  .legend ul { display: grid; margin: 0.35rem 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .legend li { border-bottom: 1px solid var(--line); }
+  summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 0.6rem;
+    min-height: 38px; font-size: 0.9375rem; font-weight: 560; color: var(--ink);
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; margin-left: auto; font-family: var(--font-mono); color: var(--ink-2); }
+  details[open] summary::after { content: '−'; color: var(--signal); }
+  summary:hover { color: var(--signal); }
+  .tick { width: 7px; height: 7px; background: var(--line-strong); flex: none; transition: background-color 0.2s ease; }
+  details[open] .tick, summary:hover .tick { background: var(--signal); }
+  .detail { display: grid; gap: 0.35rem; padding: 0 0 0.85rem 1.1rem; font-size: 0.875rem; color: var(--ink-2); max-width: 52ch; }
+  .detail .pain { color: var(--signal); font-weight: 540; }
+  .detail a { display: inline-flex; align-items: center; gap: 0.35em; width: fit-content; color: var(--ink); font-weight: 560; }
+  .sites-link { font-size: 0.875rem; color: var(--ink-2); width: fit-content; }
+  .sites-link :global(.arrow) { margin-left: 0.3em; }
+
+  .stage { position: relative; width: 100%; max-width: 680px; margin-inline: auto; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .floor { fill: none; stroke: var(--line); stroke-width: 0.6; opacity: 0.7; }
+  .t, .l, .r { stroke: #5a574f; stroke-width: 0.8; stroke-linejoin: round; }
+  .t { fill: #23221f; }
+  .l { fill: #141412; }
+  .r { fill: #1a1917; }
+  .compartment { fill: none; stroke: var(--line-strong); stroke-width: 0.8; stroke-dasharray: 3 4; }
+  .vcn { fill: color-mix(in srgb, var(--ink) 4%, transparent); stroke: #6b685f; stroke-width: 1; }
+  .spoke { fill: none; stroke: var(--ink-2); stroke-width: 1.4; }
+  .hub .t { fill: #d9d5cb; stroke: #d9d5cb; }
+  .hub .r { fill: #8d897f; stroke: #8d897f; }
+  .lane, .sync { fill: none; stroke: var(--signal); stroke-width: 1.6; stroke-linejoin: round; }
+  .sync { stroke-dasharray: 5 4; }
+  .tele { fill: none; stroke: #8d897f; stroke-width: 1.1; stroke-dasharray: 2 3; }
+  .mig { fill: none; stroke: var(--ink-2); stroke-width: 1.3; stroke-dasharray: 4 4; }
+  .pool { fill: none; stroke: var(--ink-2); stroke-width: 0.9; stroke-dasharray: 3 3; }
+  .sandbox { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--ink-2); stroke-width: 0.9; stroke-dasharray: 3 3; }
+  .ring { fill: none; stroke: var(--signal); stroke-width: 1.8; }
+  .arrow { fill: var(--signal); }
+  .pod .t, .hot .t { fill: var(--signal); stroke: #ffb08f; }
+  .pod .l, .hot .l { fill: #a8401a; stroke: #a8401a; }
+  .pod .r, .hot .r { fill: #cf4e1e; stroke: #cf4e1e; }
+  :is(.runner, .agent, .bar) .t { fill: #d9d5cb; stroke: #d9d5cb; }
+  :is(.runner, .agent, .bar) .l { fill: #8d897f; stroke: #8d897f; }
+  :is(.runner, .agent, .bar) .r { fill: #b3afa5; stroke: #b3afa5; }
+  .ci .t { stroke: var(--signal); }
+  .disk .t { fill: #d9d5cb; stroke: #8d897f; }
+  .disk .r { fill: #8d897f; stroke: #6b685f; }
+  .legacy { opacity: 0.6; }
+  .legacy .ctr.t { fill: #8d897f; }
+
+  /* Focus: one part lit, the rest dimmed. */
+  .part, .tag { transition: opacity 0.3s var(--ease-out); }
+  .map[data-focus] .part { opacity: 0.16; }
+  .map[data-focus] .tag:not(.env) { opacity: 0; }
+  .map[data-focus='network'] [data-part='network'],
+  .map[data-focus='clusters'] [data-part='clusters'],
+  .map[data-focus='delivery'] [data-part='delivery'],
+  .map[data-focus='observability'] [data-part='observability'],
+  .map[data-focus='finops'] [data-part='finops'],
+  .map[data-focus='migration'] [data-part='migration'],
+  .map[data-focus='data'] [data-part='data'],
+  .map[data-focus='agents'] [data-part='agents'] { opacity: 1; }
+  .map[data-focus='network'] .tag.drg, .map[data-focus='delivery'] .tag:is(.ci, .argo, .runners),
+  .map[data-focus='observability'] .tag.obs, .map[data-focus='finops'] .tag.cost, .map[data-focus='migration'] .tag.vms,
+  .map[data-focus='data'] .tag.sql, .map[data-focus='agents'] .tag.agents { opacity: 1; }
+  .map .part { cursor: pointer; }
+
+  .labels { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .tag { position: absolute; transform: translate(-50%, 6px); white-space: nowrap; font-size: 0.75rem; color: var(--ink-2); }
+  .tag.env { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--ink); }
+  .tag.mgmt { transform: translate(-100%, -100%); }
+  .tag.hml { transform: translate(0, -100%); }
+  .tag.dev { transform: translate(-100%, 0); }
+  .tag.prod { transform: translate(0, 0); }
+  .tag.ci { transform: translate(-50%, 10px); }
+  .tag.argo { transform: translate(calc(-100% - 6px), -50%); }
+  .tag.obs { transform: translate(6px, -120%); }
+  .tag.cost { transform: translate(6px, -50%); }
+  .tag.sql { transform: translate(10px, -50%); }
+  .tag.agents { transform: translate(-50%, 6px); }
+  .tag.vms { transform: translate(calc(-100% - 6px), -50%); }
+
+  .proof { display: grid; gap: 0.45rem; margin: 0.4rem 0 0; padding: 1rem 0 0; border-top: 1px solid var(--line); font-size: 0.875rem; color: var(--ink-2); }
+  .proof b { font-family: var(--font-mono); font-weight: 600; color: var(--signal); margin-right: 0.2em; }
+
+  @media (max-width: 1079px) {
+    .tag:not(.env) { display: none; }
+  }
+  @media (min-width: 1080px) {
+    .grid {
+      grid-template-columns: minmax(0, 4.5fr) minmax(0, 7.5fr);
+      grid-template-areas: 'title explorer' 'copy explorer';
+      grid-template-rows: auto 1fr;
+      column-gap: 3rem; row-gap: 1.25rem; align-items: start;
+    }
+    .stage { width: min(100%, calc(clamp(320px, calc(100svh - 64px - 22rem), 540px) * var(--ratio))); max-width: none; margin-inline: auto 0; }
+    /* The legend sits under the map in two columns; an open part takes the full row. */
+    .legend ul { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row dense; column-gap: 1.5rem; }
+    .legend li:has(details[open]) { grid-column: 1 / -1; }
+    .legend-title, .hint { display: inline; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .floor, .compartment, .vcn { animation: hs-fade 0.5s ease var(--at) both; }
+    .obj, .runner, .bar, .agent, .disk { animation: hs-rise 0.45s var(--ease-out) var(--at) both; }
+    .pod { animation: hs-drop 0.32s cubic-bezier(0.3, 1.25, 0.5, 1) var(--at) both; }
+    :is(.spoke, .lane, .sync, .tele, .mig, .ring) { animation: hs-draw 0.5s ease-in-out var(--at) backwards; }
+    .arrow, .sandbox, .tag { animation: hs-fade 0.3s ease var(--at) both; }
+    .legacy { animation: hs-legacy 0.45s var(--ease-out) var(--at) both; }
+  }
+  @keyframes hs-fade { from { opacity: 0; } }
+  @keyframes hs-rise { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes hs-drop { from { opacity: 0; transform: translateY(-12px); } }
+  @keyframes hs-draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes hs-legacy { from { opacity: 0; transform: translateY(8px); } }
+  @media print { .map * { animation: none !important; } }
+</style>

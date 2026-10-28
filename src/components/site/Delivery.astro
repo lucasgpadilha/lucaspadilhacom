@@ -1,0 +1,26 @@
+---
+import Chapter from './Chapter.astro';
+import DeployScene from './DeployScene.astro';
+import { delivery as d } from '../../data/delivery';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Chapter
+  id="delivery"
+  flip
+  title={t(d.title, locale)}
+  pain={t(d.pain, locale)}
+  lede={t(d.lede, locale)}
+  tools={d.tools}
+  toolsLabel={t(d.toolsLabel, locale)}
+  facts={d.facts.map((fact) => ({ value: fact.value, text: t(fact.text, locale) }))}
+>
+  <p slot="body" class="body">{t(d.body, locale)}</p>
+  <DeployScene locale={locale} />
+</Chapter>
+
+<style>
+  .body { font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
+</style>

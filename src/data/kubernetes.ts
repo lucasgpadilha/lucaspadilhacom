@@ -7,6 +7,10 @@ type L = Localized<string>;
 
 export const kubernetes = {
   title: { en: 'Docker to Kubernetes migration', pt: 'Migração de Docker para Kubernetes' } satisfies L,
+  pain: {
+    en: 'Services stuck on VMs with Docker Compose, and every deploy is a ritual.',
+    pt: 'Serviços presos em VMs com Docker Compose, e cada deploy é um ritual.',
+  } satisfies L,
   lede: {
     en: 'I take services off Docker Compose and VMs and onto Kubernetes in phases, through GitOps, always with a way back.',
     pt: 'Tiro serviços do Docker Compose e de VMs e levo para Kubernetes em fases, por GitOps, sempre com caminho de volta.',
@@ -35,10 +39,9 @@ export const kubernetes = {
     },
   ] satisfies { title: L; body: L }[],
   facts: [
-    { value: '~250', text: { en: 'services moved from Docker on VMs to OKE', pt: 'serviços levados do Docker em VMs para o OKE' } },
-    { value: '10 → 258', text: { en: 'workloads on the cluster in under three weeks', pt: 'workloads no cluster em menos de três semanas' } },
-    { value: '234', text: { en: 'service discovery records pointing at the cluster', pt: 'registros de service discovery apontando para o cluster' } },
-    { value: '12', text: { en: 'platform services moved too, including Kafka, MongoDB, MinIO and Consul', pt: 'serviços de plataforma levados junto, entre eles Kafka, MongoDB, MinIO e Consul' } },
+    { value: '500+', text: { en: 'services migrated to Kubernetes', pt: 'serviços migrados para Kubernetes' } },
+    { value: '10 → 258', text: { en: 'workloads on one cluster in under three weeks', pt: 'workloads num cluster em menos de três semanas' } },
+    { value: '234', text: { en: 'service discovery records moved over to the cluster', pt: 'registros de service discovery passados para o cluster' } },
   ] satisfies { value: string; text: L }[],
   toolsLabel: { en: 'Tools', pt: 'Ferramentas' } satisfies L,
   tools: ['Kubernetes', 'OKE', 'Docker', 'Helm', 'Argo CD', 'Image Updater', 'Kyverno', 'External Secrets', 'Vault', 'NetworkPolicies', 'Ansible', 'AWX'],

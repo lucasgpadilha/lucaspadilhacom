@@ -7,6 +7,7 @@ type L = Localized<string>;
 
 export const finops = {
   title: { en: 'FinOps: the cloud at the right size', pt: 'FinOps: a nuvem na medida' } satisfies L,
+  pain: { en: 'The bill arrives and nobody knows who spent it.', pt: 'A fatura chega e ninguém sabe quem gastou.' } satisfies L,
   lede: {
     en: 'I find where the cloud overcharges, like requests far above real use, forgotten backups and concentrated egress, and turn it into a savings plan.',
     pt: 'Encontro onde a nuvem cobra a mais, como requests muito acima do uso, backups esquecidos e egress concentrado, e transformo isso num plano de economia.',

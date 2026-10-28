@@ -7,29 +7,29 @@ type L = Localized<string>;
 
 export const meta = {
   title: {
-    en: 'Lucas Padilha — DevOps and cloud engineer, websites for businesses',
-    pt: 'Lucas Padilha — engenheiro DevOps e cloud, sites para negócios',
+    en: 'Lucas Padilha — DevOps and platform engineer',
+    pt: 'Lucas Padilha — engenheiro DevOps e de plataforma',
   } satisfies L,
   description: {
-    en: 'DevOps and cloud engineer: Kubernetes on OCI, Terraform, GitOps with Argo CD, DevSecOps pipelines and FinOps. I also build fast websites and run digital marketing for small businesses.',
-    pt: 'Engenheiro DevOps e de cloud: Kubernetes na OCI, Terraform, GitOps com Argo CD, pipelines DevSecOps e FinOps. Também faço sites rápidos e marketing digital para pequenos negócios.',
+    en: 'DevOps and platform engineer: cloud architecture, multi-cluster Kubernetes, migrations, GitOps and DevSecOps delivery, observability and FinOps. Deepest on OCI; also AWS and Azure. I also build websites for small businesses.',
+    pt: 'Engenheiro DevOps e de plataforma: arquitetura de cloud, Kubernetes multicluster, migrações, entrega GitOps e DevSecOps, observabilidade e FinOps. Mais experiência em OCI; também AWS e Azure. Também faço sites para pequenos negócios.',
   } satisfies L,
 };
 
 export const nav: Localized<{ href: string; label: string }[]> = {
   en: [
-    { href: '#kubernetes', label: 'Kubernetes' },
-    { href: '#cloud', label: 'Cloud' },
+    { href: '#cloud', label: 'Architecture' },
+    { href: '#platform', label: 'Kubernetes' },
+    { href: '#delivery', label: 'Delivery' },
     { href: '#finops', label: 'FinOps' },
-    { href: '#ops', label: 'Automation' },
     { href: '#websites', label: 'Websites' },
     { href: '#contact', label: 'Contact' },
   ],
   pt: [
-    { href: '#kubernetes', label: 'Kubernetes' },
-    { href: '#cloud', label: 'Cloud' },
+    { href: '#cloud', label: 'Arquitetura' },
+    { href: '#platform', label: 'Kubernetes' },
+    { href: '#delivery', label: 'Entrega' },
     { href: '#finops', label: 'FinOps' },
-    { href: '#ops', label: 'Automação' },
     { href: '#websites', label: 'Sites' },
     { href: '#contact', label: 'Contato' },
   ],

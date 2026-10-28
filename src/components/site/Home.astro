@@ -2,13 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
-import DeployScene from './DeployScene.astro';
-import Arrow from './Arrow.astro';
-import Capabilities from './Capabilities.astro';
-import Kubernetes from './Kubernetes.astro';
+import Scenario from './Scenario.astro';
 import Cloud from './Cloud.astro';
+import Kubernetes from './Kubernetes.astro';
+import Delivery from './Delivery.astro';
 import FinOps from './FinOps.astro';
-import Ops from './Ops.astro';
+import Operations from './Operations.astro';
 import Websites from './Websites.astro';
 import Contact from './Contact.astro';
 import { email, hero, meta, nav } from '../../data/home';
@@ -51,28 +50,14 @@ const jsonLd = {
   />
   <main id="main" tabindex="-1">
     <section class="hero zone-night" aria-labelledby="hero-title">
-      <div class="wrap grid">
-        <h1 id="hero-title">
-          {t(hero.lines, locale).map((line) => <span class="line">{line}</span>)}
-        </h1>
-        <div class="scene">
-          <DeployScene locale={locale} />
-        </div>
-        <div class="copy">
-          <p class="lede">{t(hero.lede, locale)}</p>
-          <p class="proof">{t(hero.proof, locale)}</p>
-          <div class="actions">
-            <a class="btn btn--light" href="#kubernetes">{t(hero.primary, locale)} <Arrow dir="down" /></a>
-            <a class="sites-link" href="/sites/" hreflang="pt-BR">{t(hero.sites, locale)}<Arrow /></a>
-          </div>
-        </div>
-      </div>
+      <Scenario locale={locale} />
     </section>
-    <Capabilities locale={locale} />
-    <Kubernetes locale={locale} />
     <Cloud locale={locale} />
+    {/* PLATFORM */}
+    <Kubernetes locale={locale} />
+    <Delivery locale={locale} />
     <FinOps locale={locale} />
-    <Ops locale={locale} />
+    <Operations locale={locale} />
     <div class="zone-paper" data-zone="paper">
       <Websites locale={locale} />
       <Contact locale={locale} />
@@ -100,30 +85,6 @@ const jsonLd = {
 </script>
 
 <style>
-  .hero { padding-block: clamp(1.75rem, 1rem + 2.5vw, 3rem) clamp(2rem, 1.5rem + 2vw, 3rem); overflow: hidden; }
-  .grid { display: grid; gap: 1.5rem; grid-template-areas: 'title' 'scene' 'copy'; }
-  h1 { grid-area: title; font-size: clamp(2.25rem, 1.5rem + 3.2vw, 4.25rem); font-weight: 680; letter-spacing: -0.035em; line-height: 0.98; }
-  h1 .line { display: block; }
-  h1 .line + .line { color: var(--signal); }
-  .scene { grid-area: scene; }
-  .copy { grid-area: copy; display: grid; gap: 1rem; align-content: start; }
-  .lede { font-size: var(--step-1); max-width: 42ch; color: var(--ink); }
-  .proof { font-size: var(--step--1); color: var(--ink-2); max-width: 48ch; }
-  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; margin-top: 0.5rem; }
-  .btn--light { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .sites-link { display: inline-block; padding-block: 0.65rem; font-size: 0.9375rem; line-height: 1.45; color: var(--ink-2); }
-  .sites-link :global(.arrow) { margin-left: 0.3em; }
-  .sites-link:hover { color: var(--ink); }
-  @media (min-width: 1080px) {
-    .grid {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-      grid-template-rows: auto 1fr;
-      grid-template-areas: 'title scene' 'copy scene';
-      column-gap: 3rem; row-gap: 1.75rem;
-      min-height: calc(100svh - 64px - 6rem);
-      align-content: center;
-    }
-    h1 { align-self: end; }
-    .scene { align-self: center; }
-  }
+  /* clip, not hidden: hidden would make the hero a scroll box and break the sticky map on phones. */
+  .hero { padding-block: clamp(1.5rem, 1rem + 2vw, 2.75rem) clamp(2rem, 1.5rem + 2vw, 3rem); overflow-x: clip; }
 </style>
