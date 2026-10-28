@@ -414,6 +414,41 @@ try {
     }
   }
 
+  // The chapter drawings play once on entering the viewport, settle within 5 s and hold.
+  if (!onlyDemo) {
+    for (const [name, options] of [['motion', {}], ['reduced motion', { reducedMotion: 'reduce' }]]) {
+      const { context: ctx, page: p, errors } = await open('/pt/', { viewport: { width: 1440, height: 900 }, ...options });
+      for (const sel of ['[data-cloud]', '[data-finops]']) {
+        await p.evaluate((s) => document.querySelector(s).scrollIntoView({ block: 'center', behavior: 'instant' }), sel);
+        await p.waitForTimeout(5500);
+        const running = await p.evaluate((s) => document.querySelector(s).getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length, sel);
+        check(running === 0, `${sel} (${name}): ${running} animations still running 5.5 s after it came into view`);
+        const a = await p.locator(sel).screenshot();
+        await p.waitForTimeout(1000);
+        check(a.equals(await p.locator(sel).screenshot()), `${sel} (${name}): still moving after it settled`);
+      }
+      // Telemetry route: Before lights the public round trip, After the internal path.
+      for (const route of ['before', 'after']) {
+        await p.evaluate(() => document.querySelector('[data-cloud]').scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await p.locator(`[data-cloud] [data-route="${route}"]`).click();
+        await p.waitForTimeout(4600);
+        const state = await p.evaluate((r) => {
+          const fig = document.querySelector('[data-cloud]');
+          const msg = fig.querySelector('.msg');
+          return {
+            pressed: fig.querySelector(`[data-route="${r}"]`).getAttribute('aria-pressed'),
+            caption: msg.textContent.trim() === msg.dataset[r],
+            mode: fig.classList.contains(`is-${r}`),
+            running: fig.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length,
+          };
+        }, route);
+        check(state.pressed === 'true' && state.caption && state.mode && state.running === 0, `telemetry route ${route} (${name}): ${JSON.stringify(state)}`);
+      }
+      check(errors.length === 0, `chapters (${name}): ${errors.join(' | ')}`);
+      await ctx.close();
+    }
+  }
+
   // The sales funnel's main click: /sites/ → a concept site, with no errors along the way.
   if (!onlyDemo) {
     for (const slug of DEMOS) {
