@@ -8,13 +8,23 @@ export const contact = {
 
 const SUBJECT = 'Quero uma prévia do meu site';
 
-/** Contact link for a CTA: WhatsApp when configured, otherwise e-mail with the subject filled in. */
+/** Digits of a usable Brazilian WhatsApp number (55 + DDD + number), or null. */
+const whatsappDigits = () => {
+  const digits = (contact.whatsapp ?? '').replace(/\D/g, '');
+  return digits.length >= 12 && digits.length <= 13 ? digits : null;
+};
+
+/** Contact link for a CTA: WhatsApp when a valid number is configured, otherwise e-mail with the subject filled in. */
 export function contactHref(message: string): string {
-  if (contact.whatsapp) return `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(message)}`;
+  const digits = whatsappDigits();
+  if (digits) return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
   return `mailto:${contact.email}?subject=${encodeURIComponent(SUBJECT)}&body=${encodeURIComponent(message)}`;
 }
 
-export const contactLabel = contact.whatsapp ? 'Chamar no WhatsApp' : 'Pedir por e-mail';
+/** Rendered as data-contact on every CTA so tests can check that they all agree. */
+export const contactChannel: 'whatsapp' | 'email' = whatsappDigits() ? 'whatsapp' : 'email';
+
+export const contactLabel = contactChannel === 'whatsapp' ? 'Chamar no WhatsApp' : 'Pedir por e-mail';
 
 export const defaultMessage =
   'Olá, Lucas! Tenho um negócio e quero uma prévia do meu site.\n\nNome do negócio:\nCidade:\nO que vendemos ou fazemos:\nJá temos site ou Instagram? (link):\n';

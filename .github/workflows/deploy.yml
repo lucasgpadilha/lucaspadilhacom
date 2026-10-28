@@ -21,7 +21,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - run: npm ci
@@ -64,10 +64,30 @@ jobs:
           strip_components: 1
           overwrite: true
 
+      # SCP only adds and overwrites. Remove what this version stopped shipping, by explicit path only.
+      - name: Remove files this version no longer ships
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ec2-user
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/portfolio && rm -rf -- reference assets/factory
+
       - name: Healthcheck
         run: |
+          set -euo pipefail
           for path in / /pt/ /sites/ /startup/; do
             curl -fsS --retry 6 --retry-delay 5 --retry-all-errors -o /dev/null -w "%{http_code} ${path}\n" "https://lucaspadilha.com${path}"
           done
           # The footer prints the commit that built the page: prove this deploy is the one being served.
-          curl -fsS "https://lucaspadilha.com/" | grep -q "${GITHUB_SHA::7}" && echo "live build is ${GITHUB_SHA::7}"
+          home="$(curl -fsS https://lucaspadilha.com/)"
+          if ! grep -q "${GITHUB_SHA::7}" <<<"$home"; then
+            echo "::error::the live home does not show build ${GITHUB_SHA::7}"
+            exit 1
+          fi
+          echo "live build is ${GITHUB_SHA::7}"
+          for gone in /reference/hero-target.png /assets/factory/deployment-factory-v2.webp; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "https://lucaspadilha.com${gone}")"
+            if [ "$code" != "404" ]; then echo "::error::${gone} still served (${code})"; exit 1; fi
+          done

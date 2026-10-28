@@ -55,3 +55,20 @@ Antes, a home pesava cerca de 27 MB (vídeo de fundo de 26,6 MB) e tinha erro de
 - O `404.html` só é servido em produção se o Caddy tiver `handle_errors` configurado.
 
 Capturas de página inteira (390 e 1440, todas as rotas) ficam em `../artifacts/site-v2/`, fora do repositório.
+
+## Revisão final independente
+
+Um revisor que não escreveu o código avaliou a branch inteira e não encontrou nada crítico. Os itens importantes e os reclassificados pelo efeito foram corrigidos, cada um com um teste que falhou antes da correção:
+
+- **Deploy:** o SCP nunca apagava arquivos, e o mockup antigo continuaria público. Agora um passo por SSH remove, por caminho explícito, o que deixou de existir, e o healthcheck confirma o 404.
+- **Textos públicos:** "nunca direto na main" não era verdade, porque a `main` não é protegida. O texto do pipeline e do ERP foi ajustado ao que o histórico comprova.
+- **Idioma sem `localStorage`:** a escolha de EN não sobrevivia ao reload. O `?lang` agora só sai da URL quando a preferência foi salva, e os outros parâmetros (`utm_*`, `ref`) são preservados.
+- **WhatsApp:** configurar o número quebraria o CI. O número agora é sanitizado, e os CTAs declaram o canal (`data-contact`).
+- **Faixa dos sites conceito:** "empresa fictícia" passou a aparecer também no celular.
+- **Café:** a faixa animada e o selo giravam sem parar (WCAG 2.2.2). Agora são estáticos.
+- **Créditos:** as miniaturas da `/sites/` ganharam linha de crédito das fotos do Commons (CC BY/BY-SA).
+- **Advocacia:** ganhou o espaço para a inscrição na OAB/SP, e o FAQ deixou de citar formas de honorários.
+- **Odontologia:** deixou de anunciar modalidades de pagamento (CFO).
+- **Impressão / "Salvar como PDF":** saía em branco. Agora sai completo.
+- **Menu do celular:** passou a fechar ao escolher uma seção e com Esc.
+- **Recibo:** contava JSON-LD como JavaScript e repetia o total. Agora mede só o código executável e mostra o HTML à parte.

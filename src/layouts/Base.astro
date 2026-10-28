@@ -37,22 +37,23 @@ const canonical = absolute(path);
           var KEY = 'lucaspadilha.locale'; // shared with /startup/
           var store = {
             get: function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } },
-            set: function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} },
+            set: function (v) { try { localStorage.setItem(KEY, v); return localStorage.getItem(KEY) === v; } catch (e) { return false; } },
           };
-          var query = new URLSearchParams(location.search).get('lang');
+          var params = new URLSearchParams(location.search);
+          var query = params.get('lang');
           var asked = query === 'en' || query === 'pt' ? query : null;
-          if (asked) {
-            store.set(asked);
-            history.replaceState(null, '', location.pathname + location.hash);
-          }
+          // ?lang is dropped only once the choice is saved; otherwise the URL is its only memory.
+          if (asked && store.set(asked)) params.delete('lang');
+          var rest = params.toString() ? '?' + params.toString() : '';
           if (mode === 'root') {
             var saved = store.get();
             var first = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
             var want = asked || (saved === 'en' || saved === 'pt' ? saved : first.indexOf('pt') === 0 ? 'pt' : 'en');
-            if (want === 'pt') location.replace('/pt/' + location.hash);
+            if (want === 'pt') return location.replace('/pt/' + rest + location.hash);
           } else if (asked === 'en') {
-            location.replace('/' + location.hash);
+            return location.replace('/' + rest + location.hash);
           }
+          if (rest !== location.search) history.replaceState(null, '', location.pathname + rest + location.hash);
         })();
       </script>
     )}

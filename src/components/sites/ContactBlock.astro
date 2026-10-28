@@ -1,6 +1,6 @@
 ---
 import Arrow from '../site/Arrow.astro';
-import { contact, contactHref, contactLabel, defaultMessage } from '../../data/sites';
+import { contact, contactChannel, contactHref, contactLabel, defaultMessage } from '../../data/sites';
 ---
 <section id="contato" class="contact" aria-labelledby="contato-title">
   <div class="wrap inner" data-reveal>
@@ -8,8 +8,8 @@ import { contact, contactHref, contactLabel, defaultMessage } from '../../data/s
     <h2 id="contato-title">Me conta do seu negócio.</h2>
     <p class="body">Em poucos dias você recebe o link da prévia do seu site. Se não gostar, não fecha. Simples assim.</p>
     <p class="actions">
-      <a class="btn" href={contactHref(defaultMessage)} data-contact>{contactLabel} <Arrow /></a>
-      <a class="mail" href={contactHref(defaultMessage)} data-contact>{contact.email}</a>
+      <a class="btn" href={contactHref(defaultMessage)} data-contact={contactChannel}>{contactLabel} <Arrow /></a>
+      <a class="mail" href={contactHref(defaultMessage)} data-contact={contactChannel}>{contact.email}</a>
     </p>
     <p class="aside">Quer conhecer o lado técnico? <a href="/pt/">Veja o portfólio</a>.</p>
   </div>

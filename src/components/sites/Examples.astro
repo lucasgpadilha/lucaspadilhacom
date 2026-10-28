@@ -35,11 +35,13 @@ import { demos } from '../../data/sites';
         </li>
       ))}
     </ol>
+    <p class="credits">As fotos dos sites conceito são do Wikimedia Commons, com autoria e licença creditadas no rodapé de cada site.</p>
   </div>
 </section>
 
 <style>
   .head-copy { display: grid; gap: 1.25rem; }
+  .credits { margin-top: clamp(3rem, 2rem + 3vw, 4.5rem); font-size: var(--step--1); color: var(--ink-2); max-width: 60ch; }
   .list { display: grid; gap: clamp(3.5rem, 2rem + 5vw, 6.5rem); }
   .row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.75rem; align-items: center; }
   .shot { display: block; text-decoration: none; transition: transform 0.4s var(--ease-out); }

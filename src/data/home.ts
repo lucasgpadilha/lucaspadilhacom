@@ -73,22 +73,22 @@ export const projects: Project[] = [
       en: [
         { value: '~80 s', label: 'production cutover' },
         { value: '1,459', label: 'automated tests' },
-        { value: '85', label: 'reviewed pull requests' },
+        { value: '85', label: 'merged pull requests' },
       ],
       pt: [
         { value: '~80 s', label: 'virada em produção' },
         { value: '1.459', label: 'testes automatizados' },
-        { value: '85', label: 'pull requests revisados' },
+        { value: '85', label: 'pull requests integrados' },
       ],
     },
     evidence: {
       en: [
-        'Reverse-engineered the legacy data and wrote an idempotent, reconciled import',
+        'Mapped the legacy data and wrote an idempotent, reconciled import',
         'PostgreSQL row-level security per tenant, least-privilege roles',
         'Nightly backups with restore drills, smoke tests and a rollback plan',
       ],
       pt: [
-        'Engenharia reversa dos dados legados e importação idempotente com reconciliação',
+        'Mapeamento dos dados legados e importação idempotente com reconciliação',
         'Row-level security no PostgreSQL por cliente e papéis com privilégio mínimo',
         'Backups diários com teste de restauração, smoke tests e plano de rollback',
       ],
@@ -211,7 +211,7 @@ export const sections = {
       pt: 'Todo push na main passa pelo mesmo pipeline curto. O recibo no topo da página mostra o build que gerou o que você está lendo.',
     } satisfies L,
     steps: [
-      { key: 'push', title: { en: 'Pull request', pt: 'Pull request' }, body: { en: 'Changes land through a reviewed PR, never straight to main.', pt: 'Mudanças entram por PR revisado, nunca direto na main.' } },
+      { key: 'push', title: { en: 'Push', pt: 'Push' }, body: { en: 'Pull requests and pushes to main run the same checks.', pt: 'Pull requests e pushes na main passam pelas mesmas checagens.' } },
       { key: 'build', title: { en: 'Build', pt: 'Build' }, body: { en: 'npm ci and a static Astro build on GitHub Actions.', pt: 'npm ci e build estático do Astro no GitHub Actions.' } },
       { key: 'check', title: { en: 'Check', pt: 'Checagem' }, body: { en: 'Playwright and axe run against a production preview.', pt: 'Playwright e axe rodam contra um preview de produção.' } },
       { key: 'deploy', title: { en: 'Deploy', pt: 'Deploy' }, body: { en: 'Static files go to the server over SCP.', pt: 'Os arquivos estáticos vão ao servidor por SCP.' } },
@@ -224,8 +224,8 @@ export const sections = {
       pt: 'Desenvolvo com agentes de IA e trato eles como um time rápido que precisa de revisão. Foi assim que uma migração de ERP com 481 commits saiu em nove dias sem pular testes.',
     } satisfies L,
     aiGates: {
-      en: ['A written spec and plan before any code', 'Tests and CI decide what merges', 'I review and own every merge'],
-      pt: ['Spec e plano escritos antes de qualquer código', 'Testes e CI decidem o que entra', 'Eu reviso e respondo por todo merge'],
+      en: ['A written spec and plan before any code', 'Tests and CI decide what ships', 'I review and own every change'],
+      pt: ['Spec e plano escritos antes de qualquer código', 'Testes e CI decidem o que vai ao ar', 'Eu reviso e respondo por toda mudança'],
     } satisfies Localized<string[]>,
   },
   stack: {

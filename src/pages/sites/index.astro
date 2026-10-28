@@ -10,7 +10,7 @@ import Process from '../../components/sites/Process.astro';
 import Plans from '../../components/sites/Plans.astro';
 import Faq from '../../components/sites/Faq.astro';
 import ContactBlock from '../../components/sites/ContactBlock.astro';
-import { contact, contactHref, defaultMessage, faq, hero } from '../../data/sites';
+import { contact, contactChannel, contactHref, defaultMessage, faq, hero } from '../../data/sites';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -58,7 +58,7 @@ const jsonLd = {
           <h1 id="hero-title">{hero.title}</h1>
           <p class="lede">{hero.lede}</p>
           <div class="actions">
-            <a class="btn btn--signal" href={contactHref(defaultMessage)} data-contact>{hero.primary} <Arrow /></a>
+            <a class="btn btn--signal" href={contactHref(defaultMessage)} data-contact={contactChannel}>{hero.primary} <Arrow /></a>
             <a class="btn btn--ghost" href="#exemplos">{hero.secondary} <Arrow dir="down" /></a>
           </div>
         </div>

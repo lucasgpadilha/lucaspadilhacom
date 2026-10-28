@@ -70,4 +70,4 @@ PR      → build → Playwright + axe contra o preview
 main    → build → checks → SCP para o servidor → healthcheck
 ```
 
-O healthcheck pede `/`, `/pt/`, `/sites/` e `/startup/` com retry e confirma que a home servida traz o commit do build. Segredos usados pelo workflow: `SERVER_IP` e `SSH_PRIVATE_KEY`. O servidor de produção é Caddy, que precisa de `handle_errors` para servir o `404.html` gerado.
+O healthcheck pede `/`, `/pt/`, `/sites/` e `/startup/` com retry e confirma que a home servida traz o commit do build. Segredos usados pelo workflow: `SERVER_IP` e `SSH_PRIVATE_KEY`. Como o SCP só adiciona e sobrescreve, um passo por SSH remove do servidor os caminhos que deixaram de existir (lista explícita no workflow). O servidor de produção é Caddy, que precisa de `handle_errors` para servir o `404.html` gerado.

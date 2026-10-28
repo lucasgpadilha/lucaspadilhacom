@@ -1,5 +1,5 @@
 ---
-import { contactHref, plans } from '../../data/sites';
+import { contactChannel, contactHref, plans } from '../../data/sites';
 ---
 <section id="planos" class="section" aria-labelledby="planos-title">
   <div class="wrap">
@@ -22,7 +22,7 @@ import { contactHref, plans } from '../../data/sites';
           <a
             class:list={['btn', plan.featured ? 'btn--signal' : 'btn--ghost']}
             href={contactHref(`Olá, Lucas! Tenho interesse no plano "${plan.name}".\n\nNome do negócio:\nCidade:\n`)}
-            data-contact
+            data-contact={contactChannel}
           >Quero este</a>
         </li>
       ))}

@@ -14,8 +14,8 @@ const pt = locale === 'pt';
 const builtAt = `${build.builtAt.slice(0, 10)} ${build.builtAt.slice(11, 16)} UTC`;
 const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 'Recibo desta página';
 ---
-<figure class="receipt-shell" data-reveal>
-  <div class="receipt" data-receipt data-locale={pt ? 'pt-BR' : 'en'}>
+<div class="receipt-shell" data-reveal>
+  <figure class="receipt" data-receipt data-locale={pt ? 'pt-BR' : 'en'}>
     <p class="head">
       <span>{title}</span>
       <span aria-hidden="true">#{build.shortSha}</span>
@@ -32,7 +32,7 @@ const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 
     )}
     <hr />
     <dl class="rows live">
-      <div><dt>{pt ? 'esta página' : 'this page'}</dt><dd data-weight>—</dd></div>
+      <div><dt>HTML</dt><dd data-weight>—</dd></div>
       <div><dt>{pt ? 'carregou em' : 'loaded in'}</dt><dd data-time>—</dd></div>
       <div><dt>{pt ? 'arquivos' : 'requests'}</dt><dd data-requests>—</dd></div>
       <div><dt>JavaScript</dt><dd data-js>—</dd></div>
@@ -46,8 +46,8 @@ const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 
         </>
       )}
     </figcaption>
-  </div>
-</figure>
+  </figure>
+</div>
 
 <script>
   type Entry = PerformanceResourceTiming | PerformanceNavigationTiming;
@@ -60,7 +60,9 @@ const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 
     const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
     const bytes = (nav ? size(nav) : 0) + resources.reduce((sum, entry) => sum + size(entry), 0);
-    const inline = [...document.scripts].reduce((sum, el) => sum + (el.src ? 0 : (el.textContent || '').length), 0);
+    // Only code the browser runs: JSON-LD and other data blocks are not JavaScript.
+    const executable = (el: HTMLScriptElement) => !el.type || ['module', 'text/javascript', 'application/javascript'].includes(el.type);
+    const inline = [...document.scripts].filter((el) => !el.src && executable(el)).reduce((sum, el) => sum + (el.textContent || '').length, 0);
     const js = inline + resources.filter((entry) => entry.initiatorType === 'script').reduce((sum, entry) => sum + size(entry), 0);
     const kbJs = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
     const loaded = nav && nav.loadEventEnd > 0 ? nav.loadEventEnd : performance.now();
@@ -68,7 +70,7 @@ const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 
       const el = receipt.querySelector(`[data-${key}]`);
       if (el) el.textContent = value;
     };
-    set('weight', `${kb.format(bytes / 1024)} KB`);
+    set('weight', `${kb.format((nav ? size(nav) : 0) / 1024)} KB`);
     set('time', `${sec.format(loaded / 1000)} s`);
     set('requests', kb.format(resources.length + 1));
     set('js', `${kbJs.format(js / 1024)} KB`);
@@ -90,11 +92,11 @@ const title = variant === 'home' ? (pt ? 'Recibo de build' : 'Build receipt') : 
 
 <style>
   .receipt-shell {
-    margin: 0;
     filter: drop-shadow(0 0 0.5px var(--line-strong)) drop-shadow(0 22px 28px rgb(20 20 19 / 0.12));
   }
   .receipt {
     --tooth: 12px;
+    margin: 0;
     position: relative;
     padding: 26px 22px 30px;
     background: var(--surface);

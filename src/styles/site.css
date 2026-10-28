@@ -182,3 +182,8 @@ a:hover { text-decoration-color: var(--signal); text-decoration-thickness: 2px; 
   }
   html.js [data-reveal].is-in { opacity: 1; transform: none; }
 }
+
+@media print {
+  html.js [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .site-header { position: static; }
+}
