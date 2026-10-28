@@ -96,7 +96,7 @@ export const migration = {
     { value: '10 → 258', text: { en: 'workloads on the cluster in under three weeks', pt: 'workloads no cluster em menos de três semanas' } },
     { value: '234', text: { en: 'service discovery records now pointing at it', pt: 'registros de service discovery apontando para ele' } },
     { value: '73', text: { en: 'Argo CD applications over 4 release namespaces', pt: 'aplicações no Argo CD em 4 namespaces de release' } },
-    { value: '12', text: { en: 'platform services moved along: Kafka, MongoDB, MinIO, Consul, Sentry, Strapi on PostgreSQL 17', pt: 'serviços de plataforma levados junto: Kafka, MongoDB, MinIO, Consul, Sentry, Strapi com PostgreSQL 17' } },
+    { value: '12', text: { en: 'platform services moved along, including Kafka, MongoDB, MinIO, Consul, Sentry and Strapi on PostgreSQL 17', pt: 'serviços de plataforma levados junto, entre eles Kafka, MongoDB, MinIO, Consul, Sentry e Strapi com PostgreSQL 17' } },
   ] satisfies { value: string; text: L }[],
   tools: ['Kubernetes', 'OKE', 'Argo CD', 'Image Updater', 'Helm', 'Kyverno', 'External Secrets', 'Vault', 'NetworkPolicies', 'Ansible', 'AWX'],
 };

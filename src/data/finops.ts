@@ -8,12 +8,12 @@ type L = Localized<string>;
 export const finops = {
   title: { en: 'The bill, from the bottom up', pt: 'A conta, de baixo para cima' } satisfies L,
   lede: {
-    en: 'After the move to Kubernetes on OCI, I read the cloud bill line by line and matched every CPU request to what the pods really used.',
-    pt: 'Depois da migração para Kubernetes na OCI, li a fatura da nuvem linha por linha e comparei cada request de CPU com o que os pods usavam de fato.',
+    en: 'After the move to Kubernetes on OCI, I went after what the cloud bill was paying for and compared the CPU requests with what the pods really used.',
+    pt: 'Depois da migração para Kubernetes na OCI, fui atrás do que a fatura da nuvem estava pagando e comparei os requests de CPU com o que os pods usavam de fato.',
   } satisfies L,
   body: {
-    en: 'Cost tags gave every line of the bill an owner. I rightsized nodes and requests, and node pools are recycled blue/green: the new pool is up before the old one drains. I also built a FinOps MVP for OCI.',
-    pt: 'Com tags de custo, cada linha da fatura ganhou dono. Fiz rightsizing de nodes e requests, e os node pools são reciclados em blue/green: o pool novo sobe antes de o antigo ser drenado. Também construí um MVP de FinOps para OCI.',
+    en: 'Cost tags on the infrastructure, a rightsizing map for nodes and requests, and blue/green node-pool recycling: the new pool is up before the old one drains. I also built a FinOps MVP for OCI.',
+    pt: 'Tags de custo na infraestrutura, um mapa de rightsizing de nodes e requests e reciclagem blue/green de node pools: o pool novo sobe antes de o antigo ser drenado. Também construí um MVP de FinOps para OCI.',
   } satisfies L,
   toolsLabel: { en: 'Tools', pt: 'Ferramentas' } satisfies L,
   tools: {
@@ -32,7 +32,7 @@ export const finops = {
     unit: { en: 'each cell = 0.1 core', pt: 'cada célula = 0,1 core' },
     used: { value: { en: '0.86', pt: '0,86' }, text: { en: 'used at p95', pt: 'usados no p95' } },
     ratio: { value: { en: '~15×', pt: '~15×' }, text: { en: 'more requested than used', pt: 'mais pedido que usado' } },
-    rightsizing: { en: 'what rightsizing gives back', pt: 'o que o rightsizing devolve' },
+    rightsizing: { en: 'what rightsizing would give back', pt: 'o que o rightsizing devolveria' },
   } satisfies Record<string, L | { value: L; text: L }>,
   // Text alternative for the drawing: every number, in reading order.
   alt: [
@@ -43,36 +43,36 @@ export const finops = {
     },
     { en: 'Requests were about 15× the real use.', pt: 'O pedido era cerca de 15× o uso real.' },
     {
-      en: 'Rightsizing gives back the requested cores above real use: the flat cells in the drawing.',
-      pt: 'O rightsizing devolve os cores pedidos acima do uso real: as células planas do desenho.',
+      en: 'Rightsizing would give back the requested cores above real use: the flat cells in the drawing.',
+      pt: 'O rightsizing devolveria os cores pedidos acima do uso real: as células planas do desenho.',
     },
   ] satisfies L[],
 
   // Part of a whole: the track is the whole, the fill the share.
   findings: {
     title: { en: 'Also on the bill', pt: 'Também na fatura' } satisfies L,
-    scale: { en: 'share of the total', pt: 'parcela do total' } satisfies L,
+    scale: { en: 'share', pt: 'parcela' } satisfies L,
     items: [
       { name: { en: 'Backups, of the whole bill', pt: 'Backups, do total da fatura' }, value: { en: '≈ 28%', pt: '≈ 28%' }, share: 28 },
       {
-        name: { en: 'Internet egress from 2 servers', pt: 'Egress de internet de 2 servidores' },
+        name: { en: '2 servers, of all internet egress', pt: '2 servidores, do egress de internet' },
         value: { en: '86%', pt: '86%' },
         share: 86,
       },
     ] satisfies { name: L; value: L; share: number }[],
   },
   // Before = 100. The outlined track is the cost before, the solid bar the cost after;
-  // `after` is a range when the saving is.
+  // `after` is a range when the saving is; an estimate is hatched, not solid.
   results: {
-    title: { en: 'Results', pt: 'Resultados' } satisfies L,
+    title: { en: 'Results and estimate', pt: 'Resultados e estimativa' } satisfies L,
     scale: { en: 'before = 100', pt: 'antes = 100' } satisfies L,
     before: { en: 'before', pt: 'antes' } satisfies L,
     after: { en: 'after', pt: 'depois' } satisfies L,
     items: [
       { name: { en: 'One VM', pt: 'Uma VM' }, value: { en: '−84%', pt: '−84%' }, after: [16, 16] },
       { name: { en: 'A legacy cluster', pt: 'Um cluster legado' }, value: { en: '−63%', pt: '−63%' }, after: [37, 37] },
-      { name: { en: 'Compute, mapped', pt: 'Compute mapeado' }, value: { en: '−26 to −30%', pt: '−26 a −30%' }, after: [70, 74] },
-    ] satisfies { name: L; value: L; after: [number, number] }[],
+      { name: { en: 'Compute, mapped (estimate)', pt: 'Compute, mapeado (estimativa)' }, value: { en: '−26 to −30%', pt: '−26 a −30%' }, after: [70, 74], estimate: true },
+    ] satisfies { name: L; value: L; after: [number, number]; estimate?: boolean }[],
   },
   replay: { en: 'Play again', pt: 'Ver de novo' } satisfies L,
 };

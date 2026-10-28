@@ -13,8 +13,10 @@ interface Props {
 
 const { locale, home, links, lang, cta } = Astro.props;
 const navLabel = locale === 'pt' ? 'Navegação principal' : 'Main navigation';
+// Six links need more room before they fit on one line next to the language switch and CTA.
+const crowded = links.length > 4;
 ---
-<header class="site-header">
+<header class:list={['site-header', { crowded }]}>
   <div class="wrap bar">
     <a class="brand" href={home}>
       <span class="mark" aria-hidden="true">LP</span>
@@ -46,6 +48,10 @@ const navLabel = locale === 'pt' ? 'Navegação principal' : 'Main navigation';
   </div>
 </header>
 <script is:inline>
+  // Switching language keeps the reader's place on the page.
+  document.querySelectorAll('.lang a').forEach(function (link) {
+    link.addEventListener('click', function () { if (location.hash) link.href = link.href.split('#')[0] + location.hash; });
+  });
   document.querySelectorAll('details.menu').forEach(function (menu) {
     menu.addEventListener('click', function (event) { if (event.target.closest('a')) menu.open = false; });
     document.addEventListener('keydown', function (event) {
@@ -88,7 +94,7 @@ const navLabel = locale === 'pt' ? 'Navegação principal' : 'Main navigation';
     border-radius: 2px;
   }
   .lang a[aria-current='true'] { background: var(--ink); color: var(--paper); }
-  .cta { display: none; min-height: 44px; }
+  .cta { display: none; min-height: 44px; white-space: nowrap; }
   .menu { position: relative; }
   .menu summary {
     list-style: none; cursor: pointer;
@@ -106,9 +112,15 @@ const navLabel = locale === 'pt' ? 'Navegação principal' : 'Main navigation';
   }
   .menu a { width: 100%; color: var(--ink); }
   @media (min-width: 900px) {
+    .brand { white-space: nowrap; }
     .nav { display: block; }
     .tools { margin-left: 0; }
     .menu { display: none; }
     .cta { display: inline-flex; }
+  }
+  @media (min-width: 900px) and (max-width: 1199px) {
+    .crowded .nav { display: none; }
+    .crowded .tools { margin-left: auto; }
+    .crowded .menu { display: block; }
   }
 </style>

@@ -83,9 +83,16 @@ const anchors: Record<string, P3> = {
   policy: [gx + 1.62, gy + 0.17, 0],
   image: [-3.95, -5.55, 0],
   sync: [-11.95, -5.25, 0],
-  prod: [px + 3.7, py - 3.1, 0.42],
+  // Wide screens: left of the platform, so no label leaves the right edge of the page.
+  prod: [px - 3.7, py + 3.1, 0.42],
 };
-const labels = deploy.stages.map((stage) => ({ ...stage, pos: percent(iso, box, anchors[stage.key]) }));
+// Narrow screens show names only, inside the drawing: production goes by its right corner.
+const narrow: Record<string, P3> = { prod: [px + 3.7, py - 3.1, 0.42] };
+const labels = deploy.stages.map((stage) => ({
+  ...stage,
+  pos: percent(iso, box, anchors[stage.key]),
+  narrow: narrow[stage.key] && percent(iso, box, narrow[stage.key]),
+}));
 
 // The run, in seconds. Five links, each pulse lands where the next stage starts.
 const T = {
@@ -96,14 +103,14 @@ const T = {
   image: 2.56,
   sync: 3.2,
   pods: 3.98,
-  podStep: 0.045,
+  podStep: 0.04,
 };
 const doneAt = T.pods + T.podStep * pods.length;
 const stageDone = { commit: T.commit + 0.2, ci: T.jobs[2] + 0.2, policy: T.gate + 0.4, image: T.image + 0.3, sync: T.sync + 0.42, prod: doneAt };
 const s = (n: number) => `${n.toFixed(2)}s`;
 ---
 <figure class="deploy is-clean is-boot" data-deploy aria-label={t(deploy.figure, locale)} style={`--done:${s(doneAt)}`}>
-  <div class="stage" style={`aspect-ratio:${box.w} / ${box.h}`}>
+  <div class="stage" style={`aspect-ratio:${box.w} / ${box.h};--ratio:${(box.w / box.h).toFixed(4)}`}>
     <svg viewBox={box.attr} aria-hidden="true" focusable="false">
       <defs>
         <radialGradient id="floor-fade" cx="50%" cy="55%" r="55%">
@@ -172,7 +179,7 @@ const s = (n: number) => `${n.toFixed(2)}s`;
 
     <ol class="labels" role="list" aria-hidden="true">
       {labels.map((label) => (
-        <li class:list={['label-pin', label.key]} style={`left:${label.pos.left};top:${label.pos.top};--at:${s(stageDone[label.key as keyof typeof stageDone])}`}>
+        <li class:list={['label-pin', label.key]} style={`--x:${label.pos.left};--y:${label.pos.top};${label.narrow ? `--nx:${label.narrow.left};--ny:${label.narrow.top};` : ''}--at:${s(stageDone[label.key as keyof typeof stageDone])}`}>
           <strong>{t(label.name, locale)}</strong>
           <span>{t(label.tools, locale)}</span>
           {label.proof && <em>{t(label.proof, locale)}</em>}
@@ -192,8 +199,8 @@ const s = (n: number) => `${n.toFixed(2)}s`;
     </span>
 
   <div class="controls" role="group" aria-label={t(deploy.controls.label, locale)}>
-    <button type="button" data-run="clean" aria-pressed="true">{t(deploy.controls.clean, locale)}</button>
-    <button type="button" data-run="blocked" aria-pressed="false">{t(deploy.controls.blocked, locale)}</button>
+    <button type="button" data-run="clean" data-active>{t(deploy.controls.clean, locale)}</button>
+    <button type="button" data-run="blocked">{t(deploy.controls.blocked, locale)}</button>
   </div>
   </figcaption>
 </figure>
@@ -207,7 +214,8 @@ const s = (n: number) => `${n.toFixed(2)}s`;
         fig.classList.remove('is-boot', 'is-clean', 'is-blocked');
         void fig.offsetWidth;
         fig.classList.add(button.dataset.run === 'blocked' ? 'is-blocked' : 'is-clean');
-        for (const other of buttons) other.setAttribute('aria-pressed', String(other === button));
+        // Replays, not toggles: the last run is marked for the eye; the status line announces it.
+        for (const other of buttons) other.toggleAttribute('data-active', other === button);
       });
     }
   }
@@ -226,9 +234,15 @@ const s = (n: number) => `${n.toFixed(2)}s`;
   }
   /* Sized by height on wide screens so the whole run fits the first screen. */
   .stage { position: relative; width: 100%; max-width: 620px; margin-inline: auto; }
+  /* Wide screens: as tall as the first screen allows, right-aligned, leaving room on the
+     left for the labels that hang off the CI and GitOps stages. */
   svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   @media (min-width: 1080px) {
-    .stage { width: auto; height: min(calc(100svh - 64px - 13rem), 600px); min-height: 340px; max-width: 100%; }
+    .stage {
+      --h: clamp(340px, calc(100svh - 64px - 13rem), 600px);
+      width: min(calc(100% - 10.5rem), calc(var(--h) * var(--ratio)));
+      max-width: none; margin-inline: auto 0;
+    }
   }
 
   .floor { fill: none; stroke: var(--line); stroke-width: 0.6; opacity: 0.7; }
@@ -260,26 +274,26 @@ const s = (n: number) => `${n.toFixed(2)}s`;
 
   .labels { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
   .label-pin {
-    position: absolute; transform: translate(10px, -2px);
+    position: absolute; left: var(--x); top: var(--y); transform: translate(10px, -2px);
     display: grid; gap: 1px; width: max-content; max-width: 24ch;
     font-size: 0.75rem; line-height: 1.3; color: var(--ink-2);
     transition: opacity 0.3s var(--ease-out);
   }
   .label-pin strong { color: var(--ink); font-size: 0.8125rem; font-weight: 620; }
   .label-pin em { font-style: normal; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--signal); }
-  .label-pin:is(.ci, .sync) { transform: translate(calc(-100% - 10px), -2px); text-align: right; }
-  .label-pin.prod { transform: translate(12px, -100%); }
-  @media (max-width: 699px) {
+  .label-pin:is(.ci, .sync, .prod) { transform: translate(calc(-100% - 10px), -2px); text-align: right; }
+  .label-pin.prod { transform: translate(calc(-100% - 12px), -50%); }
+  @media (max-width: 1079px) {
     .label-pin { font-size: 0.6875rem; }
     .label-pin :is(span, em) { display: none; }
-    .label-pin.prod { transform: translate(-100%, -130%); }
+    .label-pin.prod { left: var(--nx); top: var(--ny); transform: translate(-100%, -130%); text-align: left; }
     .label-pin:is(.ci, .sync) { transform: translate(2px, 6px); text-align: left; }
   }
 
   .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
   .status { min-height: 1.5rem; max-width: 46ch; }
   @media (min-width: 1080px) {
-    .deploy { width: fit-content; max-width: 100%; margin-inline: auto; }
+    .deploy { width: 100%; }
   }
   .status { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink); }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); flex: none; }
@@ -293,7 +307,9 @@ const s = (n: number) => `${n.toFixed(2)}s`;
     font-size: 0.8125rem; font-weight: 560;
   }
   .controls button:hover { color: var(--ink); border-color: var(--ink); }
-  .controls button[aria-pressed='true'] { color: var(--ink); border-color: var(--ink); }
+  .controls button[data-active] { color: var(--ink); border-color: var(--ink); }
+  /* The runs are replayed by script; without it the finished drawing stands alone. */
+  :global(html:not(.js)) .controls { display: none; }
 
   /* Blocked run: the gate holds, the later stages never ran. */
   .is-blocked .mark.ok, .is-blocked .fresh { opacity: 0; }
@@ -302,7 +318,7 @@ const s = (n: number) => `${n.toFixed(2)}s`;
   .is-blocked .dot { background: var(--alert); }
   .is-blocked .msg.clean { display: none; }
   .is-blocked .msg.blocked { display: inline; }
-  .is-blocked .label-pin:is(.image, .sync, .prod) { opacity: 0.4; }
+  .is-blocked .label-pin:is(.image, .sync, .prod) :is(strong, em) { color: var(--ink-2); }
   .is-blocked .label-pin.policy strong { color: var(--alert); }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -318,8 +334,8 @@ const s = (n: number) => `${n.toFixed(2)}s`;
     .is-clean .ring { animation: draw 0.4s ease-in-out var(--at) both; }
     .is-clean .arrow { animation: fade 0.15s ease var(--at) both; }
     .is-clean .pod { animation: roll 0.22s ease var(--at) both; }
-    .is-clean .label-pin { animation: lit 0.3s ease var(--at) both; }
-    .is-clean .status { animation: fade 0.3s ease var(--done) both; }
+    .is-clean .label-pin { animation: lit 0.25s ease var(--at) both; }
+    .is-clean .status { animation: fade 0.25s ease var(--done) both; }
 
     .is-blocked .pulse:is([data-link='0'], [data-link='1']) { animation: pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
     .is-blocked .commit .hot { animation: heat 0.3s ease var(--at) both; }

@@ -322,6 +322,10 @@ try {
       await page.emulateMedia({ media: 'print' });
       const hidden = await page.evaluate(() => [...document.querySelectorAll('[data-reveal]')].filter((el) => Number(getComputedStyle(el).opacity) < 1).length);
       check(hidden === 0, `print ${path}: ${hidden} blocks invisible when printed`);
+      const paused = await page.evaluate(() => document.querySelectorAll('[data-deploy], [data-cloud], [data-finops]').length
+        ? [...document.querySelectorAll('[data-deploy] *, [data-cloud] *, [data-finops] *')].filter((el) => getComputedStyle(el).animationName !== 'none').length
+        : 0);
+      check(paused === 0, `print ${path}: ${paused} drawing parts still animated (they would print on their first frame)`);
       await context.close();
     }
     const { context, page } = await open('/', { viewport: { width: 390, height: 844 } });
@@ -391,9 +395,9 @@ try {
     for (const [name, options] of [['motion', {}], ['reduced motion', { reducedMotion: 'reduce' }]]) {
       const { context: ctx, page: p, errors } = await open('/pt/', { viewport: { width: 1440, height: 900 }, ...options });
       const stage = p.locator('[data-deploy] .stage');
-      await p.waitForTimeout(5200);
+      await p.waitForTimeout(5000);
       const running = await p.evaluate(() => document.querySelector('[data-deploy]').getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length);
-      check(running === 0, `deploy (${name}): ${running} animations still running after 5.2 s`);
+      check(running === 0, `deploy (${name}): ${running} animations still running after 5 s`);
       const a = await stage.screenshot();
       await p.waitForTimeout(1200);
       check(a.equals(await stage.screenshot()), `deploy (${name}): the drawing still moves after 5 s`);
@@ -402,9 +406,9 @@ try {
       const blocked = await p.evaluate(() => {
         const fig = document.querySelector('[data-deploy]');
         const visible = (sel) => { const el = fig.querySelector(sel); return el && getComputedStyle(el).display !== 'none' && Number(getComputedStyle(el).opacity) > 0.5; };
-        return { msg: visible('.msg.blocked'), clean: visible('.msg.clean'), fresh: Number(getComputedStyle(fig.querySelector('.fresh')).opacity), pressed: fig.querySelector('[data-run="blocked"]').getAttribute('aria-pressed') };
+        return { msg: visible('.msg.blocked'), clean: visible('.msg.clean'), fresh: Number(getComputedStyle(fig.querySelector('.fresh')).opacity), pressed: fig.querySelector('[data-run="blocked"]').hasAttribute('data-active') };
       });
-      check(blocked.msg && !blocked.clean && blocked.fresh === 0 && blocked.pressed === 'true', `deploy (${name}): blocked run ${JSON.stringify(blocked)}`);
+      check(blocked.msg && !blocked.clean && blocked.fresh === 0 && blocked.pressed, `deploy (${name}): blocked run ${JSON.stringify(blocked)}`);
       await p.locator('[data-run="clean"]').click();
       await p.waitForTimeout(5200);
       const clean = await p.evaluate(() => getComputedStyle(document.querySelector('[data-deploy] .msg.clean')).display);

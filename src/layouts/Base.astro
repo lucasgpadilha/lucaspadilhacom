@@ -74,8 +74,14 @@ const canonical = absolute(path);
     )}
     {noindex && <meta name="robots" content="noindex, follow" />}
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2EFE8" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#11110F" />
+    {theme === 'night' ? (
+      <meta name="theme-color" content="#0D0D0C" />
+    ) : (
+      <>
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2EFE8" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#11110F" />
+      </>
+    )}
     <link rel="preload" href={sansLatin} as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />

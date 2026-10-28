@@ -159,7 +159,7 @@ const r = finops.results;
             <span class="name">{t(item.name, locale)}</span>
             <span class="val">{t(item.value, locale)}</span>
             <span class="track before" aria-hidden="true">
-              <span class="fill after" style={`width:${item.after[0]}%`}></span>
+              <span class:list={['fill', 'after', { estimate: 'estimate' in item && item.estimate }]} style={`width:${item.after[0]}%`}></span>
               {item.after[1] > item.after[0] && (
                 <span class="range" style={`left:${item.after[0]}%;width:${item.after[1] - item.after[0]}%`}></span>
               )}
@@ -287,6 +287,8 @@ const r = finops.results;
   .fill { position: absolute; inset: -1px auto -1px -1px; display: block; border-radius: 1px 2px 2px 1px; transform-origin: left center; }
   .share { background: #8d897f; }
   .after { background: var(--signal); }
+  /* Mapped, not yet realised: hatched in the signal colour. */
+  .after.estimate { background: repeating-linear-gradient(-45deg, var(--signal) 0 2px, transparent 2px 5px); box-shadow: inset 0 0 0 1px var(--signal); }
   .range {
     position: absolute; top: -1px; bottom: -1px; display: block;
     border: 1px solid var(--signal); border-left: 0; border-radius: 0 2px 2px 0;

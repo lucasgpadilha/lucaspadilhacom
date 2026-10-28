@@ -116,12 +116,12 @@ const T = {
   nsg: 1.4,
   nlb: 1.65,
   waf: 1.85,
+  kms: 1.98, // the cluster encrypts with these keys, so they come first
   prod: 2.1,
   mgmt: 2.25,
   pools: 2.35,
   pods: 2.5,
   podStep: 0.03,
-  kms: 2.95,
   tracks: 3.1,
   collector: 3.15,
   route: 3.35, // the new route draws in, its NLB lights, the caption shows
@@ -129,7 +129,7 @@ const T = {
   status: 3.6,
 };
 const done = 3.75;
-const logAt = [T.vcn, T.subnets, T.nat, T.drg, T.nsg, T.nlb, T.waf, T.prod, T.pools, T.kms];
+const logAt = [T.vcn, T.subnets, T.nat, T.drg, T.nsg, T.nlb, T.waf, T.kms, T.prod, T.pools];
 
 // Screen length of a polyline, for dash patterns in real SVG units.
 const screenLength = (pts: readonly P3[]) =>
@@ -323,37 +323,40 @@ const faceList = (b: Faces) => [['l', b.left], ['r', b.right], ['t', b.top]] as 
   </figcaption>
 </figure>
 
-<script>
-  // The apply starts when the drawing scrolls into view. Until then the animations sit
-  // paused on their first frame (is-armed), so the finished state never flashes first.
-  for (const fig of document.querySelectorAll<HTMLElement>('[data-cloud]')) {
-    const stage = fig.querySelector('.stage');
-    const msg = fig.querySelector<HTMLElement>('.msg');
-    const buttons = [...fig.querySelectorAll<HTMLButtonElement>('[data-route]')];
-    const play = () => fig.classList.add('is-playing');
+<script is:inline>
+  // The apply starts when the drawing scrolls into view. Inline, right after the figure,
+  // so it is armed (paused on its first frame) before first paint and the finished state
+  // never flashes first. Without JS the finished state shows.
+  (function () {
+    var fig = document.currentScript.previousElementSibling;
+    if (!fig || !fig.matches('[data-cloud]')) return;
+    var stage = fig.querySelector('.stage');
+    var msg = fig.querySelector('.msg');
+    var buttons = Array.prototype.slice.call(fig.querySelectorAll('[data-route]'));
+    var play = function () { fig.classList.add('is-playing'); };
 
     fig.classList.add('is-armed');
     if ('IntersectionObserver' in window && stage) {
-      const io = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) { play(); io.disconnect(); }
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (entry) { return entry.isIntersecting; })) { play(); io.disconnect(); }
       }, { threshold: 0.35 });
       io.observe(stage);
     } else {
       play();
     }
 
-    for (const button of buttons) {
-      button.addEventListener('click', () => {
-        const mode = button.dataset.route === 'before' ? 'before' : 'after';
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var mode = button.dataset.route === 'before' ? 'before' : 'after';
         fig.classList.remove('is-routing', 'is-before', 'is-after');
         void fig.offsetWidth;
-        fig.classList.add('is-routing', `is-${mode}`);
+        fig.classList.add('is-routing', 'is-' + mode);
         play();
-        for (const other of buttons) other.setAttribute('aria-pressed', String(other === button));
-        if (msg) msg.textContent = msg.dataset[mode] ?? msg.textContent;
+        buttons.forEach(function (other) { other.setAttribute('aria-pressed', String(other === button)); });
+        if (msg) msg.textContent = msg.dataset[mode] || msg.textContent;
       });
-    }
-  }
+    });
+  })();
 </script>
 
 <style>
@@ -430,6 +433,10 @@ const faceList = (b: Faces) => [['l', b.left], ['r', b.right], ['t', b.top]] as 
     .label-pin, .label-pin strong { font-size: 0.6875rem; }
     .label-pin span, .label-pin.hide-sm { display: none; }
     .label-pin.s-above { transform: translate(-50%, calc(-100% - 6px)); text-align: center; }
+  }
+  /* The smallest phones: the region and VCN outlines speak for themselves. */
+  @media (max-width: 359px) {
+    .label-pin:is(.region, .vcn) { display: none; }
   }
 
   .log {

@@ -67,9 +67,9 @@ export const cloud = {
     'oci_core_network_security_group',
     'oci_network_load_balancer_network_load_balancer',
     'oci_waf_web_app_firewall',
+    'oci_kms_vault',
     'oci_containerengine_cluster',
     'oci_containerengine_node_pool',
-    'oci_kms_vault',
   ],
   logDone: 'Apply complete.',
 
@@ -80,8 +80,8 @@ export const cloud = {
   } satisfies Record<string, L>,
   status: {
     before: {
-      en: '87% of about 380 thousand sends a day went out through NAT and came back in through the WAF and the public NLB.',
-      pt: '87% de cerca de 380 mil envios por dia saíam pela NAT e voltavam pelo WAF e pelo NLB público.',
+      en: '87% of about 380 thousand sends a day went out through NAT and came back in through the WAF and the public load balancer.',
+      pt: '87% de cerca de 380 mil envios por dia saíam pela NAT e voltavam pelo WAF e pelo load balancer público.',
     },
     after: {
       en: '87% of about 380 thousand sends a day took the round trip through the internet. Now they stay inside the network.',
