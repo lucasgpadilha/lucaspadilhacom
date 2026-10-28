@@ -1,0 +1,87 @@
+---
+/**
+ * One photo slot. Reads public/sites/exemplos/odontologia/img/<name>-<w>.webp at build
+ * time, takes the real pixel size from the WebP header and the alt text from credits.json.
+ * If the files are not there yet it renders a quiet patterned placeholder instead.
+ * The parent sizes the frame (radius, aspect); the image always covers it.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  name: string;
+  sizes: string;
+  priority?: boolean;
+  position?: string;
+  /** 'warm' lifts and warms the cool, moody photos so they sit in the bright palette */
+  tone?: 'warm';
+}
+
+interface Credit { name: string; file_prefix?: string; alt_pt?: string }
+
+const { name, sizes, priority = false, position = '50% 50%', tone } = Astro.props;
+const dir = path.join(process.cwd(), 'public/sites/exemplos/odontologia/img');
+const url = '/sites/exemplos/odontologia/img';
+
+let credits: Credit[] = [];
+try { credits = JSON.parse(fs.readFileSync(path.join(dir, 'credits.json'), 'utf8')); } catch { credits = []; }
+const credit = credits.find((c) => c.name === name || c.file_prefix === name);
+const prefix = (credit?.file_prefix ?? name).replace(/-$/, '');
+
+/** Width and height straight from a WebP header (VP8, VP8L or VP8X). */
+function webpSize(file: string): { width: number; height: number } | null {
+  const b = fs.readFileSync(file);
+  if (b.toString('ascii', 0, 4) !== 'RIFF' || b.toString('ascii', 8, 12) !== 'WEBP') return null;
+  const kind = b.toString('ascii', 12, 16);
+  if (kind === 'VP8X') return { width: 1 + b.readUIntLE(24, 3), height: 1 + b.readUIntLE(27, 3) };
+  if (kind === 'VP8 ') return { width: b.readUInt16LE(26) & 0x3fff, height: b.readUInt16LE(28) & 0x3fff };
+  if (kind === 'VP8L') {
+    const bits = b.readUInt32LE(21);
+    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+  }
+  return null;
+}
+
+const variants = [640, 1024, 1600]
+  .map((w) => {
+    const file = path.join(dir, `${prefix}-${w}.webp`);
+    if (!fs.existsSync(file)) return null;
+    const size = webpSize(file);
+    return size ? { src: `${url}/${prefix}-${w}.webp`, ...size } : null;
+  })
+  .filter((v): v is { src: string; width: number; height: number } => v !== null);
+
+const largest = variants.at(-1);
+const fallback = variants.find((v) => v.width >= 1000) ?? largest;
+const srcset = variants.map((v) => `${v.src} ${v.width}w`).join(', ');
+const alt = credit?.alt_pt ?? '';
+---
+{largest && fallback ? (
+  <img
+    src={fallback.src}
+    srcset={srcset}
+    sizes={sizes}
+    width={largest.width}
+    height={largest.height}
+    alt={alt}
+    class:list={[tone]}
+    style={`object-position:${position}`}
+    fetchpriority={priority ? 'high' : undefined}
+    loading={priority ? undefined : 'lazy'}
+    decoding={priority ? undefined : 'async'}
+  />
+) : (
+  <div class="slot" aria-hidden="true"></div>
+)}
+
+<style>
+  img, .slot { display: block; width: 100%; height: 100%; }
+  img { object-fit: cover; }
+  .warm { filter: sepia(0.28) saturate(0.78) brightness(1.1) contrast(0.9); }
+  .slot {
+    background-color: #d9ebe6;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgb(14 95 91 / 0.14) 1.5px, transparent 2px);
+    background-size: 18px 18px;
+  }
+</style>

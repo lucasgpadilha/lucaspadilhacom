@@ -1,0 +1,147 @@
+---
+/*
+ * Aurora Odontologia — art direction
+ * Palette: warm white #FBFAF7 page, warm ink #24201C (15.5:1) and #5E5750 (6.8:1) text,
+ *   deep teal #0E5F5B for headings, links and the primary button (7.2:1), mint #E4F1EE surfaces,
+ *   blush #FCE7DF for the kids tile. Sunrise coral #F07F65 is never text: only the sun bands and logo.
+ * Type: Plus Jakarta Sans Variable only. Display at weight 280 with one key phrase at 760 in teal;
+ *   uppercase tracked labels at 650; tabular numerals for steps and hours.
+ * Layout: mobile first; at 960px a 12-column grid that is never symmetric (7/5 hero, 5/7 feature,
+ *   7/5 list and tile, 7/4 FAQ and payment card). Radii 20–28px, photos always in rounded frames.
+ * Signature: "Aurora", a sun of four flat concentric bands rising behind the hero photo's top edge
+ *   (the horizon), and once more from the bottom of the closing panel. Nothing else is decorated.
+ */
+import '@fontsource-variable/plus-jakarta-sans';
+import DemoLayout from '../../../../layouts/DemoLayout.astro';
+import Header from '../../../../components/demos/odontologia/Header.astro';
+import Hero from '../../../../components/demos/odontologia/Hero.astro';
+import Tratamentos from '../../../../components/demos/odontologia/Tratamentos.astro';
+import PrimeiraConsulta from '../../../../components/demos/odontologia/PrimeiraConsulta.astro';
+import Medo from '../../../../components/demos/odontologia/Medo.astro';
+import Faq from '../../../../components/demos/odontologia/Faq.astro';
+import Visite from '../../../../components/demos/odontologia/Visite.astro';
+import Footer from '../../../../components/demos/odontologia/Footer.astro';
+---
+<DemoLayout
+  title="Aurora Odontologia · Dentista no Taquaral, Campinas"
+  description="Clínica odontológica no Taquaral, em Campinas: clínica geral, clareamento, alinhadores, implantes, odontopediatria e urgência, com consultas sem pressa."
+  slug="odontologia"
+  themeColor="#FBFAF7"
+>
+  <div class="aurora">
+    <Header />
+    <main id="conteudo">
+      <Hero />
+      <Tratamentos />
+      <PrimeiraConsulta />
+      <Medo />
+      <Faq />
+      <Visite />
+    </main>
+    <Footer />
+  </div>
+</DemoLayout>
+
+<style is:global>
+  :root {
+    --paper: #fbfaf7;
+    --ink: #24201c;
+    --ink-2: #5e5750;
+    --teal: #0e5f5b;
+    --teal-deep: #0a4643;
+    --on-teal-2: #e4f1ee;
+    --mint: #e4f1ee;
+    --mint-line: #c4ddd7;
+    --blush: #fce7df;
+    --coral: #f07f65;
+    --coral-ink: #a6432c;
+    --line: #e5e0d7;
+    --line-strong: #cfc8bc;
+    --r: 22px;
+    --r-lg: 28px;
+    --gutter: 16px;
+    --maxw: 1280px;
+    color-scheme: light;
+  }
+  @media (min-width: 480px) { :root { --gutter: 20px; } }
+  @media (min-width: 960px) { :root { --gutter: 40px; } }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: 64px; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 1.0625rem; line-height: 1.6; font-weight: 420;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  }
+  /* resets wrapped in :where() so every component class wins over them */
+  :where(.aurora) :where(h1, h2, h3, p, ul, ol, dl, dd, figure) { margin: 0; }
+  :where(.aurora) :where(ul[role='list'], ol[role='list']) { list-style: none; padding: 0; }
+  :where(.aurora) :where(h1, h2, h3) { line-height: 1.08; text-wrap: balance; }
+  :where(.aurora) p { text-wrap: pretty; }
+  :where(.aurora) :where(img, svg) { display: block; max-width: 100%; }
+  :where(.aurora) a { color: var(--teal); text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+  .aurora :focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; border-radius: 8px; }
+  .aurora .urg :focus-visible { outline-color: #fff; }
+
+  .wrap { width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; }
+  .section { padding-top: 104px; }
+  @media (min-width: 960px) { .section { padding-top: 168px; } }
+
+  .skip {
+    position: absolute; left: 12px; top: 12px; z-index: 50; padding: 12px 18px;
+    background: var(--ink); color: #fff !important; border-radius: 999px; text-decoration: none;
+    transform: translateY(-200%);
+  }
+  .skip:focus { transform: none; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+
+  .label {
+    font-size: 0.8125rem; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal);
+  }
+  .h2 {
+    margin-top: 16px; font-size: clamp(2.125rem, 1.45rem + 3vw, 4rem); font-weight: 280;
+    line-height: 1.02; letter-spacing: -0.04em; color: var(--ink);
+  }
+  .h2 strong { font-weight: 740; color: var(--teal); letter-spacing: -0.045em; }
+  .aurora .dot { margin-left: -0.04em; }
+  .sec-head { display: grid; gap: 20px; }
+  .sec-head__aside { max-width: 42ch; color: var(--ink-2); }
+  @media (min-width: 960px) {
+    .sec-head { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 32px; align-items: end; }
+    .sec-head > div { grid-column: 1 / 8; }
+    .sec-head__aside { grid-column: 9 / 13; padding-bottom: 8px; }
+  }
+
+  .frame { overflow: hidden; border-radius: var(--r-lg); background: var(--mint); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 54px; padding: 0 26px; border-radius: 999px;
+    background: var(--teal); color: #fff !important; text-decoration: none;
+    font-size: 1rem; font-weight: 650; letter-spacing: -0.005em; white-space: nowrap;
+  }
+  .btn:hover { background: var(--teal-deep); }
+  .btn--ghost {
+    min-height: 46px; padding: 0 20px; background: transparent; color: var(--teal) !important;
+    box-shadow: inset 0 0 0 1.5px var(--teal); font-size: 0.9375rem;
+  }
+  .btn--ghost:hover { background: var(--mint); }
+  .btn--light { background: #fff; color: var(--teal) !important; }
+  .btn--light:hover { background: var(--mint); }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn { transition: background-color 0.2s ease; }
+    .btn .arrow { transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1); }
+    .btn:hover .arrow { transform: translateX(3px); }
+  }
+  .quiet-link {
+    display: inline-flex; align-items: center; min-height: 44px; font-weight: 600;
+    text-decoration: underline; text-decoration-color: var(--mint-line); text-decoration-thickness: 2px;
+    text-underline-offset: 0.35em;
+  }
+  .quiet-link:hover { text-decoration-color: var(--teal); }
+  .demo-note { font-size: 0.8125rem; line-height: 1.5; color: var(--ink-2); }
+</style>

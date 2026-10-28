@@ -1,0 +1,86 @@
+---
+import Arrow from './Arrow.astro';
+
+const steps = [
+  {
+    title: 'Conversa',
+    text: 'Você conta o que sente, o que incomoda e como foram as experiências anteriores. A gente escuta antes de examinar.',
+  },
+  {
+    title: 'Exame com explicação',
+    text: 'Dentes, gengivas e mordida, com radiografias quando necessário. Você vê as imagens e entende o que elas mostram.',
+  },
+  {
+    title: 'Plano por escrito',
+    text: 'As opções de tratamento, as etapas e a ordem sugerida, para você levar para casa e pensar com calma.',
+  },
+  {
+    title: 'Você decide',
+    text: 'Nenhum procedimento começa sem a sua concordância. Se quiser começar no mesmo dia e houver tempo, tudo bem também.',
+  },
+];
+---
+<section class="section first" id="primeira-consulta" aria-labelledby="first-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="label">Sua primeira consulta</p>
+        <h2 id="first-title" class="h2">Primeiro a conversa, <strong>depois a cadeira<span class="dot">.</span></strong></h2>
+      </div>
+      <p class="sec-head__aside">
+        Reserve cerca de uma hora. Se tiver, traga radiografias e exames antigos e a lista dos
+        remédios que você usa.
+      </p>
+    </div>
+
+    <ol class="steps" role="list">
+      {steps.map((s, i) => (
+        <li class="step">
+          <span class="step__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <h3 class="step__title"><span class="sr-only">Passo {i + 1}: </span>{s.title}</h3>
+          <p class="step__text">{s.text}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="first__cta">
+      <a class="btn" href="/sites/#contato">Agendar avaliação <Arrow /></a>
+      <p>A avaliação é o primeiro passo de qualquer tratamento aqui.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .steps { display: grid; margin-top: 48px; }
+  .step {
+    position: relative; display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: 16px; align-content: start;
+    padding-bottom: 32px;
+  }
+  /* the rail: a hairline joining the numbers */
+  .step::before {
+    content: ''; position: absolute; left: 27px; top: 52px; bottom: 6px; width: 1px; background: var(--mint-line);
+  }
+  .step:last-child { padding-bottom: 0; }
+  .step:last-child::before { display: none; }
+  .step__n {
+    grid-row: 1 / span 2; display: grid; place-items: center; width: 56px; height: 56px;
+    border-radius: 50%; background: var(--mint);
+    font-size: 1.125rem; font-weight: 600; color: var(--teal); font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .step__title { padding-top: 14px; font-size: 1.25rem; font-weight: 650; letter-spacing: -0.015em; color: var(--ink); }
+  .step__text { margin-top: 8px; color: var(--ink-2); max-width: 40ch; }
+
+  .first__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 48px; }
+  .first__cta p { font-size: 0.9375rem; color: var(--ink-2); }
+
+  @media (min-width: 960px) {
+    .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 32px; margin-top: 72px; }
+    .step { grid-template-columns: none; padding-bottom: 0; }
+    .step::before { left: 72px; right: -24px; top: 28px; bottom: auto; width: auto; height: 1px; }
+    .step:last-child::before { display: none; }
+    .step__n { grid-row: auto; }
+    .step__title { padding-top: 28px; }
+    .first__cta { margin-top: 64px; }
+  }
+</style>

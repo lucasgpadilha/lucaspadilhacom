@@ -1,0 +1,51 @@
+---
+import Brand from './Brand.astro';
+---
+<footer class="ft">
+  <div class="wrap ft__in">
+    <div class="ft__brand">
+      <Brand />
+      <p>Clínica odontológica no Taquaral, Campinas&nbsp;– SP. Adultos e crianças, com hora marcada.</p>
+    </div>
+    <nav class="ft__nav" aria-label="Rodapé">
+      <ul role="list">
+        <li><a href="#tratamentos">Tratamentos</a></li>
+        <li><a href="#primeira-consulta">Primeira consulta</a></li>
+        <li><a href="#medo">Medo de dentista</a></li>
+        <li><a href="#duvidas">Dúvidas</a></li>
+        <li><a href="#visite">Horários e local</a></li>
+      </ul>
+    </nav>
+    <div class="ft__legal">
+      <p class="ft__rt">
+        <strong>Responsável técnico:</strong> no site real, aqui aparecem o nome do cirurgião-dentista
+        responsável técnico e o número de inscrição no CRO-SP.
+      </p>
+      <p>© 2026 Aurora Odontologia, empresa fictícia criada para demonstração.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .ft { margin-top: 112px; padding: 48px 0 40px; border-top: 1px solid var(--line); }
+  .ft__in { display: grid; gap: 32px; }
+  .ft__brand p { margin-top: 12px; max-width: 36ch; font-size: 0.9375rem; color: var(--ink-2); }
+  .ft__nav ul { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+  .ft__nav a {
+    display: flex; align-items: center; min-height: 44px; color: var(--ink); font-size: 0.9375rem;
+    font-weight: 520; text-decoration: none;
+  }
+  .ft__nav a:hover { color: var(--teal); text-decoration: underline; text-underline-offset: 0.3em; }
+  .ft__legal { display: grid; gap: 10px; font-size: 0.875rem; color: var(--ink-2); }
+  .ft__rt { padding: 16px 18px; background: var(--mint); border-radius: 16px; color: var(--ink); max-width: 60ch; }
+  .ft__rt strong { font-weight: 680; color: var(--teal); }
+
+  @media (min-width: 960px) {
+    .ft { margin-top: 160px; padding-top: 64px; }
+    .ft__in { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 32px; align-items: start; }
+    .ft__brand { grid-column: 1 / 5; }
+    .ft__nav { grid-column: 5 / 8; }
+    .ft__nav ul { grid-template-columns: 1fr; }
+    .ft__legal { grid-column: 8 / 13; }
+  }
+</style>

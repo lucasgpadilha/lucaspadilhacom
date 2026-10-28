@@ -1,0 +1,23 @@
+---
+/** Logo: the sun mark over a teal horizon, plus the two-weight wordmark. */
+interface Props { href?: string }
+const { href = '#topo' } = Astro.props;
+---
+<a class="brand" href={href}>
+  <svg class="mark" viewBox="0 0 40 26" aria-hidden="true" focusable="false">
+    <path d="M6 22a14 14 0 0 1 28 0Z" fill="#F9CBBB" />
+    <path d="M12 22a8 8 0 0 1 16 0Z" fill="#F07F65" />
+    <rect x="1" y="22" width="38" height="2.5" rx="1.25" fill="currentColor" />
+  </svg>
+  <span class="word"><b>Aurora</b> Odontologia</span>
+</a>
+
+<style>
+  .brand {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 44px;
+    color: var(--teal); text-decoration: none;
+  }
+  .mark { width: 40px; height: 26px; flex: none; }
+  .word { font-size: 1.0625rem; font-weight: 350; letter-spacing: -0.01em; color: var(--ink); }
+  .word b { font-weight: 760; color: var(--teal); }
+</style>
