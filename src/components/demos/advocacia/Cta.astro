@@ -1,0 +1,31 @@
+---
+/** The one action on the page: links to the showcase, where a real site would open WhatsApp. */
+interface Props { tone?: 'ink' | 'paper'; label?: string; }
+const { tone = 'ink', label = 'Agendar uma primeira conversa' } = Astro.props;
+---
+<a class:list={['cta', `cta--${tone}`]} href="/sites/#contato">
+  <span>{label}</span>
+  <svg class="cta__arrow" width="22" height="10" viewBox="0 0 22 10" aria-hidden="true" focusable="false">
+    <path d="M0 5h20M16 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.25" />
+  </svg>
+</a>
+
+<style>
+  .cta {
+    display: inline-flex; align-items: center; justify-content: space-between; gap: 18px;
+    min-height: 56px; padding: 0 22px 0 24px; max-width: 100%;
+    font-family: var(--lv-sans); font-size: var(--lv-t-ui); font-weight: 640; letter-spacing: 0.01em; line-height: 1.25;
+    text-decoration: none !important; border: 1px solid currentColor;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+  .cta--ink { background: var(--lv-ink); color: var(--lv-paper) !important; border-color: var(--lv-ink); }
+  .cta--ink:hover { background: var(--lv-ink-2); }
+  .cta--paper { background: var(--lv-paper); color: var(--lv-ink) !important; border-color: var(--lv-paper); }
+  .cta--paper:hover { background: #fffaf0; }
+  .cta__arrow { flex: none; transition: transform 0.3s var(--lv-ease); }
+  .cta:hover .cta__arrow { transform: translateX(4px); }
+  .cta--ink:focus-visible { outline: 2px solid var(--lv-ink); outline-offset: 3px; }
+  .cta--paper:focus-visible { outline: 2px solid var(--lv-paper); outline-offset: 3px; }
+  @media (max-width: 359px) { .cta { padding-inline: 18px; font-size: 0.875rem; } .cta__arrow { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .cta, .cta__arrow { transition: none; } .cta:hover .cta__arrow { transform: none; } }
+</style>

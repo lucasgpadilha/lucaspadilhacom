@@ -1,0 +1,110 @@
+---
+/**
+ * A framed, ink-to-ivory duotone photo. Reads `credits.json` for alt text and the files on disk
+ * for the srcset; if the photo is missing it renders a quiet patterned slot of the same shape.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Credit {
+  name: string;
+  file_prefix?: string;
+  width: number;
+  height: number;
+  alt_pt: string;
+}
+interface Props {
+  name: string;
+  sizes: string;
+  /** CSS aspect-ratio of the crop, e.g. "4 / 5"; `ratioSm` applies below 720px. */
+  ratio: string;
+  ratioSm?: string;
+  /** object-position of the crop. */
+  focus?: string;
+  priority?: boolean;
+  pattern?: 'spines' | 'lines' | 'grid';
+  class?: string;
+}
+
+const { name, sizes, ratio, ratioSm, focus = '50% 50%', priority = false, pattern = 'lines', class: className } = Astro.props;
+
+const found = import.meta.glob<Credit[]>('../../../../public/sites/exemplos/advocacia/img/credits.json', { eager: true, import: 'default' });
+const credits = Object.values(found)[0] ?? [];
+const credit = credits.find((c) => c.name === name || c.file_prefix === name);
+// `file_prefix` may carry the trailing dash ("biblioteca-"); files are `<prefix>-<width>.webp`.
+const prefix = (credit?.file_prefix ?? name).replace(/-$/, '');
+const dir = path.join(process.cwd(), 'public/sites/exemplos/advocacia/img');
+const widths = [640, 1024, 1600].filter((w) => fs.existsSync(path.join(dir, `${prefix}-${w}.webp`)));
+
+let img: { src: string; srcset: string; width: number; height: number; alt: string } | null = null;
+if (credit && widths.length) {
+  const largest = widths[widths.length - 1];
+  const { default: sharp } = await import('sharp');
+  const meta = await sharp(path.join(dir, `${prefix}-${largest}.webp`)).metadata();
+  const url = (w: number) => `/sites/exemplos/advocacia/img/${prefix}-${w}.webp`;
+  img = {
+    src: url(widths.includes(1024) ? 1024 : largest),
+    srcset: widths.map((w) => `${url(w)} ${w}w`).join(', '),
+    width: meta.width ?? credit.width,
+    height: meta.height ?? credit.height,
+    alt: credit.alt_pt,
+  };
+}
+---
+<figure class:list={['foto', className]} style={`--ratio: ${ratio}; --ratio-sm: ${ratioSm ?? ratio}; --focus: ${focus};`}>
+  <div class="foto__frame">
+    {img ? (
+      <div class="foto__duo">
+        <img
+          src={img.src}
+          srcset={img.srcset}
+          sizes={sizes}
+          width={img.width}
+          height={img.height}
+          alt={img.alt}
+          {...(priority ? { fetchpriority: 'high' } : { loading: 'lazy', decoding: 'async' })}
+        />
+      </div>
+    ) : (
+      <div class:list={['foto__slot', `foto__slot--${pattern}`]} aria-hidden="true"></div>
+    )}
+  </div>
+  {Astro.slots.has('default') && <figcaption class="foto__cap"><slot /></figcaption>}
+</figure>
+
+<style>
+  .foto { margin: 0; }
+  /* Thin passe-partout: a hairline frame with a narrow ivory margin inside. */
+  .foto__frame { padding: 7px; border: 1px solid var(--lv-rule-strong); background: var(--lv-paper); }
+  .foto__duo, .foto__slot { position: relative; aspect-ratio: var(--ratio-sm); overflow: hidden; }
+  @media (min-width: 720px) { .foto__duo, .foto__slot { aspect-ratio: var(--ratio); } }
+  /* Duotone: grayscale multiplied onto ivory, then lightened with ink, so blacks become ink. */
+  .foto__duo { background: #efe6d3; isolation: isolate; }
+  .foto__duo img {
+    width: 100%; height: 100%; object-fit: cover; object-position: var(--focus);
+    filter: grayscale(1) sepia(0.22) contrast(1.06) brightness(1.03);
+    mix-blend-mode: multiply;
+  }
+  .foto__duo::after {
+    content: ''; position: absolute; inset: 0; background: var(--lv-ink); mix-blend-mode: lighten; pointer-events: none;
+  }
+  .foto__slot { background-color: var(--lv-paper-deep); }
+  .foto__slot--spines {
+    background-image:
+      repeating-linear-gradient(90deg, rgba(20, 35, 29, 0.0) 0 14px, rgba(20, 35, 29, 0.10) 14px 15px, rgba(20, 35, 29, 0.0) 15px 23px, rgba(168, 131, 76, 0.22) 23px 24px),
+      linear-gradient(180deg, transparent 0 62%, rgba(20, 35, 29, 0.12) 62% calc(62% + 1px), transparent calc(62% + 1px));
+  }
+  .foto__slot--lines {
+    background-image: repeating-linear-gradient(0deg, transparent 0 21px, rgba(20, 35, 29, 0.09) 21px 22px);
+  }
+  .foto__slot--grid {
+    background-image:
+      linear-gradient(90deg, rgba(168, 131, 76, 0.24) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(20, 35, 29, 0.08) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .foto__cap {
+    display: flex; gap: 10px; align-items: baseline; margin-top: 12px;
+    font-family: var(--lv-sans); font-size: 0.8125rem; line-height: 1.5; color: var(--lv-muted);
+  }
+</style>

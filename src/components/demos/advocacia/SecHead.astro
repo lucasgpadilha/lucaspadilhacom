@@ -1,0 +1,31 @@
+---
+/** Section opening: a brass hairline, the paragraph mark (§ 1º…) and the heading. */
+interface Props {
+  mark: string;
+  title: string;
+  id: string;
+  kicker?: string;
+}
+const { mark, title, id, kicker } = Astro.props;
+---
+<div class="sh">
+  <span class="lv-rule lv-rule--scroll" aria-hidden="true"></span>
+  <div class="sh__top">
+    <span class="sh__mark" aria-hidden="true">{mark}</span>
+    {kicker && <span class="lv-label">{kicker}</span>}
+  </div>
+  <h2 id={id} class="sh__title" set:html={title} />
+  {Astro.slots.has('default') && <div class="sh__lede lv-lede"><slot /></div>}
+</div>
+
+<style>
+  .sh { display: grid; gap: 0; }
+  .sh__top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-top: 14px; }
+  /* 26px brass numerals: large text, 3.04:1 on ivory and 4.67:1 on ink. */
+  .sh__mark {
+    font-family: var(--lv-serif); font-size: 1.625rem; line-height: 1; font-weight: 340;
+    color: var(--lv-brass); font-variant-numeric: lining-nums; letter-spacing: 0.02em;
+  }
+  .sh__title { margin-top: clamp(28px, 4vw, 56px); font-size: var(--lv-t-h2); }
+  .sh__lede { margin-top: clamp(18px, 2vw, 28px); }
+</style>

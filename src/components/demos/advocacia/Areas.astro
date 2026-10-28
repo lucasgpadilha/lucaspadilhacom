@@ -1,0 +1,85 @@
+---
+import SecHead from './SecHead.astro';
+
+const groups = [
+  {
+    title: 'Direito do Trabalho',
+    items: [
+      { t: 'Rescisão e verbas rescisórias', d: 'Conferência do termo de rescisão, aviso prévio, férias e 13º proporcionais, saldo do FGTS e multa de 40%.' },
+      { t: 'Jornada e horas extras', d: 'Horas extras, banco de horas, adicional noturno, intervalos suprimidos e controle de ponto.' },
+      { t: 'Vínculo de emprego', d: 'Trabalho sem carteira assinada, contratação como PJ e outras formas de disfarçar uma relação de emprego.' },
+      { t: 'Saúde e segurança', d: 'Acidentes, doenças ocupacionais, estabilidade depois do afastamento, insalubridade e periculosidade.' },
+      { t: 'Assédio e dispensa discriminatória', d: 'Assédio moral ou sexual e demissões motivadas por doença, gravidez ou qualquer forma de discriminação.' },
+      { t: 'Consultoria para empregadores', d: 'Contratos, jornada, desligamentos e acordos, com orientação antes que a dúvida vire processo.' },
+    ],
+  },
+  {
+    title: 'Direito de Família e Sucessões',
+    items: [
+      { t: 'Divórcio e união estável', d: 'Divórcio e dissolução de união estável, em cartório quando a lei permite, com a partilha dos bens.' },
+      { t: 'Guarda e convivência', d: 'Guarda compartilhada ou unilateral, calendário de convivência e mudança de cidade de um dos pais.' },
+      { t: 'Pensão alimentícia', d: 'Pedido, revisão e cobrança de pensão, inclusive quando há parcelas atrasadas.' },
+      { t: 'Inventário e planejamento sucessório', d: 'Inventário judicial ou em cartório, testamentos e organização do patrimônio da família.' },
+    ],
+  },
+];
+let n = 0;
+const numbered = groups.map((g) => ({ ...g, start: n + 1, items: g.items.map((i) => ({ ...i, n: String(++n).padStart(2, '0') })) }));
+---
+<section id="areas" class="areas" aria-labelledby="areas-title">
+  <div class="lv-wrap areas__grid">
+    <div class="areas__head">
+      <SecHead mark="§ 1º" id="areas-title" title="Áreas de atuação">
+        <p>Duas áreas, escolhidas para que cada uma tenha um responsável dedicado. Atuamos na orientação preventiva, em acordos e, quando necessário, no processo judicial.</p>
+      </SecHead>
+    </div>
+    <div class="areas__groups">
+      {numbered.map((g) => (
+        <div class="group">
+          <h3 class="group__title lv-label">{g.title}</h3>
+          <ol class="list" role="list" start={g.start}>
+            {g.items.map((i) => (
+              <li class="item">
+                <span class="item__n" aria-hidden="true">{i.n}</span>
+                <h4 class="item__t">{i.t}</h4>
+                <p class="item__d">{i.d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .areas { padding-block: clamp(56px, 8vw, 120px); }
+  .areas__grid { display: grid; gap: 48px; }
+  .group + .group { margin-top: 56px; }
+  .group__title { padding-bottom: 14px; border-bottom: 1px solid var(--lv-ink); }
+  .item {
+    display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); column-gap: 12px;
+    padding-block: 22px 24px; border-bottom: 1px solid var(--lv-rule-strong);
+  }
+  /* Brass numerals at 36px+ (large text). */
+  .item__n {
+    grid-row: 1 / span 2; font-size: 2.25rem; line-height: 0.9; font-weight: 300;
+    color: var(--lv-brass); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -0.01em;
+  }
+  .item__t { font-size: var(--lv-t-h3); font-weight: 400; line-height: 1.15; letter-spacing: -0.006em; }
+  .item__d { margin-top: 8px; color: var(--lv-muted); line-height: 1.55; max-width: 34em; }
+
+  @media (min-width: 720px) {
+    .item { grid-template-columns: 5rem minmax(0, 1fr); }
+    .item__n { font-size: 3rem; }
+  }
+  @media (min-width: 1080px) {
+    .areas__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .areas__head { grid-column: 1 / 5; }
+    .areas__head > :global(.sh) { position: sticky; top: 76px; }
+    .areas__groups { grid-column: 6 / -1; padding-top: 15px; }
+    .item { grid-template-columns: 5.5rem minmax(0, 0.9fr) minmax(0, 1.1fr); column-gap: 28px; padding-block: 28px; }
+    .item__n { grid-row: auto; font-size: 3.25rem; }
+    .item__d { margin-top: 4px; }
+  }
+</style>

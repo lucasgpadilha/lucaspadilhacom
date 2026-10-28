@@ -1,0 +1,75 @@
+---
+import SecHead from './SecHead.astro';
+
+/* Two columns that echo the headline: "no trabalho e na família". */
+const sides = [
+  {
+    area: 'No trabalho',
+    people: [
+      { t: 'Quem trabalha', d: 'Empregados com ou sem carteira assinada, ainda no emprego ou já desligados, que querem entender uma rescisão, cobrar horas extras ou saber se um afastamento foi tratado como deveria.' },
+      { t: 'Quem emprega', d: 'Pequenas e médias empresas que precisam de contratos claros, de orientação antes de um desligamento ou de defesa em uma reclamação trabalhista.' },
+    ],
+  },
+  {
+    area: 'Na família',
+    people: [
+      { t: 'Quem está se separando', d: 'Divórcio ou fim de união estável, partilha dos bens e, quando há filhos, guarda, convivência e pensão definidas com o menor desgaste possível.' },
+      { t: 'Quem precisa fazer um inventário', d: 'Herdeiros que precisam regularizar o que ficou, e famílias que querem organizar a sucessão com antecedência, por testamento ou doação.' },
+    ],
+  },
+];
+---
+<section id="para-quem" class="pq" aria-labelledby="pq-title">
+  <div class="lv-wrap">
+    <div class="pq__head">
+      <SecHead mark="§ 2º" id="pq-title" title="Para quem atendemos">
+        <p>Quem procura um advogado costuma chegar em um momento delicado. Por isso a primeira etapa é sempre ouvir.</p>
+      </SecHead>
+    </div>
+    <div class="pq__sides">
+      {sides.map((s) => (
+        <div class="side">
+          <h3 class="side__area">{s.area}</h3>
+          <ul class="side__list" role="list">
+            {s.people.map((p) => (
+              <li class="who">
+                <h4 class="who__t">{p.t}</h4>
+                <p class="who__d">{p.d}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+    <p class="pq__note">
+      Na área trabalhista atendemos empregados e empregadores, mas nunca os dois lados do mesmo conflito.
+    </p>
+  </div>
+</section>
+
+<style>
+  .pq { padding-block: clamp(24px, 4vw, 48px) clamp(64px, 9vw, 128px); }
+  .pq__sides { margin-top: clamp(40px, 5vw, 72px); display: grid; gap: 48px; }
+  .side__area {
+    padding-bottom: 16px; border-bottom: 1px solid var(--lv-ink);
+    font-size: clamp(1.875rem, 1.45rem + 1.8vw, 3.25rem); font-weight: 340; line-height: 1.05; letter-spacing: -0.015em;
+  }
+  .who { padding-block: 24px 26px; border-bottom: 1px solid var(--lv-rule-strong); }
+  .who__t { font-size: var(--lv-t-h3); font-weight: 400; line-height: 1.15; }
+  .who__d { margin-top: 10px; color: var(--lv-muted); max-width: 32em; }
+  .pq__note {
+    margin-top: 32px; padding-left: 16px; border-left: 1px solid var(--lv-brass); max-width: 34em;
+    font-family: var(--lv-sans); font-size: 0.875rem; line-height: 1.6; color: var(--lv-muted);
+  }
+
+  @media (min-width: 720px) {
+    .pq__head { max-width: 46rem; }
+    .pq__sides { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+    .side:first-child { padding-right: clamp(24px, 3vw, 48px); }
+    /* A hairline gutter between the two columns, as in a printed page. */
+    .side + .side { padding-left: clamp(24px, 3vw, 48px); border-left: 1px solid var(--lv-rule-strong); }
+  }
+  @media (min-width: 1080px) {
+    .pq__note { margin-left: calc(50% + clamp(24px, 3vw, 48px)); }
+  }
+</style>

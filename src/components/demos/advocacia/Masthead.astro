@@ -1,0 +1,69 @@
+---
+/** Masthead like a journal's: wordmark, then a section bar between two hairlines (inline on desktop). */
+const links = [
+  { href: '#areas', label: 'Áreas' },
+  { href: '#para-quem', label: 'Para quem', wide: true },
+  { href: '#primeira-conversa', label: 'Atendimento' },
+  { href: '#escritorio', label: 'Escritório', wide: true },
+  { href: '#perguntas', label: 'Perguntas' },
+  { href: '#contato', label: 'Contato' },
+];
+---
+<header class="mast">
+  <a class="lv-skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="lv-wrap mast__inner">
+    <a class="mark" href="/sites/exemplos/advocacia/">
+      <span class="mark__name">Lacerda <em class="mark__amp">&amp;</em> Viana</span>
+      <span class="mark__kind">Advocacia</span>
+    </a>
+    <nav class="bar" aria-label="Seções">
+      <ul class="bar__list" role="list">
+        {links.map((l) => (
+          <li class:list={{ 'is-wide': l.wide }}><a href={l.href}>{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .mast__inner { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .mark {
+    justify-self: start; display: inline-flex; flex-direction: column; justify-content: center; gap: 4px;
+    min-height: 44px; padding-block: 14px 12px;
+    text-decoration: none !important; color: var(--lv-ink);
+  }
+  .mark__name {
+    font-family: var(--lv-serif); font-size: 1.5rem; line-height: 1; font-weight: 460;
+    letter-spacing: -0.012em; white-space: nowrap;
+  }
+  /* Brass italic ampersand at 24px+, which meets the 3:1 large-text minimum on ivory. */
+  .mark__amp { font-weight: 380; color: var(--lv-brass); font-size: 1.1em; line-height: 0; padding-inline: 0.03em; }
+  .mark__kind {
+    font-family: var(--lv-sans); font-size: 0.625rem; font-weight: 700; line-height: 1;
+    letter-spacing: 0.36em; text-transform: uppercase; color: var(--lv-muted);
+  }
+
+  .bar { border-block: 1px solid var(--lv-rule-strong); }
+  .bar__list { display: flex; justify-content: space-between; gap: 8px; margin: 0; }
+  .bar li.is-wide { display: none; }
+  .bar a {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px;
+    font-family: var(--lv-sans); font-size: 0.8125rem; font-weight: 620; letter-spacing: 0.015em;
+    color: var(--lv-ink); text-decoration-color: transparent;
+  }
+  .bar a:hover { text-decoration-color: var(--lv-brass); text-decoration-thickness: 1px; }
+
+  @media (min-width: 560px) {
+    .bar li.is-wide { display: list-item; }
+    .bar a { font-size: 0.875rem; }
+  }
+  @media (min-width: 1080px) {
+    .mast { border-bottom: 1px solid var(--lv-rule-strong); }
+    .mast__inner { grid-template-columns: auto 1fr; align-items: center; column-gap: 48px; }
+    .mark { padding-block: 22px 20px; }
+    .mark__name { font-size: 1.75rem; }
+    .bar { border: 0; }
+    .bar__list { justify-content: flex-end; gap: 34px; }
+  }
+</style>
