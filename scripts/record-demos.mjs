@@ -26,35 +26,50 @@ const browser = await chromium.launch();
 
 for (const slug of slugs) {
   const raw = await mkdtemp(join(tmpdir(), `rec-${slug}-`));
+  const t0 = Date.now();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, recordVideo: { dir: raw, size: { width: 1280, height: 800 } } });
   const page = await context.newPage();
   await page.goto(`${base}/sites/exemplos/${slug}/`, { waitUntil: 'networkidle' });
   await page.addStyleTag({ content: '.demo-banner { display: none !important; } html { scroll-behavior: auto !important; }' });
-  await page.waitForTimeout(2600); // the scene's bounded intro
-  // Scroll through the section that holds the scene, eased, in about 4.5 s.
-  await page.evaluate(async () => {
+  // Some scenes mount late (after a delay or the first scroll): nudge, then wait for the host.
+  await page.mouse.wheel(0, 1);
+  await page.waitForFunction(() => document.querySelector('[data-scene]'), null, { timeout: 8000 }).catch(() => {});
+  // The scroll range that drives the scene: its pin spacer when pinned, else its section.
+  const range = await page.evaluate(() => {
     const host = document.querySelector('[data-scene]');
-    const section = host?.closest('section') ?? document.body;
-    const end = Math.min(document.documentElement.scrollHeight - innerHeight, section.getBoundingClientRect().bottom + scrollY - innerHeight * 0.55);
-    const start = scrollY;
-    const duration = 4500;
-    const t0 = performance.now();
+    const box = host?.closest('.pin-spacer') ?? host?.closest('section') ?? document.body;
+    const rect = box.getBoundingClientRect();
+    const top = Math.max(0, rect.top + scrollY - 40);
+    const spacer = host?.closest('.pin-spacer');
+    // Pinned: scroll exactly the pin distance (spacer minus the pinned element), so the scene ends in view.
+    const end = spacer
+      ? top + 40 + (spacer.offsetHeight - spacer.firstElementChild.offsetHeight) * 0.98
+      : rect.bottom + scrollY - innerHeight * 0.45;
+    return { top, end: Math.min(document.documentElement.scrollHeight - innerHeight, Math.max(top + innerHeight * 0.6, end)) };
+  });
+  await page.evaluate((y) => window.scrollTo(0, y), range.top);
+  await page.waitForFunction(() => document.querySelector('[data-scene]')?.dataset.scene === 'live', null, { timeout: 8000 }).catch(() => {});
+  await page.waitForTimeout(2600); // bounded intro
+  const startAt = (Date.now() - t0) / 1000 - 0.4;
+  await page.evaluate(async ({ top, end }) => {
+    const duration = 4800;
+    const begin = performance.now();
     await new Promise((resolve) => {
       const step = (now) => {
-        const t = Math.min(1, (now - t0) / duration);
+        const t = Math.min(1, (now - begin) / duration);
         const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-        window.scrollTo(0, start + (end - start) * eased);
+        window.scrollTo(0, top + (end - top) * eased);
         if (t < 1) requestAnimationFrame(step); else resolve();
       };
       requestAnimationFrame(step);
     });
-  });
-  await page.waitForTimeout(600);
+  }, range);
+  await page.waitForTimeout(700);
   const video = page.video();
   await context.close();
   const source = await video.path();
-  // Skip the first frames of page load, keep ~7 s, 960 px wide, modest bitrate.
-  execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-ss', '1.2', '-i', source, '-t', '7', '-vf', 'scale=960:-2', '-an', '-c:v', 'libvpx', '-b:v', '900k', '-crf', '12', '-deadline', 'good', join(out, `${slug}.webm`)]);
+  // Start just before the scroll, keep ~6.5 s, 960 px wide, modest bitrate.
+  execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-ss', startAt.toFixed(2), '-i', source, '-t', '6.5', '-vf', 'scale=960:-2', '-an', '-c:v', 'libvpx', '-b:v', '900k', '-crf', '12', '-deadline', 'good', join(out, `${slug}.webm`)]);
   await rm(raw, { recursive: true, force: true });
   console.log(`recorded ${slug}`);
 }
