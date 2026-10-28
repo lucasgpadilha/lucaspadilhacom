@@ -1,0 +1,75 @@
+---
+import Arrow from './Arrow.astro';
+import { websites } from '../../data/home';
+import { plans } from '../../data/sites';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const pt = locale === 'pt';
+const demos = [
+  { slug: 'advocacia', name: 'Lacerda & Viana', niche: { en: 'Law firm', pt: 'Advocacia' } },
+  { slug: 'odontologia', name: 'Aurora Odontologia', niche: { en: 'Dental clinic', pt: 'Clínica odontológica' } },
+  { slug: 'cafe', name: 'Casa Jabuticaba', niche: { en: 'Café and bakery', pt: 'Café e padaria' } },
+];
+// Plan names stay in Portuguese: the offer itself is for Brazilian businesses.
+const planNames: Record<string, string> = { 'Página única': 'Single page', 'Site completo': 'Full website', 'Cuidado mensal': 'Monthly care' };
+---
+<section id="websites" class="websites" aria-labelledby="websites-title">
+  <div class="wrap grid">
+    <div class="text">
+      <h2 id="websites-title">{t(websites.title, locale)}</h2>
+      <p class="lede">{t(websites.body, locale)}</p>
+      <ul class="plans" role="list">
+        {plans.map((plan) => (
+          <li>
+            <span class="name">{pt ? plan.name : planNames[plan.name] ?? plan.name}</span>
+            <span class="price"><small>{pt ? plan.from : 'from'}</small> {plan.price}{plan.cadence === 'por mês' && <small> {t(websites.monthly, locale)}</small>}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="marketing">{t(websites.marketing, locale)}</p>
+      <div class="actions">
+        <a class="btn btn--signal" href="/sites/" hreflang="pt-BR">{t(websites.cta, locale)} <Arrow /></a>
+      </div>
+    </div>
+    <ul class="demos" role="list">
+      {demos.map((demo) => (
+        <li>
+          <a href={`/sites/exemplos/${demo.slug}/`} hreflang="pt-BR">
+            <img src={`/sites/thumbs/${demo.slug}-640.webp`} width="640" height="400" alt="" loading="lazy" decoding="async" />
+            <span class="name">{demo.name}</span>
+            <span class="niche">{t(demo.niche, locale)}</span>
+          </a>
+        </li>
+      ))}
+      <li class="credit">{pt ? 'Fotos dos sites conceito: Wikimedia Commons, com créditos em cada site.' : 'Concept-site photos: Wikimedia Commons, credited on each site.'}</li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .websites { padding-block: clamp(3.5rem, 2.5rem + 3vw, 6rem); }
+  .grid { display: grid; gap: 2.5rem; }
+  .text { display: grid; gap: 1.1rem; align-content: start; }
+  h2 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem); letter-spacing: -0.03em; max-width: 18ch; }
+  .lede { font-size: var(--step-1); color: var(--ink); max-width: 46ch; }
+  .plans { display: grid; border-top: 1px solid var(--line-strong); max-width: 30rem; }
+  .plans li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--line); }
+  .plans .name { font-weight: 600; }
+  .plans .price { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .plans small { font-size: 0.8125rem; font-weight: 450; color: var(--ink-2); }
+  .marketing { color: var(--ink-2); max-width: 46ch; font-size: 0.9375rem; }
+  .actions { padding-top: 0.25rem; }
+  .demos { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+  .demos li:first-child { grid-column: 1 / -1; }
+  .demos a { display: grid; gap: 0.2rem; text-decoration: none; }
+  .demos img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border: 1px solid var(--line); border-radius: 4px; margin-bottom: 0.4rem; transition: transform 0.3s var(--ease-out); }
+  .demos a:hover img { transform: translateY(-3px); }
+  .demos .name { font-weight: 620; font-size: 0.9375rem; }
+  .demos .niche { font-size: 0.8125rem; color: var(--ink-2); }
+  .demos .credit { grid-column: 1 / -1; font-size: 0.75rem; color: var(--ink-2); }
+  @media (min-width: 1080px) {
+    .grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 3.5rem; }
+  }
+</style>

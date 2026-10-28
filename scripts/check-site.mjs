@@ -32,8 +32,11 @@ const eyebrows = () => [...document.querySelectorAll('.label, .kicker, .eyebrow'
 async function portfolio(page, label) {
   const facts = await page.evaluate((eyebrowsSrc) => ({
     eyebrows: new Function(`return (${eyebrowsSrc})()`)(),
-    steps: document.querySelectorAll('#infra [data-step]').length,
-    feats: document.querySelectorAll('#feats li').length,
+    steps: document.querySelectorAll('#kubernetes [data-step]').length,
+    ops: document.querySelectorAll('#ops dt').length,
+    deploy: document.querySelectorAll('[data-deploy] svg path').length,
+    chapters: ['#kubernetes', '#cloud', '#finops', '#ops'].filter((id) => !document.querySelector(id)),
+    drawings: ['#cloud svg', '#finops svg'].filter((sel) => !document.querySelector(sel)),
     side: document.querySelectorAll('#side a[href]').length,
     mail: [...document.querySelectorAll('a[href^="mailto:"]')].map((a) => a.getAttribute('href')),
     repos: [...document.querySelectorAll('a[href^="https://github.com/lucasgpadilha/"]')]
@@ -41,8 +44,12 @@ async function portfolio(page, label) {
     text: document.body.textContent,
   }), eyebrows.toString());
   check(facts.eyebrows === 0, `${label}: ${facts.eyebrows} eyebrow labels above headings`);
-  check(facts.steps === 5, `${label}: #infra has ${facts.steps} migration steps (expected 5)`);
-  check(facts.feats >= 8, `${label}: #feats lists ${facts.feats} things done (expected ≥ 8)`);
+  check(facts.steps === 3, `${label}: #kubernetes has ${facts.steps} migration steps (expected 3)`);
+  check(facts.ops >= 8, `${label}: #ops lists ${facts.ops} areas (expected ≥ 8)`);
+  check(facts.deploy > 40, `${label}: the hero deploy drawing is missing from the HTML (${facts.deploy} paths)`);
+  check(facts.chapters.length === 0, `${label}: missing chapters ${facts.chapters.join(', ')}`);
+  check(facts.drawings.length === 0, `${label}: chapters without their drawing in the HTML: ${facts.drawings.join(', ')}`);
+  for (const price of ['R$ 470', 'R$ 960', 'R$ 87']) check(facts.text.includes(price), `${label}: missing price ${price}`);
   check(facts.side >= 4, `${label}: #side links ${facts.side} side projects (expected ≥ 4)`);
   check(facts.mail.length > 0 && facts.mail.every((m) => m.startsWith('mailto:ceo@lucaspadilha.com')), `${label}: contact e-mail is not ceo@lucaspadilha.com: ${facts.mail.join(', ')}`);
   for (const word of FORBIDDEN) check(!facts.text.includes(word), `${label}: mentions "${word}"`);
@@ -320,7 +327,7 @@ try {
     const { context, page } = await open('/', { viewport: { width: 390, height: 844 } });
     const menu = page.locator('details.menu');
     await menu.locator('summary').click();
-    await menu.locator('nav a[href="#infra"]').click();
+    await menu.locator('nav a[href="#kubernetes"]').click();
     check(!(await menu.evaluate((el) => el.open)), 'mobile menu stays open after choosing a section');
     await menu.locator('summary').click();
     await page.keyboard.press('Escape');
@@ -365,12 +372,46 @@ try {
     const { context, page } = await open('/', { viewport: { width: 1440, height: 900 } });
     const theme = () => page.evaluate(() => document.documentElement.dataset.theme || 'paper');
     const at = async (selector) => { await page.evaluate((sel) => document.querySelector(sel).scrollIntoView({ block: 'center', behavior: 'instant' }), selector); await page.waitForTimeout(500); return theme(); };
-    const night = await at('#infra [data-step="migrate"]');
-    const paper = await at('#stack');
-    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(500);
     const top = await theme();
-    check(night === 'night' && paper === 'paper' && top === 'paper', `theme shift: infra=${night}, stack=${paper}, top=${top}`);
+    const night = await at('#ops');
+    const paper = await at('#contact');
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(500);
+    const back = await theme();
+    check(top === 'night' && night === 'night' && paper === 'paper' && back === 'night', `theme shift: top=${top}, ops=${night}, contact=${paper}, back=${back}`);
+    // Density: the v3 home was 10,300px tall with ~90px section titles.
+    const size = await page.evaluate(() => ({
+      height: document.documentElement.scrollHeight,
+      h2: Math.max(...[...document.querySelectorAll('main h2')].map((h) => parseFloat(getComputedStyle(h).fontSize))),
+    }));
+    check(size.height <= 7000, `home @1440: ${size.height}px tall (budget 7000)`);
+    check(size.h2 <= 44, `home @1440: a section title is ${size.h2}px (max 44)`);
     await context.close();
+
+    // The hero deploy runs once, settles within 5 s, and the blocked run stops at the gate.
+    for (const [name, options] of [['motion', {}], ['reduced motion', { reducedMotion: 'reduce' }]]) {
+      const { context: ctx, page: p, errors } = await open('/pt/', { viewport: { width: 1440, height: 900 }, ...options });
+      const stage = p.locator('[data-deploy] .stage');
+      await p.waitForTimeout(5200);
+      const running = await p.evaluate(() => document.querySelector('[data-deploy]').getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length);
+      check(running === 0, `deploy (${name}): ${running} animations still running after 5.2 s`);
+      const a = await stage.screenshot();
+      await p.waitForTimeout(1200);
+      check(a.equals(await stage.screenshot()), `deploy (${name}): the drawing still moves after 5 s`);
+      await p.locator('[data-run="blocked"]').click();
+      await p.waitForTimeout(3200);
+      const blocked = await p.evaluate(() => {
+        const fig = document.querySelector('[data-deploy]');
+        const visible = (sel) => { const el = fig.querySelector(sel); return el && getComputedStyle(el).display !== 'none' && Number(getComputedStyle(el).opacity) > 0.5; };
+        return { msg: visible('.msg.blocked'), clean: visible('.msg.clean'), fresh: Number(getComputedStyle(fig.querySelector('.fresh')).opacity), pressed: fig.querySelector('[data-run="blocked"]').getAttribute('aria-pressed') };
+      });
+      check(blocked.msg && !blocked.clean && blocked.fresh === 0 && blocked.pressed === 'true', `deploy (${name}): blocked run ${JSON.stringify(blocked)}`);
+      await p.locator('[data-run="clean"]').click();
+      await p.waitForTimeout(5200);
+      const clean = await p.evaluate(() => getComputedStyle(document.querySelector('[data-deploy] .msg.clean')).display);
+      check(clean !== 'none', `deploy (${name}): clean run does not end healthy`);
+      check(errors.length === 0, `deploy (${name}): ${errors.join(' | ')}`);
+      await ctx.close();
+    }
   }
 
   // The sales funnel's main click: /sites/ → a concept site, with no errors along the way.

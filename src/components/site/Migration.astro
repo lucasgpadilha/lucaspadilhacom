@@ -5,12 +5,13 @@ import { t, type Locale } from '../../lib/locale';
 interface Props { locale: Locale }
 const { locale } = Astro.props;
 const m = migration;
+const pt = locale === 'pt';
 ---
-<section id="infra" class="zone-night migration" aria-labelledby="infra-title" data-theme-zone="night">
+<section id="kubernetes" class="zone-night migration" aria-labelledby="kubernetes-title">
   <div class="wrap">
-    <header class="section-head">
-      <h2 id="infra-title">{t(m.title, locale)}</h2>
-      <p class="lede">{t(m.intro, locale)}</p>
+    <header class="head">
+      <h2 id="kubernetes-title">{t(m.title, locale)}</h2>
+      <p class="lede">{t(m.lede, locale)}</p>
     </header>
     <div class="layout">
       <div class="stage" data-stage>
@@ -41,14 +42,22 @@ const m = migration;
           </p>
         </div>
       </div>
-      <ol class="steps" role="list">
-        {m.steps.map((step) => (
-          <li class="step" data-step={step.key}>
-            <h3>{t(step.title, locale)}</h3>
-            <p>{t(step.body, locale)}</p>
-          </li>
-        ))}
-      </ol>
+      <div class="side">
+        <ol class="steps" role="list">
+          {m.steps.map((step) => (
+            <li class="step" data-step={step.key}>
+              <h3>{t(step.title, locale)}</h3>
+              <p>{t(step.body, locale)}</p>
+            </li>
+          ))}
+        </ol>
+        <div class="after">
+          <ul class="facts" role="list">
+            {m.facts.map((fact) => <li><b>{fact.value}</b> {t(fact.text, locale)}</li>)}
+          </ul>
+          <p class="tools"><span class="visually-hidden">{pt ? 'Ferramentas' : 'Tools'}: </span>{m.tools.join(' · ')}</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -61,7 +70,7 @@ const m = migration;
 
   gsap.registerPlugin(ScrollTrigger);
 
-  const root = document.getElementById('infra');
+  const root = document.getElementById('kubernetes');
   const host = root?.querySelector<HTMLElement>('[data-stage-host]');
   if (root && host) {
     const handle = mountScene(host, () => import('./migration-scene'));
@@ -76,39 +85,37 @@ const m = migration;
     update(0);
     ScrollTrigger.create({
       trigger: root.querySelector('.steps'),
-      start: 'top 70%',
-      end: 'bottom 70%',
+      start: 'top 65%',
+      end: 'bottom 60%',
       onUpdate: (self) => update(self.progress),
-    });
-
-    // Lights off for the infrastructure chapter, back on after it.
-    ScrollTrigger.create({
-      trigger: root,
-      endTrigger: '#how',
-      start: 'top 55%',
-      end: 'bottom 45%',
-      onToggle: (self) => { document.documentElement.dataset.theme = self.isActive ? 'night' : 'paper'; },
     });
   }
 </script>
 
 <style>
+  .migration { padding-block: clamp(3.5rem, 2.5rem + 3vw, 6rem); border-top: 1px solid var(--line); }
+  .head { display: grid; gap: 1rem; margin-bottom: 2rem; }
+  h2 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem); letter-spacing: -0.03em; max-width: 20ch; }
+  .head .lede { font-size: var(--step-1); color: var(--ink); max-width: 52ch; }
+  @media (min-width: 1080px) {
+    .head { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: 3.5rem; align-items: end; }
+  }
+
   /* Inactive steps stay fully legible (AA); the active one gets the ink and a signal marker. */
   .step h3 { color: var(--ink-2); transition: color 0.3s var(--ease-out); }
   .step h3::before {
-    content: ''; display: block; width: 28px; height: 2px; margin-bottom: 0.9rem;
+    content: ''; display: block; width: 28px; height: 2px; margin-bottom: 0.8rem;
     background: var(--line-strong); transition: background-color 0.3s var(--ease-out), width 0.3s var(--ease-out);
   }
   .step[data-active] h3 { color: var(--ink); }
   .step[data-active] h3::before { background: var(--signal); width: 56px; }
   html:not(.js) .step h3 { color: var(--ink); }
-  .migration { padding-block: clamp(5rem, 4rem + 6vw, 9rem) clamp(3rem, 2rem + 4vw, 6rem); }
-  .layout { display: grid; gap: 2rem; }
-  .stage { position: sticky; top: 64px; z-index: 3; height: min(44vh, 380px); }
+  .layout { display: grid; gap: 1.5rem; }
+  .stage { position: sticky; top: 64px; z-index: 3; height: min(42vh, 360px); }
   .stage-inner {
     position: relative; height: 100%;
     border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
-    background: radial-gradient(120% 90% at 70% 40%, #1b1a17 0%, var(--paper) 70%);
+    background: var(--surface);
   }
   .fallback { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 1rem; }
   .fallback[hidden] { display: none; }
@@ -124,22 +131,24 @@ const m = migration;
     font-family: var(--font-mono); color: var(--ink-2); font-size: 0.75rem;
   }
   .counter strong { font-family: var(--font-sans); font-size: var(--step-3); color: var(--ink); font-weight: 680; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-  .steps { display: grid; gap: 0; position: relative; z-index: 1; }
-  .step {
-    min-height: 62vh; display: grid; align-content: center; gap: 0.75rem;
-    padding: 1.5rem 0;
-  }
+  .steps { display: grid; position: relative; z-index: 1; }
+  .step { min-height: 52vh; display: grid; align-content: center; gap: 0.6rem; padding: 1.25rem 0; }
   .step h3 { font-size: var(--step-2); max-width: 20ch; }
-  .step p { color: var(--ink-2); max-width: 46ch; font-size: var(--step-1); line-height: 1.45; }
+  .step p { color: var(--ink-2); max-width: 44ch; font-size: var(--step-0); line-height: 1.5; }
+  .after { display: grid; gap: 1rem; padding-top: 1rem; }
+  .facts { display: grid; gap: 0.55rem; font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
+  .facts b { font-family: var(--font-mono); font-weight: 600; color: var(--signal); margin-right: 0.15em; }
+  .tools { font-size: 0.8125rem; color: var(--ink-2); padding-top: 0.75rem; border-top: 1px solid var(--line); max-width: 46ch; }
   /* Phones: the opaque stage stays on top; each step's text lives in the lower half and
      slides under the stage as it leaves, so copy never sits on the canvas. */
-  @media (max-width: 959px) {
-    .stage { box-shadow: 0 18px 24px -12px var(--paper); }
-    .step { min-height: 72vh; align-content: end; padding-bottom: 10vh; }
+  @media (max-width: 1079px) {
+    .stage { box-shadow: 0 18px 24px -12px var(--paper); height: min(38vh, 340px); }
+    .step { min-height: 48vh; align-content: end; padding-bottom: 5vh; }
   }
-  @media (min-width: 960px) {
-    .layout { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 4rem; align-items: start; }
-    .stage { top: 88px; height: calc(100vh - 140px); max-height: 720px; }
-    .step { min-height: 80vh; }
+  @media (min-width: 1080px) {
+    .layout { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 3.5rem; align-items: start; }
+    .stage { top: 88px; height: min(calc(100vh - 140px), 600px); }
+    .step { min-height: 58vh; }
+    .step:first-child { min-height: 40vh; align-content: start; padding-top: 0; }
   }
 </style>

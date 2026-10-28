@@ -1,0 +1,46 @@
+---
+import { ops } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+// "[1.100+] hosts…" → the bracketed number is set apart.
+const parts = (text: string) => text.split(/\[([^\]]+)\]/);
+---
+<section id="ops" class="zone-night ops" aria-labelledby="ops-title">
+  <div class="wrap">
+    <header class="head">
+      <h2 id="ops-title">{t(ops.title, locale)}</h2>
+      <p class="lede">{t(ops.lede, locale)}</p>
+    </header>
+    <dl class="grid">
+      {ops.items.map((item) => (
+        <div class="item">
+          <dt>{t(item.title, locale)}</dt>
+          <dd>{parts(t(item.body, locale)).map((part, i) => (i % 2 ? <b>{part}</b> : part))}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
+
+<style>
+  .ops { padding-block: clamp(3.5rem, 2.5rem + 3vw, 6rem); border-top: 1px solid var(--line); }
+  .head { display: grid; gap: 1rem; margin-bottom: 2rem; }
+  h2 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem); letter-spacing: -0.03em; }
+  .head .lede { font-size: var(--step-1); color: var(--ink-2); max-width: 52ch; }
+  @media (min-width: 1080px) {
+    .head { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: 3.5rem; align-items: end; }
+  }
+  .grid { display: grid; margin: 0; border-top: 1px solid var(--line); }
+  .item { display: grid; gap: 0.35rem; align-content: start; padding: 1.1rem 0 1.25rem; border-bottom: 1px solid var(--line); }
+  dt { font-weight: 620; font-size: 1rem; }
+  dd { margin: 0; color: var(--ink-2); font-size: 0.9375rem; line-height: 1.5; max-width: 48ch; }
+  dd b { font-family: var(--font-mono); font-weight: 600; color: var(--signal); font-size: 0.875rem; }
+  @media (min-width: 700px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2.5rem; }
+  }
+  @media (min-width: 1080px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 3rem; }
+  }
+</style>

@@ -11,21 +11,25 @@ export const meta = {
     pt: 'Lucas Padilha — engenheiro DevOps e cloud, sites para negócios',
   } satisfies L,
   description: {
-    en: 'I move workloads to Kubernetes, cut cloud bills and automate infrastructure. I also build fast websites and run digital marketing for small businesses.',
-    pt: 'Levo workloads para Kubernetes, corto a conta de nuvem e automatizo infraestrutura. Também faço sites rápidos e marketing digital para pequenos negócios.',
+    en: 'DevOps and cloud engineer: Kubernetes on OCI, Terraform, GitOps with Argo CD, DevSecOps pipelines and FinOps. I also build fast websites and run digital marketing for small businesses.',
+    pt: 'Engenheiro DevOps e de cloud: Kubernetes na OCI, Terraform, GitOps com Argo CD, pipelines DevSecOps e FinOps. Também faço sites rápidos e marketing digital para pequenos negócios.',
   } satisfies L,
 };
 
 export const nav: Localized<{ href: string; label: string }[]> = {
   en: [
-    { href: '#infra', label: 'Infrastructure' },
-    { href: '#feats', label: 'Track record' },
+    { href: '#kubernetes', label: 'Kubernetes' },
+    { href: '#cloud', label: 'Cloud' },
+    { href: '#finops', label: 'FinOps' },
+    { href: '#ops', label: 'Operations' },
     { href: '#websites', label: 'Websites' },
     { href: '#contact', label: 'Contact' },
   ],
   pt: [
-    { href: '#infra', label: 'Infraestrutura' },
-    { href: '#feats', label: 'Histórico' },
+    { href: '#kubernetes', label: 'Kubernetes' },
+    { href: '#cloud', label: 'Cloud' },
+    { href: '#finops', label: 'FinOps' },
+    { href: '#ops', label: 'Operação' },
     { href: '#websites', label: 'Sites' },
     { href: '#contact', label: 'Contato' },
   ],
@@ -50,156 +54,112 @@ export const hero = {
 };
 
 export interface MigrationStep {
-  key: 'vms' | 'migrate' | 'off' | 'finops' | 'network';
+  key: 'vms' | 'migrate' | 'off';
   title: L;
   body: L;
 }
 
 export const migration = {
-  title: { en: 'From five VMs to one cluster', pt: 'De cinco VMs a um cluster' } satisfies L,
-  intro: {
-    en: 'A recent platform migration, told by its numbers. Keep scrolling to run it.',
-    pt: 'Uma migração de plataforma recente, contada pelos números. Continue rolando para rodar.',
+  title: { en: 'From five VMs to one Kubernetes cluster', pt: 'De cinco VMs a um cluster Kubernetes' } satisfies L,
+  lede: {
+    en: 'About 250 Docker Compose services, spread over five virtual machines, moved in phases to OKE and delivered through GitOps. Scroll to run it.',
+    pt: 'Cerca de 250 serviços em Docker Compose, espalhados em cinco máquinas virtuais, levados em fases para o OKE e entregues por GitOps. Role para rodar.',
   } satisfies L,
-  counter: { en: 'workloads on Kubernetes', pt: 'workloads no Kubernetes' } satisfies L,
+  counter: { en: 'workloads on the cluster', pt: 'workloads no cluster' } satisfies L,
   steps: [
     {
       key: 'vms',
       title: { en: 'About 250 services on five VMs', pt: 'Cerca de 250 serviços em cinco VMs' },
       body: {
-        en: 'Docker Compose stacks spread over five virtual machines: hard to scale, harder to patch and impossible to see as a whole.',
-        pt: 'Stacks de Docker Compose espalhadas em cinco máquinas virtuais: difíceis de escalar, mais difíceis de atualizar e impossíveis de enxergar como um todo.',
+        en: 'Docker Compose stacks over five virtual machines: hard to scale, harder to patch and impossible to see as a whole.',
+        pt: 'Stacks de Docker Compose em cinco máquinas virtuais: difíceis de escalar, mais difíceis de atualizar e impossíveis de enxergar como um todo.',
       },
     },
     {
       key: 'migrate',
-      title: { en: 'Moved in phases to Kubernetes', pt: 'Migrados em fases para Kubernetes' },
+      title: { en: 'Moved in phases', pt: 'Migrados em fases' },
       body: {
-        en: 'Each service was read from the key-value store, registered behind the load balancer and only then stopped on Docker, all through GitOps with Argo CD. The managed cluster went from 10 to 258 workloads in three weeks.',
-        pt: 'Cada serviço foi lido do key-value store, registrado atrás do load balancer e só então parado no Docker, tudo por GitOps com Argo CD. O cluster gerenciado foi de 10 para 258 workloads em três semanas.',
+        en: 'Each service was read from the key-value store, registered behind the load balancer and only then stopped on Docker. The cluster went from 10 to 258 workloads in under three weeks.',
+        pt: 'Cada serviço foi lido do key-value store, registrado atrás do load balancer e só então parado no Docker. O cluster foi de 10 para 258 workloads em menos de três semanas.',
       },
     },
     {
       key: 'off',
-      title: { en: 'Five VMs switched off or emptied', pt: 'Cinco VMs desligadas ou esvaziadas' },
+      title: { en: 'VMs switched off or emptied', pt: 'VMs desligadas ou esvaziadas' },
       body: {
-        en: 'As each VM ran out of services it was emptied, and switched off where it could be. Today 73 Argo CD applications describe what runs on the cluster.',
-        pt: 'Conforme cada VM ficava sem serviços, era esvaziada e, quando possível, desligada. Hoje 73 aplicações no Argo CD descrevem o que roda no cluster.',
-      },
-    },
-    {
-      key: 'finops',
-      title: { en: 'Then the bill', pt: 'Depois, a conta' },
-      body: {
-        en: 'CPU requests were about 15 times the real p95 usage. Rightsizing nodes and requests mapped 26–30% of savings in compute; one legacy cluster now costs 63% less and one VM 84% less. Backups turned out to be almost 28% of the bill.',
-        pt: 'Os requests de CPU estavam cerca de 15 vezes acima do uso real no p95. O rightsizing de nós e requests mapeou 26–30% de economia em compute; um cluster legado passou a custar 63% menos e uma VM, 84% menos. Os backups eram quase 28% da conta.',
-      },
-    },
-    {
-      key: 'network',
-      title: { en: 'Network and security as code', pt: 'Rede e segurança como código' },
-      body: {
-        en: 'VCN, DRG, NSGs, NAT with a reserved IP, WAF and public and internal NLBs in Terraform with automated static validation, plus NetworkPolicies per tenant through GitOps.',
-        pt: 'VCN, DRG, NSGs, NAT com IP reservado, WAF e NLB público e interno em Terraform com validação estática automatizada, além de NetworkPolicies por tenant via GitOps.',
+        en: 'As each VM ran out of services it was emptied, and switched off where it could be. Service discovery now points at the cluster.',
+        pt: 'Conforme cada VM ficava sem serviços, era esvaziada e, quando possível, desligada. O service discovery agora aponta para o cluster.',
       },
     },
   ] satisfies MigrationStep[],
+  facts: [
+    { value: '10 → 258', text: { en: 'workloads on the cluster in under three weeks', pt: 'workloads no cluster em menos de três semanas' } },
+    { value: '234', text: { en: 'service discovery records now pointing at it', pt: 'registros de service discovery apontando para ele' } },
+    { value: '73', text: { en: 'Argo CD applications over 4 release namespaces', pt: 'aplicações no Argo CD em 4 namespaces de release' } },
+    { value: '12', text: { en: 'platform services moved along: Kafka, MongoDB, MinIO, Consul, Sentry, Strapi on PostgreSQL 17', pt: 'serviços de plataforma levados junto: Kafka, MongoDB, MinIO, Consul, Sentry, Strapi com PostgreSQL 17' } },
+  ] satisfies { value: string; text: L }[],
+  tools: ['Kubernetes', 'OKE', 'Argo CD', 'Image Updater', 'Helm', 'Kyverno', 'External Secrets', 'Vault', 'NetworkPolicies', 'Ansible', 'AWX'],
 };
 
-export const feats = {
-  title: { en: 'Other things I’ve shipped', pt: 'Outras entregas' } satisfies L,
+/** Square brackets mark the number in each line; the page sets it in the signal colour. */
+export const ops = {
+  title: { en: 'Operations at scale', pt: 'Operação em escala' } satisfies L,
+  lede: {
+    en: 'Before the cluster, the groundwork: a Linux fleet, branches, network and identity, standardized and automated.',
+    pt: 'Antes do cluster, a base: frota Linux, filiais, rede e identidade padronizadas e automatizadas.',
+  } satisfies L,
   items: [
     {
-      title: { en: '1,100+ Linux hosts standardized', pt: 'Mais de 1.100 hosts Linux padronizados' },
-      body: { en: 'AWX, Uyuni, FOG and FreeIPA against configuration drift.', pt: 'AWX, Uyuni, FOG e FreeIPA contra divergência de configuração.' },
+      title: { en: 'Linux fleet', pt: 'Frota Linux' },
+      body: { en: '[1,100+] hosts standardized with AWX, Uyuni, FOG and FreeIPA, against configuration drift.', pt: '[1.100+] hosts padronizados com AWX, Uyuni, FOG e FreeIPA, contra divergência de configuração.' },
     },
     {
-      title: { en: '230+ branches provisioned automatically', pt: 'Mais de 230 filiais provisionadas automaticamente' },
-      body: { en: 'The same setup every time, from the first machine to the last.', pt: 'A mesma configuração sempre, da primeira máquina à última.' },
+      title: { en: 'Branches and network', pt: 'Filiais e rede' },
+      body: { en: '[230+] branches provisioned automatically; [300+] access points onboarded into Zabbix through its API.', pt: '[230+] filiais com provisionamento automatizado; [300+] access points cadastrados no Zabbix pela API.' },
     },
     {
-      title: { en: '300+ access points in production', pt: 'Mais de 300 access points em produção' },
-      body: { en: 'Each one onboarded into Zabbix through its API.', pt: 'Cada um cadastrado no Zabbix pela API.' },
+      title: { en: 'Identity', pt: 'Identidade' },
+      body: { en: 'FreeIPA integrated with Active Directory, and the Microsoft 365 account lifecycle automated.', pt: 'FreeIPA integrado ao Active Directory e ciclo de vida de contas do Microsoft 365 automatizado.' },
     },
     {
-      title: { en: 'FreeIPA integrated with Active Directory', pt: 'FreeIPA integrado ao Active Directory' },
-      body: { en: 'One identity across Linux and Windows.', pt: 'Uma identidade só entre Linux e Windows.' },
+      title: { en: 'Kubernetes, day 0 to day 2', pt: 'Kubernetes do dia 0 ao dia 2' },
+      body: { en: 'OKE and Rancher: provisioning, cluster import, upgrades, registry, ingress and certificates.', pt: 'OKE e Rancher: provisionamento, importação de clusters, upgrades, registry, ingress e certificados.' },
     },
     {
-      title: { en: 'Kubernetes on day 0 and day 2', pt: 'Kubernetes do dia 0 ao dia 2' },
-      body: { en: 'OKE and Rancher: provisioning, cluster import, upgrades, ingress and certificates.', pt: 'OKE e Rancher: provisionamento, importação de clusters, upgrades, ingress e certificados.' },
+      title: { en: 'Platform services', pt: 'Serviços de plataforma' },
+      body: { en: 'Harbor, Traefik, cert-manager, Vault and Infisical, HAProxy and CI runners kept healthy.', pt: 'Harbor, Traefik, cert-manager, Vault e Infisical, HAProxy e runners de CI mantidos saudáveis.' },
     },
     {
-      title: { en: 'Platform services kept healthy', pt: 'Serviços de plataforma saudáveis' },
-      body: { en: 'Harbor, Traefik, cert-manager, Vault/Infisical and HAProxy.', pt: 'Harbor, Traefik, cert-manager, Vault/Infisical e HAProxy.' },
+      title: { en: 'CI/CD', pt: 'CI/CD' },
+      body: { en: 'Self-hosted GitHub Actions runners on OKE; GitLab CI and Jenkins pipelines tuned for builds, runners and secrets.', pt: 'Runners self-hosted do GitHub Actions no OKE; pipelines de GitLab CI e Jenkins otimizados em builds, runners e segredos.' },
     },
     {
-      title: { en: 'CI runners inside the cluster', pt: 'Runners de CI dentro do cluster' },
-      body: { en: 'Self-hosted GitHub Actions runners on Kubernetes; GitLab CI and Jenkins pipelines tuned.', pt: 'Runners self-hosted do GitHub Actions no Kubernetes; pipelines de GitLab CI e Jenkins otimizados.' },
+      title: { en: 'Databases', pt: 'Bancos de dados' },
+      body: { en: 'SQL Server 2022 to 2025 upgrade prepared: runbook, inventory and login control. Replication and CDC.', pt: 'Atualização do SQL Server 2022 para 2025 preparada: runbook, inventário e controle de logins. Replicação e CDC.' },
     },
     {
-      title: { en: 'Stateful services migrated', pt: 'Serviços com estado migrados' },
-      body: { en: 'Kafka, MongoDB, MinIO, Consul and more, moved into the cluster.', pt: 'Kafka, MongoDB, MinIO, Consul e outros, levados para o cluster.' },
+      title: { en: 'Automation', pt: 'Automação' },
+      body: { en: 'Python, AWX, n8n and APIs for health checks, auto-healing, alerts, incident response and disaster recovery on OCI.', pt: 'Python, AWX, n8n e APIs para health checks, auto-healing, alertas, resposta a incidentes e disaster recovery na OCI.' },
     },
     {
-      title: { en: '87% of telemetry traffic off the public path', pt: '87% da telemetria fora da rota pública' },
-      body: { en: 'Of about 380 thousand events a day, 87% went out through NAT, the public load balancer and WAF; they now take an internal path.', pt: 'De cerca de 380 mil envios por dia, 87% saíam pela NAT, pelo load balancer público e pelo WAF; agora seguem por uma rota interna.' },
-    },
-    {
-      title: { en: 'SQL Server 2022 to 2025, prepared', pt: 'SQL Server 2022 para 2025, preparado' },
-      body: { en: 'Runbook, inventory and login control ready for the upgrade.', pt: 'Runbook, inventário e controle de logins prontos para a atualização.' },
-    },
-    {
-      title: { en: 'Day-to-day automation in AWX', pt: 'Automação do dia a dia no AWX' },
-      body: { en: 'Service sync with Argo CD and temporary SQL access that even works on Windows Server 2012.', pt: 'Sincronização de serviços com o Argo CD e acesso temporário a SQL que funciona até no Windows Server 2012.' },
-    },
-    {
-      title: { en: 'Python and n8n automations', pt: 'Automações em Python e n8n' },
-      body: { en: 'Health checks, auto-healing, alerts and a lot of repetitive work removed.', pt: 'Health checks, auto-healing, alertas e muito trabalho repetitivo eliminado.' },
-    },
-  ] satisfies { title: L; body: L }[],
-};
-
-export const howIWork = {
-  title: { en: 'How I work', pt: 'Como eu trabalho' } satisfies L,
-  items: [
-    {
-      title: { en: 'Write it down', pt: 'Tudo por escrito' },
-      body: {
-        en: 'Runbooks with rollback guards, architecture decision records, and a record and handoff for each of the 60-odd tickets I’ve led.',
-        pt: 'Runbooks com guarda de rollback, registros de decisão de arquitetura e um registro e um handoff para cada um dos cerca de 60 tickets que conduzi.',
-      },
-    },
-    {
-      title: { en: 'Teach the team and the agents', pt: 'Ensinar o time e os agentes' },
-      body: {
-        en: 'Lessons become AGENTS.md files and skills that people and AI coding agents follow, so the same mistake is not made twice.',
-        pt: 'Os aprendizados viram arquivos AGENTS.md e skills que pessoas e agentes de IA seguem, para o mesmo erro não acontecer duas vezes.',
-      },
-    },
-    {
-      title: { en: 'Rules for production', pt: 'Regras para produção' },
-      body: {
-        en: 'Secrets never leak. Only a reviewed plan gets applied. Production is read without adding load.',
-        pt: 'Segredo nunca vaza. Só se aplica plan conferido. Produção é lida sem gerar carga.',
-      },
+      title: { en: 'Written down', pt: 'Tudo por escrito' },
+      body: { en: '[~880] commits over 12 repositories in 4 months; [~60] tickets led, each with a record and a handoff. Runbooks and ADRs become AGENTS.md files and skills for people and AI agents.', pt: '[~880] commits em 12 repositórios em 4 meses; [~60] tickets conduzidos, cada um com registro e handoff. Runbooks e ADRs viram AGENTS.md e skills para pessoas e agentes de IA.' },
     },
   ] satisfies { title: L; body: L }[],
 };
 
 export const websites = {
-  title: { en: 'Websites and digital marketing', pt: 'Sites e marketing digital' } satisfies L,
-  sitesTitle: { en: 'Websites', pt: 'Sites' } satisfies L,
-  sitesBody: {
-    en: 'Fast websites for small businesses, built and hosted with the same care as production infrastructure. Three concept sites show the range.',
-    pt: 'Sites rápidos para pequenos negócios, feitos e hospedados com o mesmo cuidado de uma infraestrutura de produção. Três sites conceito mostram o alcance.',
+  title: { en: 'Websites and marketing for small businesses', pt: 'Sites e marketing para pequenos negócios' } satisfies L,
+  body: {
+    en: 'Fast websites, built and hosted with the same care as production infrastructure, plus the marketing that brings people to them. Three concept sites show the range.',
+    pt: 'Sites rápidos, feitos e hospedados com o mesmo cuidado de uma infraestrutura de produção, e o marketing que leva gente até eles. Três sites conceito mostram o alcance.',
   } satisfies L,
-  sitesCta: { en: 'See the offer (in Portuguese)', pt: 'Ver a oferta' } satisfies L,
-  marketingTitle: { en: 'Digital marketing', pt: 'Marketing digital' } satisfies L,
-  marketingBody: {
-    en: 'Instagram and social media management, paid traffic on Meta, Google, TikTok and Kwai Ads, TikTok Shop, and content automation.',
+  marketing: {
+    en: 'Instagram and social media management, paid traffic on Meta, Google, TikTok and Kwai Ads, TikTok Shop and content automation.',
     pt: 'Gestão de Instagram e redes sociais, tráfego pago no Meta, Google, TikTok e Kwai Ads, TikTok Shop e automação de conteúdo.',
   } satisfies L,
+  cta: { en: 'See the offer (in Portuguese)', pt: 'Ver a oferta' } satisfies L,
+  monthly: { en: 'a month', pt: 'por mês' } satisfies L,
 };
 
 export const side = {
@@ -226,6 +186,7 @@ export const about = {
 
 export const contact = {
   title: { en: 'Let’s talk', pt: 'Vamos conversar' } satisfies L,
+  sideTitle: { en: 'Side projects', pt: 'Projetos paralelos' } satisfies L,
   body: {
     en: 'Hiring for DevOps, cloud or platform work, or need a website for your business? Email is the fastest way.',
     pt: 'Contratando para DevOps, cloud ou plataforma, ou precisa de um site para o seu negócio? E-mail é o caminho mais rápido.',

@@ -5,11 +5,8 @@ import Footer from './Footer.astro';
 import DeployScene from './DeployScene.astro';
 import Arrow from './Arrow.astro';
 import Migration from './Migration.astro';
-import Feats from './Feats.astro';
-import HowIWork from './HowIWork.astro';
-import Stack from './Stack.astro';
-import SitesMarketing from './SitesMarketing.astro';
-import SideProjects from './SideProjects.astro';
+import Ops from './Ops.astro';
+import Websites from './Websites.astro';
 import Contact from './Contact.astro';
 import { email, hero, meta, nav } from '../../data/home';
 import { homePath, t, type Locale } from '../../lib/locale';
@@ -69,15 +66,32 @@ const jsonLd = {
       </div>
     </section>
     <Migration locale={locale} />
-    <Feats locale={locale} />
-    <HowIWork locale={locale} />
-    <Stack locale={locale} />
-    <SitesMarketing locale={locale} />
-    <SideProjects locale={locale} />
-    <Contact locale={locale} />
+    <Ops locale={locale} />
+    <div class="zone-paper" data-zone="paper">
+      <Websites locale={locale} />
+      <Contact locale={locale} />
+    </div>
   </main>
   <Footer locale={locale} />
 </Base>
+
+<script>
+  // The header follows the zone under it: night until the paper half reaches its bottom edge.
+  const paper = document.querySelector('[data-zone="paper"]');
+  if (paper) {
+    const root = document.documentElement;
+    let queued = false;
+    const sync = () => {
+      queued = false;
+      const theme = paper.getBoundingClientRect().top <= 64 ? 'paper' : 'night';
+      if (root.dataset.theme !== theme) root.dataset.theme = theme;
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(sync); } };
+    addEventListener('scroll', queue, { passive: true });
+    addEventListener('resize', queue);
+    sync();
+  }
+</script>
 
 <style>
   .hero { padding-block: clamp(1.75rem, 1rem + 2.5vw, 3rem) clamp(2.5rem, 1.5rem + 3vw, 4rem); overflow: hidden; }
@@ -91,7 +105,8 @@ const jsonLd = {
   .proof { font-size: var(--step--1); color: var(--ink-2); max-width: 48ch; }
   .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; margin-top: 0.5rem; }
   .btn--light { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .sites-link { display: inline-flex; align-items: center; gap: 0.45em; min-height: 44px; font-size: 0.9375rem; color: var(--ink-2); }
+  .sites-link { display: inline-block; padding-block: 0.65rem; font-size: 0.9375rem; line-height: 1.45; color: var(--ink-2); }
+  .sites-link :global(.arrow) { margin-left: 0.3em; }
   .sites-link:hover { color: var(--ink); }
   @media (min-width: 1080px) {
     .grid {
