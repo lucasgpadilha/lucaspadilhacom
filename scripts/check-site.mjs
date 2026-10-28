@@ -33,10 +33,11 @@ async function portfolio(page, label) {
   const facts = await page.evaluate((eyebrowsSrc) => ({
     eyebrows: new Function(`return (${eyebrowsSrc})()`)(),
     steps: document.querySelectorAll('#kubernetes [data-step]').length,
-    ops: document.querySelectorAll('#ops dt').length,
+    ops: document.querySelectorAll('#operations article').length,
+    legend: document.querySelectorAll('[data-legend] details[data-part]').length,
     deploy: document.querySelectorAll('[data-deploy] svg path').length,
-    chapters: ['#kubernetes', '#cloud', '#finops', '#ops'].filter((id) => !document.querySelector(id)),
-    drawings: ['#kubernetes svg', '#cloud svg', '#finops svg'].filter((sel) => !document.querySelector(sel)),
+    chapters: ['#cloud', '#platform', '#kubernetes', '#delivery', '#finops', '#operations', '#observability', '#data', '#automation', '#how'].filter((id) => !document.querySelector(id)),
+    drawings: ['[data-scenario] svg', '#cloud svg', '#platform svg', '#kubernetes svg', '#delivery svg', '#finops svg'].filter((sel) => !document.querySelector(sel)),
     side: document.querySelectorAll('#side a[href]').length,
     mail: [...document.querySelectorAll('a[href^="mailto:"]')].map((a) => a.getAttribute('href')),
     repos: [...document.querySelectorAll('a[href^="https://github.com/lucasgpadilha/"]')]
@@ -45,7 +46,8 @@ async function portfolio(page, label) {
   }), eyebrows.toString());
   check(facts.eyebrows === 0, `${label}: ${facts.eyebrows} eyebrow labels above headings`);
   check(facts.steps === 5, `${label}: #kubernetes shows ${facts.steps} method steps (expected 5)`);
-  check(facts.ops >= 8, `${label}: #ops lists ${facts.ops} areas (expected ≥ 8)`);
+  check(facts.ops === 3, `${label}: #operations shows ${facts.ops} blocks (expected 3)`);
+  check(facts.legend === 8, `${label}: the hero legend has ${facts.legend} parts (expected 8)`);
   check(facts.deploy > 40, `${label}: the hero deploy drawing is missing from the HTML (${facts.deploy} paths)`);
   check(facts.chapters.length === 0, `${label}: missing chapters ${facts.chapters.join(', ')}`);
   check(facts.drawings.length === 0, `${label}: chapters without their drawing in the HTML: ${facts.drawings.join(', ')}`);
@@ -55,7 +57,7 @@ async function portfolio(page, label) {
   for (const word of FORBIDDEN) check(!facts.text.includes(word), `${label}: mentions "${word}"`);
   for (const repo of facts.repos) check(PUBLIC_REPOS.has(repo), `${label}: links non-public repo "${repo}"`);
   check(/Wikimedia Commons/.test(facts.text), `${label}: demo thumbnails show CC BY/BY-SA photos without a credit line`);
-  for (const stale of ['Role para rodar', 'Scroll to run it', 'De cinco VMs a um cluster', 'From five VMs to one', 'it was emptied and shut down', 'era esvaziada e desligada', 'Tools I use every day', 'Ferramentas do dia a dia', 'About 380 thousand events a day rerouted', 'Cerca de 380 mil envios por dia tirados', 'Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
+  for (const stale of ['Infraestrutura de cloud como código na OCI', 'O que eu faço', 'Rede e clusters como código', 'Role para rodar', 'Scroll to run it', 'De cinco VMs a um cluster', 'From five VMs to one', 'it was emptied and shut down', 'era esvaziada e desligada', 'Tools I use every day', 'Ferramentas do dia a dia', 'About 380 thousand events a day rerouted', 'Cerca de 380 mil envios por dia tirados', 'Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
     check(!facts.text.includes(stale), `${label}: still says "${stale}"`);
   }
 }
@@ -324,8 +326,8 @@ try {
       await page.emulateMedia({ media: 'print' });
       const hidden = await page.evaluate(() => [...document.querySelectorAll('[data-reveal]')].filter((el) => Number(getComputedStyle(el).opacity) < 1).length);
       check(hidden === 0, `print ${path}: ${hidden} blocks invisible when printed`);
-      const paused = await page.evaluate(() => document.querySelectorAll('[data-deploy], [data-migrate], [data-cloud], [data-finops]').length
-        ? [...document.querySelectorAll('[data-deploy] *, [data-migrate] *, [data-cloud] *, [data-finops] *')].filter((el) => getComputedStyle(el).animationName !== 'none').length
+      const paused = await page.evaluate(() => document.querySelectorAll('[data-scenario], [data-deploy], [data-migrate], [data-cloud], [data-finops]').length
+        ? [...document.querySelectorAll('[data-scenario] *, [data-deploy] *, [data-migrate] *, [data-cloud] *, [data-finops] *')].filter((el) => getComputedStyle(el).animationName !== 'none').length
         : 0);
       check(paused === 0, `print ${path}: ${paused} drawing parts still animated (they would print on their first frame)`);
       await context.close();
@@ -333,7 +335,7 @@ try {
     const { context, page } = await open('/', { viewport: { width: 390, height: 844 } });
     const menu = page.locator('details.menu');
     await menu.locator('summary').click();
-    await menu.locator('nav a[href="#kubernetes"]').click();
+    await menu.locator('nav a[href="#cloud"]').click();
     check(!(await menu.evaluate((el) => el.open)), 'mobile menu stays open after choosing a section');
     await menu.locator('summary').click();
     await page.keyboard.press('Escape');
@@ -379,17 +381,17 @@ try {
     const theme = () => page.evaluate(() => document.documentElement.dataset.theme || 'paper');
     const at = async (selector) => { await page.evaluate((sel) => document.querySelector(sel).scrollIntoView({ block: 'center', behavior: 'instant' }), selector); await page.waitForTimeout(500); return theme(); };
     const top = await theme();
-    const night = await at('#ops');
+    const night = await at('#operations');
     const paper = await at('#contact');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(500);
     const back = await theme();
-    check(top === 'night' && night === 'night' && paper === 'paper' && back === 'night', `theme shift: top=${top}, ops=${night}, contact=${paper}, back=${back}`);
+    check(top === 'night' && night === 'night' && paper === 'paper' && back === 'night', `theme shift: top=${top}, operations=${night}, contact=${paper}, back=${back}`);
     // Density: the v3 home was 10,300px tall with ~90px section titles.
     const size = await page.evaluate(() => ({
       height: document.documentElement.scrollHeight,
       h2: Math.max(...[...document.querySelectorAll('main h2')].map((h) => parseFloat(getComputedStyle(h).fontSize))),
     }));
-    check(size.height <= 7000, `home @1440: ${size.height}px tall (budget 7000)`);
+    check(size.height <= 8000, `home @1440: ${size.height}px tall (budget 8000)`);
     check(size.h2 <= 44, `home @1440: a section title is ${size.h2}px (max 44)`);
     await context.close();
 
@@ -397,7 +399,8 @@ try {
     for (const [name, options] of [['motion', {}], ['reduced motion', { reducedMotion: 'reduce' }]]) {
       const { context: ctx, page: p, errors } = await open('/pt/', { viewport: { width: 1440, height: 900 }, ...options });
       const stage = p.locator('[data-deploy] .stage');
-      await p.waitForTimeout(5000);
+      await p.evaluate(() => document.querySelector('[data-deploy]').scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await p.waitForTimeout(5600); // the run starts when the drawing is in view and lasts under 5 s
       const running = await p.evaluate(() => document.querySelector('[data-deploy]').getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length);
       check(running === 0, `deploy (${name}): ${running} animations still running after 5 s`);
       const a = await stage.screenshot();
@@ -420,11 +423,35 @@ try {
     }
   }
 
+  // The hero map: assembles on load, settles within 5 s, and the legend drives it.
+  if (!onlyDemo) {
+    for (const [name, options] of [['motion', {}], ['reduced motion', { reducedMotion: 'reduce' }], ['phone', { viewport: { width: 390, height: 844 } }]]) {
+      const { context: ctx, page: p, errors } = await open('/pt/', { viewport: { width: 1440, height: 900 }, ...options });
+      await p.waitForTimeout(5000);
+      const running = await p.evaluate(() => document.querySelector('[data-scenario]').getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length);
+      check(running === 0, `scenario (${name}): ${running} animations still running after 5 s`);
+      await p.locator('details[data-part="delivery"] summary').click();
+      await p.waitForTimeout(400);
+      const focus = await p.evaluate(() => {
+        const fig = document.querySelector('[data-scenario]');
+        const lit = [...fig.querySelectorAll('.part[data-part="delivery"]')].every((el) => Number(getComputedStyle(el).opacity) === 1);
+        const dim = [...fig.querySelectorAll('.part[data-part="network"]')].every((el) => Number(getComputedStyle(el).opacity) < 0.5);
+        return { key: fig.dataset.focus, lit, dim, link: document.querySelector('details[data-part="delivery"][open] a[href="#delivery"]') !== null };
+      });
+      check(focus.key === 'delivery' && focus.lit && focus.dim && focus.link, `scenario (${name}): legend does not drive the map ${JSON.stringify(focus)}`);
+      await p.locator('details[data-part="delivery"] summary').click();
+      await p.waitForTimeout(400);
+      check(await p.evaluate(() => !document.querySelector('[data-scenario]').dataset.focus), `scenario (${name}): closing the part leaves the map dimmed`);
+      check(errors.length === 0, `scenario (${name}): ${errors.join(' | ')}`);
+      await ctx.close();
+    }
+  }
+
   // The chapter drawings play once on entering the viewport, settle within 5 s and hold.
   if (!onlyDemo) {
     for (const [name, options] of [['motion', {}], ['reduced motion', { reducedMotion: 'reduce' }]]) {
       const { context: ctx, page: p, errors } = await open('/pt/', { viewport: { width: 1440, height: 900 }, ...options });
-      for (const sel of ['[data-migrate]', '[data-cloud]', '[data-finops]']) {
+      for (const sel of ['[data-migrate]', '[data-cloud]', '[data-finops]', '[data-deploy]']) {
         await p.evaluate((s) => document.querySelector(s).scrollIntoView({ block: 'center', behavior: 'instant' }), sel);
         await p.waitForTimeout(5500);
         const running = await p.evaluate((s) => document.querySelector(s).getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length, sel);

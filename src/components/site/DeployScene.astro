@@ -347,7 +347,8 @@ const s = (n: number) => `${n.toFixed(2)}s`;
     .is-armed.is-clean .ring { animation: dp-draw 0.4s ease-in-out var(--at) both var(--play); }
     .is-armed.is-clean .arrow { animation: dp-fade 0.15s ease var(--at) both var(--play); }
     .is-armed.is-clean .pod { animation: dp-roll 0.22s ease var(--at) both var(--play); }
-    .is-armed.is-clean .label-pin { animation: dp-lit 0.25s ease var(--at) both var(--play); }
+    /* Labels dim only while a run plays; waiting for the scroll, they stay fully legible. */
+    .is-armed.is-playing.is-clean .label-pin { animation: dp-lit 0.25s ease var(--at) both; }
     .is-armed.is-clean .status { animation: dp-fade 0.25s ease var(--done) both var(--play); }
 
     .is-armed.is-blocked .pulse:is([data-link='0'], [data-link='1']) { animation: dp-pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both var(--play); }

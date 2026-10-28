@@ -226,7 +226,7 @@ export const deploy = {
       name: { en: 'Policy and secrets', pt: 'Política e segredos' },
       tools: { en: 'Kyverno · External Secrets from Vault', pt: 'Kyverno · External Secrets do Vault' },
     },
-    { key: 'image', name: { en: 'Image', pt: 'Imagem' }, tools: { en: 'OCIR registry', pt: 'registry OCIR' } },
+    { key: 'image', name: { en: 'Image', pt: 'Imagem' }, tools: { en: 'registry: OCIR or Harbor', pt: 'registry: OCIR ou Harbor' } },
     {
       key: 'sync',
       name: { en: 'GitOps', pt: 'GitOps' },
@@ -236,7 +236,7 @@ export const deploy = {
     {
       key: 'prod',
       name: { en: 'Production', pt: 'Produção' },
-      tools: { en: 'OKE · rolling update', pt: 'OKE · rolling update' },
+      tools: { en: 'Kubernetes · rolling update', pt: 'Kubernetes · rolling update' },
       proof: { en: '258 workloads', pt: '258 workloads' },
     },
   ] satisfies { key: string; name: L; tools: L; proof?: L }[],

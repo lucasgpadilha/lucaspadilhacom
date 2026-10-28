@@ -57,7 +57,7 @@ export const how = {
       body: { en: 'Everything as reviewed code: only a checked Terraform plan gets applied, delivery goes through GitOps, runbooks carry rollback guards, secrets never leak.', pt: 'Tudo em código revisado: só se aplica plan conferido, a entrega passa por GitOps, os runbooks têm guarda de rollback e segredo nunca vaza.' },
     },
     {
-      title: { en: 'Hand over', pt: 'Entrega' },
+      title: { en: 'Hand over', pt: 'Handoff' },
       body: { en: 'A record and a handoff for each of the 60-odd tickets I’ve led, and documentation that people and AI agents follow.', pt: 'Registro e handoff para cada um dos cerca de 60 tickets que conduzi, e documentação que pessoas e agentes de IA seguem.' },
     },
   ] satisfies { title: L; body: L }[],
