@@ -13,6 +13,8 @@
  */
 import '@fontsource-variable/plus-jakarta-sans';
 import DemoLayout from '../../../../layouts/DemoLayout.astro';
+// Preloaded so the hero doesn't shift when the web font swaps in (CLS).
+import jakartaLatin from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
 import Header from '../../../../components/demos/odontologia/Header.astro';
 import Hero from '../../../../components/demos/odontologia/Hero.astro';
 import Tratamentos from '../../../../components/demos/odontologia/Tratamentos.astro';
@@ -28,6 +30,7 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
   slug="odontologia"
   themeColor="#FBFAF7"
 >
+  <link slot="head" rel="preload" href={jakartaLatin} as="font" type="font/woff2" crossorigin />
   <div class="aurora">
     <Header />
     <main id="conteudo">

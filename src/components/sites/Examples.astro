@@ -52,6 +52,7 @@ import { demos } from '../../data/sites';
   .copy li::before { content: ''; width: 7px; height: 7px; margin-top: 0.55em; border-radius: 50%; background: var(--signal); }
   @media (min-width: 1000px) {
     .row { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 3.5rem; }
+    .row:nth-child(even) { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); }
     .row:nth-child(even) .shot { order: 2; }
   }
   @media (prefers-reduced-motion: reduce) { .shot, .shot:hover { transition: none; transform: none; } }
