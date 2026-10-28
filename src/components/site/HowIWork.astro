@@ -12,7 +12,7 @@ const { locale } = Astro.props;
     </header>
     <ol class="practices" role="list">
       {howIWork.items.map((item) => (
-        <li data-reveal>
+        <li>
           <h3>{t(item.title, locale)}</h3>
           <p>{t(item.body, locale)}</p>
         </li>

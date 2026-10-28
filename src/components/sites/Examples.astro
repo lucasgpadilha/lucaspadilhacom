@@ -5,13 +5,13 @@ import { demos } from '../../data/sites';
 ---
 <section id="exemplos" class="section" aria-labelledby="exemplos-title">
   <div class="wrap">
-    <header class="section-head" data-reveal>
+    <header class="section-head">
         <h2 id="exemplos-title">Três negócios, três personalidades</h2>
         <p class="lede">Sites conceito de empresas fictícias. Abra no celular: é lá que o seu cliente vai ver.</p>
       </header>
     <ol class="list" role="list">
       {demos.map((demo, index) => (
-        <li class="row" data-reveal>
+        <li class="row">
           <a class="shot" href={`/sites/exemplos/${demo.slug}/`}>
             <BrowserFrame
               url={`lucaspadilha.com/sites/exemplos/${demo.slug}`}

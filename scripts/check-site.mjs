@@ -354,6 +354,30 @@ try {
     await context.close();
   }
 
+  // The hero headline reveal finishes fast and leaves the title readable; pages cross-fade natively.
+  if (!onlyDemo) {
+    for (const path of ['/', '/pt/']) {
+      const { context, page } = await open(path, { viewport: { width: 1440, height: 900 } });
+      await page.waitForTimeout(1500);
+      const hero = await page.evaluate(() => {
+        const h1 = document.querySelector('h1');
+        const parts = [...h1.querySelectorAll('*')];
+        const moved = parts.filter((el) => {
+          const t = getComputedStyle(el).transform;
+          return t !== 'none' && t !== 'matrix(1, 0, 0, 1, 0, 0)';
+        }).length;
+        const vt = [...document.styleSheets].some((sheet) => {
+          try { return [...sheet.cssRules].some((rule) => rule.cssText.includes('@view-transition')); } catch { return false; }
+        });
+        return { opacity: Number(getComputedStyle(h1).opacity), visibility: getComputedStyle(h1).visibility, moved, text: h1.textContent.trim().length, vt, reveals: document.querySelectorAll('[data-reveal]').length };
+      });
+      check(hero.opacity === 1 && hero.visibility === 'visible' && hero.moved === 0 && hero.text > 20, `hero ${path}: headline not settled after 1.5 s ${JSON.stringify(hero)}`);
+      check(hero.vt, `hero ${path}: no @view-transition rule`);
+      check(hero.reveals === 0, `hero ${path}: ${hero.reveals} blocks still use the generic scroll reveal`);
+      await context.close();
+    }
+  }
+
   // Content must be visible without JavaScript and with reduced motion.
   for (const [name, options] of [['no-js', { javaScriptEnabled: false }], ['reduced-motion', { reducedMotion: 'reduce' }]]) {
     for (const path of onlyDemo ? [] : ['/', '/pt/']) {

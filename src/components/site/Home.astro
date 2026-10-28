@@ -52,8 +52,8 @@ const jsonLd = {
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap grid">
         <div class="copy">
-          <h1 id="hero-title" data-split>
-            {t(hero.lines, locale).map((line) => <span class="line">{line}</span>)}
+          <h1 id="hero-title">
+            {t(hero.lines, locale).map((line, i) => <span class:list={['line', { second: i === 1 }]}>{i === 1 ? <span class="mark">{line}</span> : line}</span>)}
           </h1>
           <p class="lede">{t(hero.lede, locale)}</p>
           <div class="actions">
@@ -84,6 +84,15 @@ const jsonLd = {
   h1 { font-size: clamp(2.5rem, 1.2rem + 5.4vw, 6rem); font-weight: 690; letter-spacing: -0.04em; line-height: 0.95; max-width: 14ch; }
   h1 .line { display: block; }
   h1 .line + .line { color: var(--ink-2); }
+  /* The second promise gets a signal stroke drawn once under it; the text is visible from frame one. */
+  .mark {
+    background: linear-gradient(var(--signal), var(--signal)) no-repeat 0 92% / 100% 0.09em;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .mark { animation: stroke 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+    @keyframes stroke { from { background-size: 0% 0.09em; } }
+  }
   .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
   .receipt-col { max-width: 380px; width: 100%; justify-self: center; }
   @media (min-width: 1080px) {

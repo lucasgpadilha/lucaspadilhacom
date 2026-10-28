@@ -3,10 +3,10 @@ import { faq } from '../../data/sites';
 ---
 <section id="duvidas" class="section" aria-labelledby="duvidas-title">
   <div class="wrap">
-    <header class="section-head" data-reveal>
+    <header class="section-head">
       <h2 id="duvidas-title">Perguntas que todo mundo faz</h2>
     </header>
-    <div class="list" data-reveal>
+    <div class="list">
       {faq.map((item) => (
         <details>
           <summary><span>{item.q}</span><span class="plus" aria-hidden="true"></span></summary>

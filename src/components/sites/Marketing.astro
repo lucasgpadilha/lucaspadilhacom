@@ -4,19 +4,19 @@ import { contactChannel, contactHref, marketing } from '../../data/sites';
 ---
 <section id="marketing" class="section marketing" aria-labelledby="marketing-title">
   <div class="wrap">
-    <header class="section-head" data-reveal>
+    <header class="section-head">
       <h2 id="marketing-title">{marketing.title}</h2>
       <p class="lede">{marketing.lede}</p>
     </header>
     <ul class="items" role="list">
       {marketing.items.map((item) => (
-        <li data-reveal>
+        <li>
           <h3>{item.title}</h3>
           <p>{item.body}</p>
         </li>
       ))}
     </ul>
-    <p class="foot" data-reveal>
+    <p class="foot">
       <span>{marketing.note}</span>
       <a class="btn btn--ghost" href={contactHref('Olá, Lucas! Quero saber mais sobre marketing digital para o meu negócio.\n\nNome do negócio:\nCidade:\nInstagram (link):\n')} data-contact={contactChannel}>Quero conversar <Arrow /></a>
     </p>

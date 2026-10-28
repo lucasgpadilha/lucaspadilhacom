@@ -3,11 +3,11 @@ import { steps } from '../../data/sites';
 ---
 <section id="como-funciona" class="section" aria-labelledby="como-funciona-title">
   <div class="wrap">
-    <header class="section-head" data-reveal>
+    <header class="section-head">
         <h2 id="como-funciona-title">Você vê antes de fechar</h2>
         <p class="lede">Nada de comprar no escuro. Primeiro a prévia, depois a decisão.</p>
       </header>
-    <ol class="steps" role="list" data-reveal>
+    <ol class="steps" role="list">
       {steps.map((step, index) => (
         <li class:list={{ key: index === 1 }}>
           <span class="n" aria-hidden="true">{index + 1}</span>

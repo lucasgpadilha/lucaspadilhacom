@@ -12,7 +12,7 @@ const { locale } = Astro.props;
     </header>
     <dl class="groups">
       {stackGroups.map((group) => (
-        <div class="group" data-reveal>
+        <div class="group">
           <dt>{t(group.title, locale)}</dt>
           <dd><ul role="list">{group.tools.map((tool) => <li>{tool}</li>)}</ul></dd>
         </div>
