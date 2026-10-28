@@ -8,18 +8,20 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
-import { mountScene } from '../../../lib/three/mount';
-import { prefersReducedMotion } from '../../../lib/motion';
+import { mountScene, type SceneHandle } from '../../../lib/three/mount';
+import { prefersReducedMotion, wantsStatic } from '../../../lib/motion';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const reduced = prefersReducedMotion();
 const show = (el: Element | null) => el && gsap.set(el, { visibility: 'visible' });
+// Never wait long on fonts: a late font only means the lines are measured with the fallback face.
+const fontsReady = Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, 900))]);
 
 /* 1. Headline ------------------------------------------------------------------------------- */
 const title = document.querySelector<HTMLElement>('.hero-title');
 if (title && !reduced) {
-  document.fonts.ready.then(() => {
+  void fontsReady.then(() => {
     const split = SplitText.create(title, { type: 'lines', mask: 'lines', tag: 'span', linesClass: 'hero-line' });
     gsap.set(split.lines, { yPercent: 108 });
     show(title);
@@ -39,8 +41,11 @@ if (title && !reduced) {
 const hero = document.querySelector<HTMLElement>('.hero');
 const oven = document.querySelector<HTMLElement>('[data-oven]');
 if (hero && oven) {
-  const handle = mountScene(oven, () => import('./scene'), { pointer: true });
-  if (oven.dataset.scene !== 'fallback') {
+  if (wantsStatic()) {
+    // Reduced motion, Save-Data or no WebGL: the runtime keeps the photo; no hold, no bake.
+    mountScene(oven, () => import('./scene'));
+  } else {
+    let handle: SceneHandle | null = null;
     // Hold the hero still while the tray bakes, from the moment its bottom (where the oven sits
     // on phones) reaches the bottom of the screen. On desktop the hero fills the first screen,
     // so the hold starts right away and the first screen simply stays put.
@@ -56,7 +61,7 @@ if (hero && oven) {
     const tween = gsap.to(bake, {
       p: 1,
       ease: 'none',
-      onUpdate: () => handle.setProgress(bake.p),
+      onUpdate: () => handle?.setProgress(bake.p),
       scrollTrigger: { trigger: hero, start: 0, end: () => hold.end, scrub: 0.8, invalidateOnRefresh: true },
     });
     // If WebGL gives up after mounting, the photo comes back and the page should scroll normally.
@@ -68,7 +73,23 @@ if (hero && oven) {
       hold.kill(true);
       ScrollTrigger.refresh();
     }).observe(oven, { attributes: true, attributeFilter: ['data-scene'] });
-    document.fonts.ready.then(() => ScrollTrigger.refresh());
+    void fontsReady.then(() => ScrollTrigger.refresh());
+    // Let the headline arrive alone. When the oven is already in view (desktop), it lights up right
+    // after the headline; when it is mostly below the fold (phones), on the first scroll or touch,
+    // so a visitor who only reads the first screen never pays for WebGL.
+    oven.dataset.scene = 'waiting';
+    const mount = () => {
+      if (handle) return;
+      handle = mountScene(oven, () => import('./scene'), { pointer: true });
+      handle.setProgress(bake.p);
+      // On a slow connection, show the photo while the oven is still on its way.
+      setTimeout(() => oven.dataset.scene === 'pending' && oven.classList.add('is-slow'), 2500);
+    };
+    addEventListener('scroll', mount, { once: true, passive: true });
+    addEventListener('pointerdown', mount, { once: true, passive: true });
+    const box = oven.getBoundingClientRect();
+    const inView = Math.max(0, Math.min(box.bottom, window.innerHeight) - Math.max(box.top, 0)) / Math.max(1, box.height);
+    if (inView > 0.5) setTimeout(mount, 1500);
   }
 }
 

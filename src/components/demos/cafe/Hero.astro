@@ -83,8 +83,11 @@ import Photo from './Photo.astro';
   .arch-photo[hidden] { display: none; }
   .arch :global(img), .arch :global(.cj-ph) { width: 100%; height: 100%; object-fit: cover; }
   .arch :global(img) { object-position: 30% 62%; }
-  /* While the oven warms up, keep the arch empty instead of flashing the photo before the tray. */
-  :global(.cj-motion) .arch:not([data-scene='fallback']) .arch-photo { opacity: 0; animation: cj-reveal 0.4s ease-out 4s forwards; }
+  /* While the oven warms up, keep the arch empty instead of flashing the photo before the tray.
+     If the script never runs at all (the arch never gets a state), the photo appears after 4 s. */
+  :global(.cj-motion) .arch:not([data-scene='fallback']) .arch-photo { opacity: 0; }
+  :global(.cj-motion) .arch:not([data-scene]) .arch-photo { animation: cj-reveal 0.4s ease-out 4s forwards; }
+  :global(.cj-motion) .arch.is-slow:not([data-scene='fallback']) .arch-photo { opacity: 1; transition: opacity 0.4s ease-out; }
   .arch :global(canvas) { animation: cj-fade 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
   @keyframes cj-reveal { to { opacity: 1; } }
   @keyframes cj-fade { from { opacity: 0; } }
@@ -108,6 +111,13 @@ import Photo from './Photo.astro';
   .tag-v b { margin-left: 0.35rem; font-weight: 700; color: var(--crosta-texto); }
   .tag-v small { font: 600 0.65em var(--sans); margin-right: 0.15em; vertical-align: 0.25em; }
 
+  /* On phones the tag hangs lower and smaller, below the front of the tray. */
+  @media (max-width: 599px) {
+    .tag { bottom: -9%; padding: 0.45rem 0.8rem 0.5rem 1.6rem; }
+    .tag-hole { left: 0.6rem; }
+    .tag-k { font-size: 0.6875rem; }
+    .tag-v { font-size: 1rem; }
+  }
   @media (min-width: 600px) {
     .hero-media { max-width: 36rem; }
   }

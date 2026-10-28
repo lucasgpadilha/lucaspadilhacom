@@ -2,13 +2,15 @@
  * Casa Jabuticaba: pão de queijo rising in the oven.
  *
  * A round baking pan with eight cheese breads and a jabuticaba-glazed cup of coffee,
- * seen through the hero arch (the mouth of the oven). Scroll is the bake: the global
- * progress puffs the breads up (staggered), deepens their crust from pale dough to
- * golden-brown and advects the steam over the cup. A short camera settle is the only
- * time-based motion; after it, frames change only on scroll or pointer.
+ * seen through the hero arch (the mouth of the oven). Scroll is the bake: one progress
+ * value puffs the breads up (staggered, back of the oven first), deepens their crust
+ * from pale dough to golden-brown, advects the steam over the cup and eases the camera
+ * down to show the rise. Nothing is time-based except the damped pointer parallax, so
+ * an idle frame is perfectly still.
  *
- * Draw calls: breads (1, instanced), contact shadows (1, instanced), pan, cup body,
- * saucer, handle, coffee, steam. Everything procedural; no textures are loaded.
+ * Cost: a handful of draw calls (breads, contact shadows, steam, and the pan, cup, saucer,
+ * handle and coffee sharing one standard program). The breads are icospheres displaced by
+ * noise once on the CPU; the shader only shapes them by bake and paints the crust.
  */
 import {
   BufferAttribute,
@@ -19,10 +21,6 @@ import {
   DoubleSide,
   HemisphereLight,
   IcosahedronGeometry,
-  BackSide,
-  MeshBasicMaterial,
-  PMREMGenerator,
-  SphereGeometry,
   InstancedBufferAttribute,
   InstancedMesh,
   LatheGeometry,
@@ -44,7 +42,9 @@ import {
 } from 'three';
 import type { SceneContext, SceneInstance } from '../../../lib/three/mount';
 
-// 3D simplex noise, after Ian McEwan and Stefan Gustavson (Ashima Arts, MIT licence).
+// ---- Noise ------------------------------------------------------------------------------------
+
+// 3D simplex noise for the GPU, after Ian McEwan and Stefan Gustavson (Ashima Arts, MIT licence).
 const NOISE = /* glsl */ `
 vec3 cjMod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 cjMod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -89,19 +89,6 @@ float cjNoise(vec3 v) {
 }
 `;
 
-// Bump from a procedural height (Mikkelsen's surface-gradient trick, as in three's bumpmap chunk).
-const PERTURB = /* glsl */ `
-vec3 cjPerturb(vec3 surfPos, vec3 surfNorm, float height, float faceDir) {
-  vec3 sx = normalize(dFdx(surfPos));
-  vec3 sy = normalize(dFdy(surfPos));
-  vec3 r1 = cross(sy, surfNorm);
-  vec3 r2 = cross(surfNorm, sx);
-  float det = dot(sx, r1) * faceDir;
-  vec3 grad = sign(det) * (dFdx(height) * r1 + dFdy(height) * r2);
-  return normalize(abs(det) * surfNorm - grad);
-}
-`;
-
 /** Deterministic random numbers, so every visit bakes the same tray. */
 function random(seed: number) {
   let t = seed >>> 0;
@@ -113,30 +100,162 @@ function random(seed: number) {
   };
 }
 
-/** Icosphere with shared vertices, so the shader can displace it without cracks. */
-function icosphere(detail: number) {
-  const source = new IcosahedronGeometry(1, detail);
-  const pos = source.getAttribute('position');
+// The same family of noise on the CPU, for the one-off displacement of the dough.
+// 3D simplex noise after Stefan Gustavson's public-domain reference implementation.
+const GRAD = [1, 1, 0, -1, 1, 0, 1, -1, 0, -1, -1, 0, 1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, -1, 0, 1, 1, 0, -1, 1, 0, 1, -1, 0, -1, -1];
+function noise3(seed: number) {
+  const p = new Uint8Array(256).map((_, i) => i);
+  const rand = random(seed);
+  for (let i = 255; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const t = p[i]; p[i] = p[j]; p[j] = t;
+  }
+  const perm = new Uint8Array(512);
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  const F3 = 1 / 3, G3 = 1 / 6;
+  const corner = (x: number, y: number, z: number, h: number) => {
+    let t = 0.6 - x * x - y * y - z * z;
+    if (t < 0) return 0;
+    const g = (h % 12) * 3;
+    t *= t;
+    return t * t * (GRAD[g] * x + GRAD[g + 1] * y + GRAD[g + 2] * z);
+  };
+  return (x: number, y: number, z: number) => {
+    const s = (x + y + z) * F3;
+    const i = Math.floor(x + s), j = Math.floor(y + s), k = Math.floor(z + s);
+    const t = (i + j + k) * G3;
+    const x0 = x - i + t, y0 = y - j + t, z0 = z - k + t;
+    let i1 = 0, j1 = 0, k1 = 0, i2 = 0, j2 = 0, k2 = 0;
+    if (x0 >= y0) {
+      if (y0 >= z0) { i1 = 1; i2 = 1; j2 = 1; }
+      else if (x0 >= z0) { i1 = 1; i2 = 1; k2 = 1; }
+      else { k1 = 1; i2 = 1; k2 = 1; }
+    } else if (y0 < z0) { k1 = 1; j2 = 1; k2 = 1; }
+    else if (x0 < z0) { j1 = 1; j2 = 1; k2 = 1; }
+    else { j1 = 1; i2 = 1; j2 = 1; }
+    const ii = i & 255, jj = j & 255, kk = k & 255;
+    return 32 * (
+      corner(x0, y0, z0, perm[ii + perm[jj + perm[kk]]]) +
+      corner(x0 - i1 + G3, y0 - j1 + G3, z0 - k1 + G3, perm[ii + i1 + perm[jj + j1 + perm[kk + k1]]]) +
+      corner(x0 - i2 + 2 * G3, y0 - j2 + 2 * G3, z0 - k2 + 2 * G3, perm[ii + i2 + perm[jj + j2 + perm[kk + k2]]]) +
+      corner(x0 - 1 + 3 * G3, y0 - 1 + 3 * G3, z0 - 1 + 3 * G3, perm[ii + 1 + perm[jj + 1 + perm[kk + 1]]])
+    );
+  };
+}
+
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+// ---- Dough --------------------------------------------------------------------------------------
+
+/**
+ * The bread's shape at a given bake: a lumpy radius from the precomputed noise, a slumped
+ * dough ball that rises and puffs (with a small overshoot mid-bake), and a flat base on the
+ * pan. The GLSL and the JS versions are the same function.
+ */
+const SHAPE_GLSL = /* glsl */ `
+vec3 cjShape(vec3 dir, vec4 nz, float b, float size) {
+  float amp = mix(0.03, 0.058, b);
+  float crack = nz.y * smoothstep(0.15, 0.7, dir.y) * smoothstep(0.45, 1.0, b);
+  vec3 p = dir * (1.0 + amp * nz.x - crack * 0.025);
+  float puff = sin(3.14159265 * b);
+  float sy = mix(0.66, 0.9, b) + 0.07 * puff;
+  float sxz = mix(0.92, 1.0, b) - 0.025 * puff;
+  p.y *= sy;
+  p.xz *= sxz;
+  float floorY = -0.62 * sy;
+  float t = 1.0 - smoothstep(floorY - 0.25, floorY + 0.28, p.y);
+  p.y = mix(p.y, floorY - (floorY - p.y) * 0.12, t);
+  p.xz *= 1.0 + 0.07 * t;
+  p.y -= floorY - 0.02;
+  return p * mix(0.8, 1.0, b) * size;
+}
+`;
+function shape(out: Float32Array, o: number, dx: number, dy: number, dz: number, n: number, ridge: number, b: number, size: number) {
+  const amp = mix(0.03, 0.058, b);
+  const crack = ridge * smoothstep(0.15, 0.7, dy) * smoothstep(0.45, 1, b);
+  const r = 1 + amp * n - crack * 0.025;
+  let x = dx * r, y = dy * r, z = dz * r;
+  const puff = Math.sin(Math.PI * b);
+  const sy = mix(0.66, 0.9, b) + 0.07 * puff;
+  const sxz = mix(0.92, 1, b) - 0.025 * puff;
+  y *= sy; x *= sxz; z *= sxz;
+  const floorY = -0.62 * sy;
+  const t = 1 - smoothstep(floorY - 0.25, floorY + 0.28, y);
+  y = mix(y, floorY - (floorY - y) * 0.12, t);
+  x *= 1 + 0.07 * t; z *= 1 + 0.07 * t;
+  y -= floorY - 0.02;
+  const s = mix(0.8, 1, b) * size;
+  out[o] = x * s; out[o + 1] = y * s; out[o + 2] = z * s;
+}
+
+interface Bread { x: number; z: number; size: number; delay: number; tone: number; seed: number }
+
+/**
+ * All breads in one geometry (one draw call). Each vertex carries its direction on the unit
+ * sphere, its noise (lumps, fissure ridge, broad mottling), the bread's centre and bake
+ * window, and the normals of the raw and the baked shape, so the GPU runs no noise per vertex.
+ */
+function doughGeometry(breads: Bread[], detail: number) {
+  const ico = new IcosahedronGeometry(1, detail);
+  const src = ico.getAttribute('position');
   const ids = new Map<string, number>();
-  const verts: number[] = [];
-  const index: number[] = [];
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+  const dirs: number[] = [];
+  const tri: number[] = [];
+  for (let i = 0; i < src.count; i++) {
+    const x = src.getX(i), y = src.getY(i), z = src.getZ(i);
     const key = `${Math.round(x * 1e4)},${Math.round(y * 1e4)},${Math.round(z * 1e4)}`;
     let id = ids.get(key);
-    if (id === undefined) {
-      id = verts.length / 3;
-      verts.push(x, y, z);
-      ids.set(key, id);
-    }
-    index.push(id);
+    if (id === undefined) { id = dirs.length / 3; dirs.push(x, y, z); ids.set(key, id); }
+    tri.push(id);
   }
-  source.dispose();
+  ico.dispose();
+  const V = dirs.length / 3;
+  const count = breads.length * V;
+  const position = new Float32Array(count * 3);
+  const noise = new Float32Array(count * 4);
+  const info = new Float32Array(count * 4);
+  const centre = new Float32Array(count * 3);
+  const raw = new Float32Array(count * 3);
+  const baked = new Float32Array(count * 3);
+  const index = new Uint16Array(breads.length * tri.length);
+  breads.forEach((b, bi) => {
+    const lumps = noise3(b.seed), ridges = noise3(b.seed + 101), mottle = noise3(b.seed + 202);
+    for (let v = 0; v < V; v++) {
+      const o = bi * V + v;
+      const dx = dirs[v * 3], dy = dirs[v * 3 + 1], dz = dirs[v * 3 + 2];
+      const n = lumps(dx * 1.3, dy * 1.3, dz * 1.3) + 0.4 * lumps(dx * 3.2 + 7, dy * 3.2, dz * 3.2);
+      const ridge = smoothstep(0.86, 1, 1 - Math.abs(ridges(dx * 2.4, dy * 2.4, dz * 2.4)));
+      position[o * 3] = dx; position[o * 3 + 1] = dy; position[o * 3 + 2] = dz;
+      noise[o * 4] = n; noise[o * 4 + 1] = ridge; noise[o * 4 + 2] = mottle(dx * 1.8, dy * 1.8, dz * 1.8);
+      info[o * 4] = b.delay; info[o * 4 + 1] = b.tone; info[o * 4 + 2] = b.size;
+      centre[o * 3] = b.x; centre[o * 3 + 2] = b.z;
+      shape(raw, o * 3, dx, dy, dz, n, ridge, 0, b.size);
+      shape(baked, o * 3, dx, dy, dz, n, ridge, 1, b.size);
+    }
+    for (let t = 0; t < tri.length; t++) index[bi * tri.length + t] = bi * V + tri[t];
+  });
+  // Normals of the two extreme shapes; the shader blends them as the bread bakes.
+  const normalsOf = (positions: Float32Array) => {
+    const g = new BufferGeometry();
+    g.setAttribute('position', new BufferAttribute(positions, 3));
+    g.setIndex(new BufferAttribute(index, 1));
+    g.computeVertexNormals();
+    const n = g.getAttribute('normal').array as Float32Array;
+    g.dispose();
+    return n;
+  };
   const geometry = new BufferGeometry();
-  const array = new Float32Array(verts);
-  geometry.setAttribute('position', new BufferAttribute(array, 3));
-  geometry.setAttribute('normal', new BufferAttribute(array.slice(), 3));
-  geometry.setIndex(index);
+  geometry.setAttribute('position', new BufferAttribute(position, 3));
+  geometry.setAttribute('normal', new BufferAttribute(normalsOf(raw), 3));
+  geometry.setAttribute('aBakedNormal', new BufferAttribute(normalsOf(baked), 3));
+  geometry.setAttribute('aNoise', new BufferAttribute(noise, 4));
+  geometry.setAttribute('aBread', new BufferAttribute(info, 4));
+  geometry.setAttribute('aCentre', new BufferAttribute(centre, 3));
+  geometry.setIndex(new BufferAttribute(index, 1));
   return geometry;
 }
 
@@ -149,7 +268,7 @@ const CUP = new Vector3(1.5, 0, -3.15);
 const CUP_SCALE = 1.45;
 const COFFEE_Y = 0.5;
 
-export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInstance {
+export async function create(canvas: HTMLCanvasElement, _ctx: SceneContext): Promise<SceneInstance> {
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = SRGBColorSpace;
@@ -158,45 +277,20 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(24, 0.8, 0.5, 60);
-  const target = new Vector3(0.18, 0.9, -0.75);
+  const target = new Vector3(0.18, 1.0, -0.85);
 
-  // Reflections: a tiny studio (cream sweep, warm floor, two softboxes), prefiltered once.
-  // It gives the glaze its jabuticaba-dot highlight and the dough a soft, food-like ambient.
-  const studio = new Scene();
-  const sweep = new SphereGeometry(10, 24, 12);
-  const tones = [new Color('#fff4e4'), new Color('#ead8bb'), new Color('#5c3f2e')];
-  const colors: number[] = [];
-  const sp = sweep.getAttribute('position');
-  for (let i = 0; i < sp.count; i++) {
-    const t = sp.getY(i) / 10;
-    const c = t > 0 ? tones[1].clone().lerp(tones[0], Math.min(1, t * 1.6)) : tones[1].clone().lerp(tones[2], Math.min(1, -t * 2.2));
-    colors.push(c.r, c.g, c.b);
-  }
-  sweep.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3));
-  studio.add(new Mesh(sweep, new MeshBasicMaterial({ vertexColors: true, side: BackSide })));
-  const box = (w: number, h: number, intensity: Color, at: Vector3) => {
-    const panel = new Mesh(new PlaneGeometry(w, h), new MeshBasicMaterial({ color: intensity, side: DoubleSide }));
-    panel.position.copy(at);
-    panel.lookAt(0, 0, 0);
-    studio.add(panel);
-  };
-  box(5, 3, new Color(5.5, 4.6, 3.6), new Vector3(-5, 6, -4));
-  box(3, 2.4, new Color(2.2, 2.1, 2.0), new Vector3(5, 3.5, 6.5));
-  const pmrem = new PMREMGenerator(renderer);
-  const environment = pmrem.fromScene(studio, 0.035).texture;
-  pmrem.dispose();
-  studio.traverse((o) => { const m = o as Mesh; m.geometry?.dispose(); (m.material as MeshBasicMaterial | undefined)?.dispose(); });
-  scene.environment = environment;
-  scene.environmentIntensity = 0.75;
-
-  // Light: a warm oven key from behind and above and a soft front fill.
-  scene.add(new HemisphereLight(0xfff5e8, 0xa98665, 0.3));
-  const key = new DirectionalLight(0xffdcb4, 2.6);
+  // Light: a warm oven key from behind and above, a creamy sky with a toasted bounce, a soft
+  // front fill, and a small high front light that puts the jabuticaba-dot highlight on the glaze.
+  scene.add(new HemisphereLight(0xfff3e2, 0x9c7656, 1.15));
+  const key = new DirectionalLight(0xffd9ae, 2.6);
   key.position.set(-3.4, 5.6, -3.0);
   scene.add(key);
-  const fill = new DirectionalLight(0xfff0e0, 0.55);
+  const fill = new DirectionalLight(0xfff0e0, 0.6);
   fill.position.set(3.8, 2.6, 6.0);
   scene.add(fill);
+  const glint = new DirectionalLight(0xffffff, 0.9);
+  glint.position.set(-1.5, 6.5, 7.5);
+  scene.add(glint);
 
   const uniforms = {
     uBake: { value: 0 },
@@ -206,12 +300,24 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
     uBrown: { value: new Color('#a9743b') },
     uBlister: { value: new Color('#7a5130') },
   };
-  const rand = random(19);
 
   // ---- Breads -----------------------------------------------------------------------------
-  const breadGeometry = icosphere(11);
-  const seeds = new Float32Array(BREADS * 4);
-  const delays = new Float32Array(BREADS * 2);
+  const rand = random(19);
+  const breads: Bread[] = [];
+  const spots: [number, number][] = [[0.05, 0.02]];
+  for (let i = 0; i < BREADS - 1; i++) {
+    const a = (i / (BREADS - 1)) * Math.PI * 2 + 0.35;
+    spots.push([Math.cos(a) * 1.3, Math.sin(a) * 1.3]);
+  }
+  spots.forEach(([x, z], i) => {
+    const jx = x + (rand() - 0.5) * 0.14;
+    const jz = z + (rand() - 0.5) * 0.14;
+    const size = (0.92 + rand() * 0.16) * 0.5;
+    // The back of the oven is hotter: the back row starts first.
+    const delay = Math.min(0.4, Math.max(0, ((jz + 1.4) / 2.8) * 0.26 + rand() * 0.14));
+    breads.push({ x: jx, z: jz, size, delay, tone: rand(), seed: 11 + i * 7 });
+  });
+
   const breadMaterial = new MeshStandardMaterial({ roughness: 0.6, metalness: 0 });
   breadMaterial.defines = { ...breadMaterial.defines, CJ_WRAP: '0.55' };
   breadMaterial.onBeforeCompile = (shader) => {
@@ -219,51 +325,22 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', /* glsl */ `#include <common>
         uniform float uBake;
-        attribute vec4 aSeed;
-        attribute vec2 aDelay;
+        attribute vec3 aBakedNormal;
+        attribute vec4 aNoise;
+        attribute vec4 aBread;
+        attribute vec3 aCentre;
         varying vec3 vCjDir;
-        varying vec3 vCjShape;
-        varying vec4 vCjBake;
-        varying vec3 vCjSeed;
-        ${NOISE}
-        vec3 cjShape(vec3 dir, float b, out float crack) {
-          float n1 = cjNoise(dir * 1.3 + aSeed.xyz);
-          float n2 = cjNoise(dir * 3.2 + aSeed.zxy);
-          float amp = mix(0.03, 0.07, b);
-          float r = 1.0 + amp * n1 + amp * 0.45 * n2;
-          float ridge = 1.0 - abs(cjNoise(dir * 2.4 + aSeed.yzx * 1.3));
-          crack = smoothstep(0.86, 1.0, ridge) * smoothstep(0.15, 0.7, dir.y) * smoothstep(0.45, 1.0, b);
-          r -= crack * 0.025;
-          vec3 p = dir * r;
-          float puff = sin(3.14159265 * b);
-          float sy = mix(0.66, 0.9, b) + 0.07 * puff;
-          float sxz = mix(0.92, 1.0, b) - 0.025 * puff;
-          p.y *= sy;
-          p.xz *= sxz;
-          float floorY = -0.62 * sy;
-          float t = 1.0 - smoothstep(floorY - 0.25, floorY + 0.28, p.y);
-          p.y = mix(p.y, floorY - (floorY - p.y) * 0.12, t);
-          p.xz *= 1.0 + 0.07 * t;
-          p.y -= floorY - 0.02;
-          return p * mix(0.8, 1.0, b) * aSeed.w;
-        }`)
+        varying vec4 vCjNoise;
+        varying vec2 vCjBake;
+        ${SHAPE_GLSL}`)
       .replace('#include <beginnormal_vertex>', /* glsl */ `
-        float cjB = smoothstep(aDelay.x, aDelay.x + 0.6, uBake);
-        vec3 cjDir = normalize(position);
-        vec3 cjT1 = normalize(cross(cjDir, abs(cjDir.y) < 0.95 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0)));
-        vec3 cjT2 = cross(cjDir, cjT1);
-        float cjCrack;
-        float cjSkip;
-        vec3 cjP0 = cjShape(cjDir, cjB, cjCrack);
-        vec3 cjPa = cjShape(normalize(cjDir + cjT1 * 0.015), cjB, cjSkip);
-        vec3 cjPb = cjShape(normalize(cjDir + cjT2 * 0.015), cjB, cjSkip);
-        vec3 objectNormal = normalize(cross(cjPa - cjP0, cjPb - cjP0));`)
+        float cjB = smoothstep(aBread.x, aBread.x + 0.6, uBake);
+        vec3 objectNormal = normalize(mix(normal, aBakedNormal, cjB));`)
       .replace('#include <begin_vertex>', /* glsl */ `
-        vec3 transformed = cjP0;
-        vCjDir = cjDir;
-        vCjShape = cjP0 / aSeed.w + aSeed.xyz;
-        vCjBake = vec4(cjB, cjCrack, aDelay.y, 0.0);
-        vCjSeed = aSeed.yzx * 1.3;`);
+        vec3 transformed = cjShape(position, aNoise, cjB, aBread.z) + aCentre;
+        vCjDir = position;
+        vCjNoise = aNoise;
+        vCjBake = vec2(cjB, aBread.y);`);
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', /* glsl */ `#include <common>
         uniform vec3 uRaw;
@@ -272,11 +349,19 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
         uniform vec3 uBrown;
         uniform vec3 uBlister;
         varying vec3 vCjDir;
-        varying vec3 vCjShape;
-        varying vec4 vCjBake;
-        varying vec3 vCjSeed;
+        varying vec4 vCjNoise;
+        varying vec2 vCjBake;
         ${NOISE}
-        ${PERTURB}`)
+        // Bump from a procedural height (surface-gradient method, as in three's bumpmap chunk).
+        vec3 cjPerturb(vec3 surfPos, vec3 surfNorm, float height, float faceDir) {
+          vec3 sx = normalize(dFdx(surfPos));
+          vec3 sy = normalize(dFdy(surfPos));
+          vec3 r1 = cross(sy, surfNorm);
+          vec3 r2 = cross(surfNorm, sx);
+          float det = dot(sx, r1) * faceDir;
+          vec3 grad = sign(det) * (dFdx(height) * r1 + dFdy(height) * r2);
+          return normalize(abs(det) * surfNorm - grad);
+        }`)
       .replace('#include <lights_physical_pars_fragment>', ShaderChunk.lights_physical_pars_fragment.replace(
         'reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );',
         /* glsl */ `reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );
@@ -284,140 +369,107 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
         float cjWrap = saturate( ( dot( geometryNormal, directLight.direction ) + CJ_WRAP ) / ( 1.0 + CJ_WRAP ) );
         reflectedLight.directDiffuse += max( cjWrap - dotNL, 0.0 ) * directLight.color * BRDF_Lambert( material.diffuseContribution ) * vec3( 1.0, 0.62, 0.4 );`))
       .replace('#include <color_fragment>', /* glsl */ `
+        // Crust: the crown browns first, the sides follow, the base stays pale.
         float cjB = vCjBake.x;
         float cjH = smoothstep(-0.4, 0.95, vCjDir.y);
-        float cjN = cjNoise(vCjShape * 1.8);
-        float cjF = cjNoise(vCjShape * 6.0);
-        float cjBl = cjNoise(vCjShape * 16.0);
-        float cjCrust = cjB * (0.32 + 0.82 * cjH) + 0.14 * cjN * cjB + 0.07 * cjF * cjB;
+        float cjN = vCjNoise.z;
+        float cjLump = vCjNoise.x;
+        float cjBl = cjNoise(vCjDir * 16.0 + vCjBake.y * 31.0);
+        float cjCrust = cjB * (0.32 + 0.82 * cjH) + 0.14 * cjN * cjB + 0.07 * cjLump * cjB;
         vec3 cjCol = mix(uRaw, uPale, smoothstep(0.0, 0.55, cjB));
         cjCol = mix(cjCol, uGold, smoothstep(0.2, 0.78, cjCrust));
-        cjCol = mix(cjCol, uBrown, smoothstep(0.68, 1.12, cjCrust) * 0.8);
+        cjCol = mix(cjCol, uBrown, smoothstep(0.62, 1.1, cjCrust) * 0.85);
         float cjRing = (1.0 - smoothstep(-0.93, -0.7, vCjDir.y)) * cjB;
         cjCol = mix(cjCol, uGold * 0.92, cjRing * 0.6);
+        // Cheese blisters: small matte freckles where the crust is golden.
         float cjSpot = smoothstep(0.62, 0.88, cjBl) * smoothstep(0.45, 1.0, cjCrust);
         cjCol = mix(cjCol, uBlister, cjSpot * 0.32);
-        // Fissures: thin lines on the crown where the crust split, showing paler crumb.
-        float cjRidge = 1.0 - abs(cjNoise(vCjDir * 1.6 + vCjSeed));
-        float cjPatch = smoothstep(0.15, 0.55, cjNoise(vCjDir * 1.1 - vCjSeed));
-        float cjCrack = smoothstep(0.972, 0.994, cjRidge) * cjPatch * smoothstep(0.3, 0.8, vCjDir.y) * smoothstep(0.6, 1.0, cjB);
-        cjCol = mix(cjCol, mix(uPale, uRaw, 0.25), cjCrack * 0.55);
-        cjCol *= (0.95 + 0.1 * vCjBake.z) * (1.0 + 0.05 * cjF * cjB);
+        // Fissures: a few thin lines on the crown where the crust split, showing paler crumb.
+        float cjRidge = 1.0 - abs(cjNoise(vCjDir * 1.6 + vCjBake.y * 17.0));
+        float cjCrack = smoothstep(0.972, 0.994, cjRidge) * smoothstep(-0.15, 0.25, cjN) * smoothstep(0.3, 0.8, vCjDir.y) * smoothstep(0.6, 1.0, cjB);
+        cjCol = mix(cjCol, uPale, cjCrack * 0.45);
+        cjCol *= (0.95 + 0.1 * vCjBake.y) * (1.0 + 0.05 * cjLump * cjB);
         diffuseColor.rgb = cjCol;`)
       .replace('#include <roughnessmap_fragment>', /* glsl */ `
         float roughnessFactor = mix(0.52, 0.7, smoothstep(0.1, 0.8, cjB)) + cjN * 0.06 + cjSpot * 0.1 + cjCrack * 0.12;`)
       .replace('#include <normal_fragment_maps>', /* glsl */ `#include <normal_fragment_maps>
-        float cjHeight = (cjNoise(vCjShape * 11.0) * 0.7 + cjNoise(vCjShape * 27.0) * 0.18 - cjCrack * 0.5) * mix(0.0012, 0.003, cjB);
+        // Fine pitting of the crust, deeper as it bakes.
+        float cjHeight = cjBl * 0.5 * mix(0.0012, 0.003, cjB);
         normal = cjPerturb(-vViewPosition, normal, cjHeight, faceDirection);`);
   };
+  const dough = new Mesh(doughGeometry(breads, 12), breadMaterial);
+  dough.frustumCulled = false;
+  dough.position.y = PAN_FLOOR;
+  scene.add(dough);
 
-  const breads = new InstancedMesh(breadGeometry, breadMaterial, BREADS);
-  breads.frustumCulled = false;
-  const shadowCount = BREADS + 2;
-  const shadowDelays = new Float32Array(shadowCount * 2);
-  const shadowKinds = new Float32Array(shadowCount * 2);
-  const dummy = new Object3D();
-  const spots: [number, number][] = [[0.05, 0.02]];
-  for (let i = 0; i < BREADS - 1; i++) {
-    const a = (i / (BREADS - 1)) * Math.PI * 2 + 0.35;
-    spots.push([Math.cos(a) * 1.3, Math.sin(a) * 1.3]);
-  }
-  const shadowMatrices: Matrix4[] = [];
-  spots.forEach(([x, z], i) => {
-    const jx = x + (rand() - 0.5) * 0.14;
-    const jz = z + (rand() - 0.5) * 0.14;
-    const size = 0.92 + rand() * 0.16;
-    seeds.set([rand() * 40, rand() * 40, rand() * 40, size], i * 4);
-    // The back of the oven is hotter: breads at the back start first.
-    const back = ((jz + 1.4) / 2.8) * 0.26;
-    const delay = Math.min(0.4, Math.max(0, back + rand() * 0.14));
-    delays.set([delay, rand()], i * 2);
-    shadowDelays.set([delay, size], i * 2);
-    shadowKinds.set([0, 0.75], i * 2);
-    dummy.position.set(jx, PAN_FLOOR, jz);
-    dummy.rotation.set(0, rand() * Math.PI * 2, 0);
-    dummy.scale.setScalar(0.5);
-    dummy.updateMatrix();
-    breads.setMatrixAt(i, dummy.matrix);
-    dummy.position.set(jx + 0.07, PAN_FLOOR + 0.004, jz + 0.09);
-    dummy.rotation.set(0, 0, 0);
-    dummy.scale.set(1.12, 1, 1.22);
-    dummy.updateMatrix();
-    shadowMatrices.push(dummy.matrix.clone());
-  });
-  breadGeometry.setAttribute('aSeed', new InstancedBufferAttribute(seeds, 4));
-  breadGeometry.setAttribute('aDelay', new InstancedBufferAttribute(delays, 2));
-  scene.add(breads);
-
-  // ---- Pan --------------------------------------------------------------------------------
-  const R = 2.12;
-  const panGeometry = lathe([
-    [0, PAN_FLOOR], [R - 0.06, PAN_FLOOR], [R - 0.01, PAN_FLOOR + 0.03], [R + 0.05, 0.2], [R + 0.075, 0.235],
-    [R + 0.11, 0.245], [R + 0.135, 0.225], [R + 0.12, 0.19], [R + 0.06, 0.02], [R, 0], [0, 0],
-  ], 72);
-  const panMaterial = new MeshStandardMaterial({ color: '#3a302b', roughness: 0.42, metalness: 0.3, side: DoubleSide });
-  panMaterial.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vCjObj;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvCjObj = position;');
+  // ---- Pan, cup, saucer, coffee: one standard program -------------------------------------
+  // With no environment map, glossy surfaces would only catch point highlights. A cheap fake
+  // reflection (a tall window to the left, a creamy sky, a Fresnel rim) gives the jabuticaba glaze
+  // the gloss of the brand's dot. Same hook source for every material, so one program.
+  const softbox = (strength: number) => (shader: { uniforms: Record<string, { value: unknown }>; fragmentShader: string }) => {
+    shader.uniforms.uSoftbox = { value: strength };
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\nvarying vec3 vCjObj;\n${NOISE}`)
-      .replace('#include <color_fragment>', /* glsl */ `#include <color_fragment>
-        float cjPat = cjNoise(vCjObj * 1.7) * 0.6 + cjNoise(vCjObj * 7.0) * 0.4;
-        diffuseColor.rgb *= 0.86 + 0.22 * cjPat;`)
-      .replace('#include <roughnessmap_fragment>', /* glsl */ `#include <roughnessmap_fragment>
-        roughnessFactor = clamp(roughnessFactor + cjPat * 0.16, 0.25, 0.8);`);
+      .replace('#include <common>', '#include <common>\nuniform float uSoftbox;')
+      .replace('#include <aomap_fragment>', `
+        vec3 cjR = inverseTransformDirection(reflect(-geometryViewDir, geometryNormal), viewMatrix);
+        float cjAz = atan(cjR.x, cjR.z);
+        float cjBox = (1.0 - smoothstep(0.16, 0.36, abs(cjAz + 0.95))) * smoothstep(-0.95, -0.55, cjR.y) * (1.0 - smoothstep(0.3, 0.6, cjR.y));
+        float cjSky = smoothstep(0.15, 0.85, cjR.y) * 0.3;
+        float cjFres = pow(1.0 - saturate(dot(geometryNormal, geometryViewDir)), 4.0) * 0.6;
+        reflectedLight.indirectSpecular += uSoftbox * (cjBox * vec3(1.0, 0.96, 0.92) + (cjSky + cjFres) * vec3(0.98, 0.9, 0.8));
+        #include <aomap_fragment>`);
   };
-  const pan = new Mesh(panGeometry, panMaterial);
+  const R = 2.12;
+  const pan = new Mesh(
+    lathe([
+      [0, PAN_FLOOR], [R - 0.06, PAN_FLOOR], [R - 0.01, PAN_FLOOR + 0.03], [R + 0.05, 0.2], [R + 0.075, 0.235],
+      [R + 0.11, 0.245], [R + 0.135, 0.225], [R + 0.12, 0.19], [R + 0.06, 0.02], [R, 0], [0, 0],
+    ], 72),
+    new MeshStandardMaterial({ color: '#3a302b', roughness: 0.42, metalness: 0.3, side: DoubleSide }),
+  );
+  pan.material.onBeforeCompile = softbox(0.12);
   scene.add(pan);
 
-  // ---- Cup of coffee ---------------------------------------------------------------------
-  const glaze = new MeshStandardMaterial({ color: '#2b1530', roughness: 0.12, metalness: 0, side: DoubleSide });
-  const cupGeometry = lathe([
+  const glaze = new MeshStandardMaterial({ color: '#2b1530', roughness: 0.14, metalness: 0, side: DoubleSide });
+  const porcelain = new MeshStandardMaterial({ color: '#f2e9da', roughness: 0.3, metalness: 0, side: DoubleSide });
+  const coffeeMaterial = new MeshStandardMaterial({ color: '#1f1009', roughness: 0.06, metalness: 0, side: DoubleSide });
+  glaze.onBeforeCompile = softbox(0.85);
+  porcelain.onBeforeCompile = softbox(0.18);
+  coffeeMaterial.onBeforeCompile = softbox(0.22);
+  const body = new Mesh(lathe([
     [0, 0], [0.26, 0], [0.29, 0.025], [0.33, 0.17], [0.37, 0.38], [0.4, 0.56], [0.405, 0.6], [0.39, 0.608],
     [0.375, 0.57], [0.345, 0.38], [0.3, 0.17], [0.25, 0.075], [0, 0.075],
-  ], 48);
-  const saucerGeometry = lathe([
+  ], 48), glaze);
+  const saucer = new Mesh(lathe([
     [0, 0], [0.38, 0], [0.44, 0.018], [0.62, 0.06], [0.645, 0.074], [0.625, 0.082], [0.44, 0.045], [0.3, 0.035], [0, 0.035],
-  ], 56);
+  ], 56), porcelain);
   const handleGeometry = new TorusGeometry(0.15, 0.04, 10, 24, Math.PI * 1.25);
   handleGeometry.rotateZ(-Math.PI * 0.625);
   handleGeometry.translate(0.47, 0.33, 0);
-  const cup = new Object3D();
-  const body = new Mesh(cupGeometry, glaze);
-  body.position.y = 0.035;
   const handle = new Mesh(handleGeometry, glaze);
-  handle.position.y = 0.035;
-  handle.rotation.y = -0.5;
-  body.rotation.y = -0.5;
+  body.position.y = handle.position.y = 0.035;
+  body.rotation.y = handle.rotation.y = -0.5;
   const coffeeGeometry = new CircleGeometry(0.36, 40);
   coffeeGeometry.rotateX(-Math.PI / 2);
-  const coffee = new Mesh(coffeeGeometry, new MeshStandardMaterial({ color: '#2a170d', roughness: 0.1, metalness: 0 }));
+  const coffee = new Mesh(coffeeGeometry, coffeeMaterial);
   coffee.position.y = COFFEE_Y;
-  const porcelain = new MeshStandardMaterial({ color: '#f2e9da', roughness: 0.28, metalness: 0, side: DoubleSide });
-  cup.add(new Mesh(saucerGeometry, porcelain), body, handle, coffee);
+  const cup = new Object3D();
+  cup.add(saucer, body, handle, coffee);
   cup.position.copy(CUP);
   cup.scale.setScalar(CUP_SCALE);
   scene.add(cup);
 
   // ---- Contact shadows (soft blobs, one draw call) -----------------------------------------
-  dummy.position.set(0.12, 0.003, 0.16);
-  dummy.scale.set(4.9, 1, 4.9);
-  dummy.updateMatrix();
-  shadowMatrices.push(dummy.matrix.clone());
-  shadowDelays.set([-1, 1], BREADS * 2);
-  shadowKinds.set([1, 0.5], BREADS * 2);
-  dummy.position.set(CUP.x + 0.1, 0.003, CUP.z + 0.14);
-  dummy.scale.set(1.55 * CUP_SCALE, 1, 1.55 * CUP_SCALE);
-  dummy.updateMatrix();
-  shadowMatrices.push(dummy.matrix.clone());
-  shadowDelays.set([-1, 1], (BREADS + 1) * 2);
-  shadowKinds.set([1, 0.55], (BREADS + 1) * 2);
+  const blobs = [
+    ...breads.map((b) => ({ x: b.x + 0.07, z: b.z + 0.09, sx: 1.12, sz: 1.22, delay: b.delay, size: b.size * 2, kind: 0, strength: 0.75 })),
+    { x: 0.12, z: 0.16, sx: 4.9, sz: 4.9, delay: -1, size: 1, kind: 1, strength: 0.5 },
+    { x: CUP.x + 0.1, z: CUP.z + 0.14, sx: 1.55 * CUP_SCALE, sz: 1.55 * CUP_SCALE, delay: -1, size: 1, kind: 1, strength: 0.55 },
+  ];
   const shadowGeometry = new PlaneGeometry(1, 1);
   shadowGeometry.rotateX(-Math.PI / 2);
-  shadowGeometry.setAttribute('aDelay', new InstancedBufferAttribute(shadowDelays, 2));
-  shadowGeometry.setAttribute('aKind', new InstancedBufferAttribute(shadowKinds, 2));
-  const shadowMaterial = new ShaderMaterial({
+  shadowGeometry.setAttribute('aDelay', new InstancedBufferAttribute(new Float32Array(blobs.flatMap((b) => [b.delay, b.size])), 2));
+  shadowGeometry.setAttribute('aKind', new InstancedBufferAttribute(new Float32Array(blobs.flatMap((b) => [b.kind, b.strength])), 2));
+  const shadows = new InstancedMesh(shadowGeometry, new ShaderMaterial({
     uniforms: { uBake: uniforms.uBake },
     transparent: true,
     depthWrite: false,
@@ -428,11 +480,11 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       varying vec2 vUv;
       varying vec2 vKind;
       void main() {
-        float b = aKind.x > 0.5 ? 1.0 : smoothstep(aDelay.x, aDelay.x + 0.6, uBake);
+        float b = smoothstep(aDelay.x, aDelay.x + 0.6, uBake);
         vec3 p = position;
-        p.xz *= (aKind.x > 0.5 ? 1.0 : mix(0.8, 1.0, b) * aDelay.y);
+        p.xz *= aKind.x > 0.5 ? 1.0 : mix(0.8, 1.0, b) * aDelay.y;
         vUv = uv - 0.5;
-        vKind = vec2(aKind.x, aKind.y);
+        vKind = aKind;
         gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(p, 1.0);
       }`,
     fragmentShader: /* glsl */ `
@@ -446,9 +498,12 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
         vec3 tint = vKind.x > 0.5 ? vec3(0.42, 0.27, 0.18) : vec3(0.1, 0.06, 0.04);
         gl_FragColor = vec4(tint, a);
       }`,
+  }), blobs.length);
+  const matrix = new Matrix4();
+  blobs.forEach((b, i) => {
+    const y = b.kind ? 0.003 : PAN_FLOOR + 0.004;
+    shadows.setMatrixAt(i, matrix.makeScale(b.sx, 1, b.sz).setPosition(b.x, y, b.z));
   });
-  const shadows = new InstancedMesh(shadowGeometry, shadowMaterial, shadowCount);
-  shadowMatrices.forEach((m, i) => shadows.setMatrixAt(i, m));
   shadows.frustumCulled = false;
   shadows.renderOrder = -1;
   scene.add(shadows);
@@ -474,7 +529,7 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       void main() {
         float y = vUv.y;
         float t = uRise;
-        float sway = (cjNoise(vec3(y * 1.4 - t * 1.1, 2.3, 0.0)) * 0.2 + sin(y * 6.0 - t * 5.0) * 0.035) * smoothstep(0.0, 0.75, y);
+        float sway = (sin(y * 3.1 - t * 2.3) * 0.11 + sin(y * 6.0 - t * 5.0 + 1.7) * 0.04) * smoothstep(0.0, 0.75, y);
         float x = vUv.x - 0.5 - sway;
         float width = mix(0.06, 0.19, smoothstep(0.0, 1.0, y));
         float core = exp(-(x * x) / (width * width));
@@ -491,20 +546,14 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
   scene.add(steam);
 
   // ---- Camera, progress, pointer -----------------------------------------------------------
-  let width = 1;
-  let height = 1;
   let progress = 0;
-  let intro = 0;
-  const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
   let fitDistance = 12;
+  const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
 
-  const ease = (t: number) => 1 - Math.pow(1 - t, 3);
   const place = () => {
-    const settle = 1 - ease(Math.min(intro, 1));
-    const bake = progress;
-    const elevation = (31 - 4 * bake + 5 * settle - pointer.y * 1.6) * (Math.PI / 180);
-    const azimuth = (-6 + pointer.x * 3.2 - 3 * settle) * (Math.PI / 180);
-    const distance = fitDistance * (1 - 0.07 * bake + 0.1 * settle);
+    const elevation = (38 - 6 * progress - pointer.y * 1.6) * (Math.PI / 180);
+    const azimuth = (-6 + pointer.x * 3.2) * (Math.PI / 180);
+    const distance = fitDistance * (1 - 0.06 * progress);
     camera.position.set(
       target.x + Math.sin(azimuth) * Math.cos(elevation) * distance,
       target.y + Math.sin(elevation) * distance,
@@ -515,10 +564,15 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
     steam.rotation.y = Math.atan2(camera.position.x - steam.position.x, camera.position.z - steam.position.z);
   };
 
+  // Where the driver links in parallel, compile every program before the first frame so the
+  // main thread is not blocked waiting on the GPU.
+  place();
+  if (renderer.extensions.has('KHR_parallel_shader_compile')) await renderer.compileAsync(scene, camera);
+
   return {
     resize(w, h, dpr) {
-      width = Math.max(1, w);
-      height = Math.max(1, h);
+      const width = Math.max(1, w);
+      const height = Math.max(1, h);
       renderer.setPixelRatio(dpr);
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
@@ -536,8 +590,8 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       pointer.tx = Math.max(-1, Math.min(1, x));
       pointer.ty = Math.max(-1, Math.min(1, y));
     },
+    // Only the damped pointer parallax asks for frames; it settles in about a second.
     tick(dt) {
-      intro = Math.min(1, intro + dt / 1.1);
       const k = 1 - Math.exp(-dt * 7);
       pointer.x += (pointer.tx - pointer.x) * k;
       pointer.y += (pointer.ty - pointer.y) * k;
@@ -546,7 +600,7 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
         pointer.x = pointer.tx;
         pointer.y = pointer.ty;
       }
-      return intro < 1 || !settled;
+      return !settled;
     },
     render() {
       place();
@@ -557,10 +611,9 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
         const mesh = object as Mesh;
         mesh.geometry?.dispose();
         const material = mesh.material;
-        if (Array.isArray(material)) material.forEach((m) => m.dispose());
+        if (Array.isArray(material)) material.forEach((mat) => mat.dispose());
         else material?.dispose();
       });
-      environment.dispose();
       renderer.dispose();
     },
   };
