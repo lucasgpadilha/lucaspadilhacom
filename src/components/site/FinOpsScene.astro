@@ -309,6 +309,10 @@ const r = finops.results;
     .pin .note { font-size: 0.6875rem; }
     .pin.used { transform: translate(-14px, 8px); }
   }
+  /* The smallest phones: pull the corner label back inside the screen. */
+  @media (max-width: 359px) {
+    .pin.rightsizing { transform: translate(-28%, -100%); }
+  }
 
   /* ---------- the run ---------- */
   @media (prefers-reduced-motion: no-preference) {
