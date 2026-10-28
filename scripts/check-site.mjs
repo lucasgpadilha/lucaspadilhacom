@@ -36,7 +36,7 @@ async function portfolio(page, label) {
     ops: document.querySelectorAll('#ops dt').length,
     deploy: document.querySelectorAll('[data-deploy] svg path').length,
     chapters: ['#kubernetes', '#cloud', '#finops', '#ops'].filter((id) => !document.querySelector(id)),
-    drawings: ['#cloud svg', '#finops svg'].filter((sel) => !document.querySelector(sel)),
+    drawings: ['#kubernetes svg', '#cloud svg', '#finops svg'].filter((sel) => !document.querySelector(sel)),
     side: document.querySelectorAll('#side a[href]').length,
     mail: [...document.querySelectorAll('a[href^="mailto:"]')].map((a) => a.getAttribute('href')),
     repos: [...document.querySelectorAll('a[href^="https://github.com/lucasgpadilha/"]')]
@@ -44,7 +44,7 @@ async function portfolio(page, label) {
     text: document.body.textContent,
   }), eyebrows.toString());
   check(facts.eyebrows === 0, `${label}: ${facts.eyebrows} eyebrow labels above headings`);
-  check(facts.steps === 3, `${label}: #kubernetes has ${facts.steps} migration steps (expected 3)`);
+  check(facts.steps === 5, `${label}: #kubernetes shows ${facts.steps} method steps (expected 5)`);
   check(facts.ops >= 8, `${label}: #ops lists ${facts.ops} areas (expected ≥ 8)`);
   check(facts.deploy > 40, `${label}: the hero deploy drawing is missing from the HTML (${facts.deploy} paths)`);
   check(facts.chapters.length === 0, `${label}: missing chapters ${facts.chapters.join(', ')}`);
@@ -55,7 +55,7 @@ async function portfolio(page, label) {
   for (const word of FORBIDDEN) check(!facts.text.includes(word), `${label}: mentions "${word}"`);
   for (const repo of facts.repos) check(PUBLIC_REPOS.has(repo), `${label}: links non-public repo "${repo}"`);
   check(/Wikimedia Commons/.test(facts.text), `${label}: demo thumbnails show CC BY/BY-SA photos without a credit line`);
-  for (const stale of ['it was emptied and shut down', 'era esvaziada e desligada', 'Tools I use every day', 'Ferramentas do dia a dia', 'About 380 thousand events a day rerouted', 'Cerca de 380 mil envios por dia tirados', 'Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
+  for (const stale of ['Role para rodar', 'Scroll to run it', 'De cinco VMs a um cluster', 'From five VMs to one', 'it was emptied and shut down', 'era esvaziada e desligada', 'Tools I use every day', 'Ferramentas do dia a dia', 'About 380 thousand events a day rerouted', 'Cerca de 380 mil envios por dia tirados', 'Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
     check(!facts.text.includes(stale), `${label}: still says "${stale}"`);
   }
 }
@@ -230,6 +230,8 @@ try {
         // Scroll-reveal starts hidden; show everything so axe judges the final state.
         await page.evaluate(() => document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-in')));
         await page.waitForTimeout(800);
+        // Judge the settled page: the hero run dims labels for its first second or so.
+        await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'), null, { timeout: 8000 }).catch(() => {});
         const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
         for (const v of axe.violations.filter((item) => item.impact === 'serious' || item.impact === 'critical')) {
           check(false, `${label}: axe ${v.id} (${v.impact}) — ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')}`);
@@ -322,8 +324,8 @@ try {
       await page.emulateMedia({ media: 'print' });
       const hidden = await page.evaluate(() => [...document.querySelectorAll('[data-reveal]')].filter((el) => Number(getComputedStyle(el).opacity) < 1).length);
       check(hidden === 0, `print ${path}: ${hidden} blocks invisible when printed`);
-      const paused = await page.evaluate(() => document.querySelectorAll('[data-deploy], [data-cloud], [data-finops]').length
-        ? [...document.querySelectorAll('[data-deploy] *, [data-cloud] *, [data-finops] *')].filter((el) => getComputedStyle(el).animationName !== 'none').length
+      const paused = await page.evaluate(() => document.querySelectorAll('[data-deploy], [data-migrate], [data-cloud], [data-finops]').length
+        ? [...document.querySelectorAll('[data-deploy] *, [data-migrate] *, [data-cloud] *, [data-finops] *')].filter((el) => getComputedStyle(el).animationName !== 'none').length
         : 0);
       check(paused === 0, `print ${path}: ${paused} drawing parts still animated (they would print on their first frame)`);
       await context.close();
@@ -422,7 +424,7 @@ try {
   if (!onlyDemo) {
     for (const [name, options] of [['motion', {}], ['reduced motion', { reducedMotion: 'reduce' }]]) {
       const { context: ctx, page: p, errors } = await open('/pt/', { viewport: { width: 1440, height: 900 }, ...options });
-      for (const sel of ['[data-cloud]', '[data-finops]']) {
+      for (const sel of ['[data-migrate]', '[data-cloud]', '[data-finops]']) {
         await p.evaluate((s) => document.querySelector(s).scrollIntoView({ block: 'center', behavior: 'instant' }), sel);
         await p.waitForTimeout(5500);
         const running = await p.evaluate((s) => document.querySelector(s).getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length, sel);
@@ -431,6 +433,25 @@ try {
         await p.waitForTimeout(1000);
         check(a.equals(await p.locator(sel).screenshot()), `${sel} (${name}): still moving after it settled`);
       }
+      // Rollback: the last phase goes back to Docker and its VM stays on.
+      await p.evaluate(() => document.querySelector('[data-migrate]').scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await p.locator('[data-migrate] [data-mode="rollback"]').click();
+      await p.waitForTimeout(2800);
+      const rollback = await p.evaluate(() => {
+        const fig = document.querySelector('[data-migrate]');
+        const op = (sel) => Number(getComputedStyle(fig.querySelector(sel)).opacity);
+        return {
+          pods: op('.pod.n2'), vm: op('.vm.v2 .run'), wire: op('.to-vm.v2 .live'),
+          msg: getComputedStyle(fig.querySelector('.msg.rollback')).display !== 'none',
+          running: fig.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length,
+        };
+      });
+      check(rollback.pods === 0 && rollback.vm === 1 && rollback.wire === 1 && rollback.msg && rollback.running === 0, `migration rollback (${name}): ${JSON.stringify(rollback)}`);
+      await p.locator('[data-migrate] [data-mode="clean"]').click();
+      await p.waitForTimeout(4800);
+      const clean = await p.evaluate(() => { const fig = document.querySelector('[data-migrate]'); return [...fig.querySelectorAll('.pod')].every((el) => Number(getComputedStyle(el).opacity) === 1) && Number(getComputedStyle(fig.querySelector('.vm.v2 .run')).opacity) === 0; });
+      check(clean, `migration clean run (${name}): pods not all up or a VM still running`);
+
       // Telemetry route: Before lights the public round trip, After the internal path.
       for (const route of ['before', 'after']) {
         await p.evaluate(() => document.querySelector('[data-cloud]').scrollIntoView({ block: 'center', behavior: 'instant' }));

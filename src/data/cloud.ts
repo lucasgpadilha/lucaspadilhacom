@@ -7,14 +7,14 @@ type L = Localized<string>;
 // no employers, hostnames, repositories, bill amounts or incident dates.
 
 export const cloud = {
-  title: { en: 'Network and clusters as code', pt: 'Rede e clusters como código' } satisfies L,
+  title: { en: 'Cloud infrastructure as code on OCI', pt: 'Infraestrutura de cloud como código na OCI' } satisfies L,
   lede: {
-    en: 'I designed the OKE clusters on Oracle Cloud and provisioned them in Terraform, from the VCN to the keys, with static validation before anything applies.',
-    pt: 'Desenhei os clusters OKE na Oracle Cloud e provisionei tudo em Terraform, da VCN às chaves, com validação estática antes de qualquer apply.',
+    en: 'I design and provision Oracle Cloud environments in Terraform, from the network to the Kubernetes clusters and the keys: reviewed before applying, reproducible in any environment.',
+    pt: 'Desenho e provisiono ambientes na Oracle Cloud em Terraform, da rede aos clusters Kubernetes e às chaves: revisados antes do apply, reproduzíveis em qualquer ambiente.',
   } satisfies L,
   body: {
-    en: 'VCNs, DRG, NSGs, NAT with a reserved IP, public and internal NLBs, WAF, Cluster Autoscaler, KMS and IAM live in the same code, along with cost tags and backup policies. Then I moved telemetry onto the internal network.',
-    pt: 'VCNs, DRG, NSGs, NAT com IP reservado, NLB público e interno, WAF, Cluster Autoscaler, KMS e IAM vivem no mesmo código, junto com tags de custo e políticas de backup. Depois, levei a telemetria para a rede interna.',
+    en: 'VCNs, DRG, NSGs, NAT with a reserved IP, public and internal NLBs, WAF, Cluster Autoscaler, KMS and IAM in the same code, with cost tags, backup policies and automated static validation. The traffic path is part of the design too: what can stay inside the network does not go out to the internet.',
+    pt: 'VCNs, DRG, NSGs, NAT com IP reservado, NLB público e interno, WAF, Cluster Autoscaler, KMS e IAM no mesmo código, com tags de custo, políticas de backup e validação estática automatizada. O caminho do tráfego também entra no desenho: o que pode ficar dentro da rede não sai para a internet.',
   } satisfies L,
   toolsLabel: { en: 'Tools', pt: 'Ferramentas' } satisfies L,
   tools: {

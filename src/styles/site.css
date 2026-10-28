@@ -215,5 +215,5 @@ body { transition: background-color 0.5s var(--ease-out), color 0.5s var(--ease-
 @media print {
   .site-header { position: static !important; }
   /* Drawings print finished: their resting styles are the final state. */
-  [data-deploy] *, [data-cloud] *, [data-finops] * { animation: none !important; }
+  [data-deploy] *, [data-migrate] *, [data-cloud] *, [data-finops] * { animation: none !important; }
 }

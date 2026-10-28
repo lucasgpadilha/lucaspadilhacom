@@ -4,7 +4,8 @@ import Header from './Header.astro';
 import Footer from './Footer.astro';
 import DeployScene from './DeployScene.astro';
 import Arrow from './Arrow.astro';
-import Migration from './Migration.astro';
+import Capabilities from './Capabilities.astro';
+import Kubernetes from './Kubernetes.astro';
 import Cloud from './Cloud.astro';
 import FinOps from './FinOps.astro';
 import Ops from './Ops.astro';
@@ -67,7 +68,8 @@ const jsonLd = {
         </div>
       </div>
     </section>
-    <Migration locale={locale} />
+    <Capabilities locale={locale} />
+    <Kubernetes locale={locale} />
     <Cloud locale={locale} />
     <FinOps locale={locale} />
     <Ops locale={locale} />
@@ -98,7 +100,7 @@ const jsonLd = {
 </script>
 
 <style>
-  .hero { padding-block: clamp(1.75rem, 1rem + 2.5vw, 3rem) clamp(2.5rem, 1.5rem + 3vw, 4rem); overflow: hidden; }
+  .hero { padding-block: clamp(1.75rem, 1rem + 2.5vw, 3rem) clamp(2rem, 1.5rem + 2vw, 3rem); overflow: hidden; }
   .grid { display: grid; gap: 1.5rem; grid-template-areas: 'title' 'scene' 'copy'; }
   h1 { grid-area: title; font-size: clamp(2.25rem, 1.5rem + 3.2vw, 4.25rem); font-weight: 680; letter-spacing: -0.035em; line-height: 0.98; }
   h1 .line { display: block; }

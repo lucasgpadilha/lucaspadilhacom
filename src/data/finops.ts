@@ -6,14 +6,14 @@ type L = Localized<string>;
 // amounts, no employer, host or repository names.
 
 export const finops = {
-  title: { en: 'The bill, from the bottom up', pt: 'A conta, de baixo para cima' } satisfies L,
+  title: { en: 'FinOps: the cloud at the right size', pt: 'FinOps: a nuvem na medida' } satisfies L,
   lede: {
-    en: 'After the move to Kubernetes on OCI, I went after what the cloud bill was paying for and compared the CPU requests with what the pods really used.',
-    pt: 'Depois da migração para Kubernetes na OCI, fui atrás do que a fatura da nuvem estava pagando e comparei os requests de CPU com o que os pods usavam de fato.',
+    en: 'I find where the cloud overcharges, like requests far above real use, forgotten backups and concentrated egress, and turn it into a savings plan.',
+    pt: 'Encontro onde a nuvem cobra a mais, como requests muito acima do uso, backups esquecidos e egress concentrado, e transformo isso num plano de economia.',
   } satisfies L,
   body: {
-    en: 'Cost tags on the infrastructure, a rightsizing map for nodes and requests, and blue/green node-pool recycling: the new pool is up before the old one drains. I also built a FinOps MVP for OCI.',
-    pt: 'Tags de custo na infraestrutura, um mapa de rightsizing de nodes e requests e reciclagem blue/green de node pools: o pool novo sobe antes de o antigo ser drenado. Também construí um MVP de FinOps para OCI.',
+    en: 'Cost tags on the infrastructure, requests compared with real p95 use, a rightsizing map for nodes and requests, and blue/green node-pool recycling: the new pool is up before the old one drains. I also built a FinOps MVP for OCI.',
+    pt: 'Tags de custo na infraestrutura, requests comparados com o uso real no p95, mapa de rightsizing de nodes e requests e reciclagem blue/green de node pools: o pool novo sobe antes de o antigo ser drenado. Também construí um MVP de FinOps para OCI.',
   } satisfies L,
   toolsLabel: { en: 'Tools', pt: 'Ferramentas' } satisfies L,
   tools: {

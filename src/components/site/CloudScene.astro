@@ -477,29 +477,29 @@ const faceList = (b: Faces) => [['l', b.left], ['r', b.right], ['t', b.top]] as 
     .cloud.is-armed { --play: paused; }
     .cloud.is-armed.is-playing { --play: running; }
 
-    .is-armed :is(.plate, .ring) { animation: fade 0.45s ease var(--at) both; animation-play-state: var(--play); }
-    .is-armed .obj { animation: rise 0.42s var(--ease-out) var(--at) both; animation-play-state: var(--play); }
-    .is-armed .pool { animation: drop 0.32s var(--ease-out) var(--at) both; animation-play-state: var(--play); }
-    .is-armed .pod { animation: fade 0.22s ease var(--at) both; animation-play-state: var(--play); }
-    .is-armed .label-pin { animation: fade 0.3s ease var(--at) both; animation-play-state: var(--play); }
-    .is-armed .log li { animation: fade 0.18s ease var(--at) both; animation-play-state: var(--play); }
-    .is-armed .track { animation: fade 0.3s ease var(--tracks) both; animation-play-state: var(--play); }
-    .is-armed:not(.is-routing) .route.after .live { animation: draw 0.4s ease-in-out var(--route) both; animation-play-state: var(--play); }
-    .is-armed:not(.is-routing) .hop-after .t { animation: unlit 0.2s ease var(--lit-in) both; animation-play-state: var(--play); }
-    .is-armed:not(.is-routing) .status { animation: fade 0.3s ease var(--status) both; animation-play-state: var(--play); }
+    .is-armed :is(.plate, .ring) { animation: cl-fade 0.45s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .obj { animation: cl-rise 0.42s var(--ease-out) var(--at) both; animation-play-state: var(--play); }
+    .is-armed .pool { animation: cl-drop 0.32s var(--ease-out) var(--at) both; animation-play-state: var(--play); }
+    .is-armed .pod { animation: cl-fade 0.22s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .label-pin { animation: cl-fade 0.3s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .log li { animation: cl-fade 0.18s ease var(--at) both; animation-play-state: var(--play); }
+    .is-armed .track { animation: cl-fade 0.3s ease var(--tracks) both; animation-play-state: var(--play); }
+    .is-armed:not(.is-routing) .route.after .live { animation: cl-draw 0.4s ease-in-out var(--route) both; animation-play-state: var(--play); }
+    .is-armed:not(.is-routing) .hop-after .t { animation: cl-unlit 0.2s ease var(--lit-in) both; animation-play-state: var(--play); }
+    .is-armed:not(.is-routing) .status { animation: cl-fade 0.3s ease var(--status) both; animation-play-state: var(--play); }
 
     .is-routing.is-before .route.before .live,
-    .is-routing.is-after .route.after .live { animation: draw var(--dur) linear both; }
+    .is-routing.is-after .route.after .live { animation: cl-draw var(--dur) linear both; }
     .is-routing.is-before .route.before .dots,
-    .is-routing.is-after .route.after .dots { animation: stream var(--dur) linear both; }
+    .is-routing.is-after .route.after .dots { animation: cl-stream var(--dur) linear both; }
     .is-routing.is-before .hop-before .t,
-    .is-routing.is-after .hop-after .t { animation: unlit 0.15s ease var(--lit) both; }
+    .is-routing.is-after .hop-after .t { animation: cl-unlit 0.15s ease var(--lit) both; }
   }
 
-  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
-  @keyframes drop { from { opacity: 0; transform: translateY(-10px); } }
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes unlit { from { stroke: var(--edge); } }
-  @keyframes draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
-  @keyframes stream { from { opacity: 1; stroke-dashoffset: var(--from); } to { opacity: 1; stroke-dashoffset: var(--to); } }
+  @keyframes cl-rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes cl-drop { from { opacity: 0; transform: translateY(-10px); } }
+  @keyframes cl-fade { from { opacity: 0; } }
+  @keyframes cl-unlit { from { stroke: var(--edge); } }
+  @keyframes cl-draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes cl-stream { from { opacity: 1; stroke-dashoffset: var(--from); } to { opacity: 1; stroke-dashoffset: var(--to); } }
 </style>

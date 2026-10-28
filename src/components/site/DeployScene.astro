@@ -322,40 +322,40 @@ const s = (n: number) => `${n.toFixed(2)}s`;
   .is-blocked .label-pin.policy strong { color: var(--alert); }
 
   @media (prefers-reduced-motion: no-preference) {
-    .is-boot .obj { animation: rise 0.5s var(--ease-out) calc(var(--i) * 0.04s) both; }
-    .is-boot .floor { animation: fade 0.6s ease both; }
+    .is-boot .obj { animation: dp-rise 0.5s var(--ease-out) calc(var(--i) * 0.04s) both; }
+    .is-boot .floor { animation: dp-fade 0.6s ease both; }
 
-    .is-clean .pulse { animation: pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
-    .is-clean .commit .hot { animation: heat 0.3s ease var(--at) both; }
-    .is-clean .job { animation: heat-g 0.2s ease var(--at) both; }
-    .is-clean .scan { animation: scan 0.36s ease-in-out var(--at) both; }
-    .is-clean .mark.ok { animation: fade 0.2s ease var(--at) both; }
-    .is-clean .fresh { animation: drop 0.32s cubic-bezier(0.3, 1.25, 0.5, 1) var(--at) both; }
-    .is-clean .ring { animation: draw 0.4s ease-in-out var(--at) both; }
-    .is-clean .arrow { animation: fade 0.15s ease var(--at) both; }
-    .is-clean .pod { animation: roll 0.22s ease var(--at) both; }
-    .is-clean .label-pin { animation: lit 0.25s ease var(--at) both; }
-    .is-clean .status { animation: fade 0.25s ease var(--done) both; }
+    .is-clean .pulse { animation: dp-pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
+    .is-clean .commit .hot { animation: dp-heat 0.3s ease var(--at) both; }
+    .is-clean .job { animation: dp-heat-g 0.2s ease var(--at) both; }
+    .is-clean .scan { animation: dp-scan 0.36s ease-in-out var(--at) both; }
+    .is-clean .mark.ok { animation: dp-fade 0.2s ease var(--at) both; }
+    .is-clean .fresh { animation: dp-drop 0.32s cubic-bezier(0.3, 1.25, 0.5, 1) var(--at) both; }
+    .is-clean .ring { animation: dp-draw 0.4s ease-in-out var(--at) both; }
+    .is-clean .arrow { animation: dp-fade 0.15s ease var(--at) both; }
+    .is-clean .pod { animation: dp-roll 0.22s ease var(--at) both; }
+    .is-clean .label-pin { animation: dp-lit 0.25s ease var(--at) both; }
+    .is-clean .status { animation: dp-fade 0.25s ease var(--done) both; }
 
-    .is-blocked .pulse:is([data-link='0'], [data-link='1']) { animation: pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
-    .is-blocked .commit .hot { animation: heat 0.3s ease var(--at) both; }
-    .is-blocked .job { animation: heat-g 0.2s ease var(--at) both; }
-    .is-blocked .scan { animation: scan-fail 0.36s ease-in-out var(--at) both; }
-    .is-blocked .plane { animation: alarm 0.5s ease var(--at) both; }
-    .is-blocked .mark.no { animation: fade 0.2s ease var(--at) both; }
-    .is-blocked .status { animation: fade 0.3s ease 2.3s both; }
+    .is-blocked .pulse:is([data-link='0'], [data-link='1']) { animation: dp-pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
+    .is-blocked .commit .hot { animation: dp-heat 0.3s ease var(--at) both; }
+    .is-blocked .job { animation: dp-heat-g 0.2s ease var(--at) both; }
+    .is-blocked .scan { animation: dp-scan-fail 0.36s ease-in-out var(--at) both; }
+    .is-blocked .plane { animation: dp-alarm 0.5s ease var(--at) both; }
+    .is-blocked .mark.no { animation: dp-fade 0.2s ease var(--at) both; }
+    .is-blocked .status { animation: dp-fade 0.3s ease 2.3s both; }
   }
 
-  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes pulse { from { stroke-dashoffset: 26; } to { stroke-dashoffset: -110; } }
-  @keyframes heat { from { fill: var(--face-t); stroke: var(--edge); } }
-  @keyframes heat-g { from { opacity: 0.25; filter: grayscale(1); } }
-  @keyframes scan { 0% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(-50px); } 100% { opacity: 0; transform: translateY(-50px); } }
-  @keyframes scan-fail { 0% { opacity: 1; transform: translateY(0); stroke: var(--signal); } 60% { opacity: 1; transform: translateY(-30px); stroke: var(--alert); } 100% { opacity: 0; transform: translateY(-30px); stroke: var(--alert); } }
-  @keyframes alarm { from { fill: color-mix(in srgb, var(--ink) 5%, transparent); } 30% { fill: color-mix(in srgb, var(--alert) 40%, transparent); } }
-  @keyframes drop { from { opacity: 0; transform: translateY(-18px); } }
-  @keyframes draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
-  @keyframes roll { from { opacity: 0.35; filter: grayscale(1) brightness(0.7); } }
-  @keyframes lit { from { opacity: 0.35; } }
+  @keyframes dp-rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes dp-fade { from { opacity: 0; } }
+  @keyframes dp-pulse { from { stroke-dashoffset: 26; } to { stroke-dashoffset: -110; } }
+  @keyframes dp-heat { from { fill: var(--face-t); stroke: var(--edge); } }
+  @keyframes dp-heat-g { from { opacity: 0.25; filter: grayscale(1); } }
+  @keyframes dp-scan { 0% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(-50px); } 100% { opacity: 0; transform: translateY(-50px); } }
+  @keyframes dp-scan-fail { 0% { opacity: 1; transform: translateY(0); stroke: var(--signal); } 60% { opacity: 1; transform: translateY(-30px); stroke: var(--alert); } 100% { opacity: 0; transform: translateY(-30px); stroke: var(--alert); } }
+  @keyframes dp-alarm { from { fill: color-mix(in srgb, var(--ink) 5%, transparent); } 30% { fill: color-mix(in srgb, var(--alert) 40%, transparent); } }
+  @keyframes dp-drop { from { opacity: 0; transform: translateY(-18px); } }
+  @keyframes dp-draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes dp-roll { from { opacity: 0.35; filter: grayscale(1) brightness(0.7); } }
+  @keyframes dp-lit { from { opacity: 0.55; } }
 </style>
