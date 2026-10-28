@@ -1,0 +1,36 @@
+---
+import { sections } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = sections.path;
+---
+<section id="path" class="section" aria-labelledby="path-title">
+  <div class="wrap">
+    <header class="section-head" data-reveal>
+      <p class="label">{t(s.label, locale)}</p>
+      <h2 id="path-title">{t(s.title, locale)}</h2>
+    </header>
+    <ol class="timeline" role="list">
+      {s.items.map((item) => (
+        <li data-reveal>
+          <p class="when">{t(item.when, locale)}</p>
+          <p class="what">{t(item.text, locale)}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .timeline { border-top: 2px solid var(--ink); }
+  .timeline li { display: grid; gap: 0.5rem; padding: 1.5rem 0; border-bottom: 1px solid var(--line); }
+  .when { font-family: var(--font-mono); font-size: 0.875rem; font-weight: 600; }
+  .what { font-size: var(--step-1); line-height: 1.4; max-width: 52ch; }
+  .timeline li:last-child .when::after { content: ''; display: inline-block; width: 8px; height: 8px; margin-left: 0.6rem; border-radius: 50%; background: var(--signal); vertical-align: middle; }
+  @media (min-width: 960px) {
+    .timeline li { grid-template-columns: 3fr 9fr; gap: 2rem; padding: 2rem 0; }
+    .when { padding-top: 0.35rem; }
+  }
+</style>

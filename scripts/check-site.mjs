@@ -11,9 +11,26 @@ const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
 
 /** Routes and what every viewport must satisfy. `extra` runs once per route at 390px. */
+// Only these repositories are public; private work must never be linked.
+const PUBLIC_REPOS = new Set(['lucaspadilhacom', 'pynoc', 'floci-cloud-lab', 'tuildap', 'agent-benchmark']);
+
+async function portfolio(page, label) {
+  const facts = await page.evaluate(() => ({
+    work: document.querySelectorAll('#work article').length,
+    repos: [...document.querySelectorAll('a[href^="https://github.com/lucasgpadilha/"]')]
+      .map((a) => new URL(a.href).pathname.split('/')[2]),
+    text: document.body.innerText,
+  }));
+  check(facts.work >= 6, `${label}: #work has ${facts.work} articles`);
+  for (const repo of facts.repos) check(PUBLIC_REPOS.has(repo), `${label}: links non-public repo "${repo}"`);
+  for (const stale of ['Operational Stack', 'Available for opportunities', 'Nginx']) {
+    check(!facts.text.includes(stale), `${label}: still says "${stale}"`);
+  }
+}
+
 const routes = [
-  { path: '/', lang: 'en' },
-  { path: '/pt/', lang: 'pt-BR' },
+  { path: '/', lang: 'en', extra: portfolio },
+  { path: '/pt/', lang: 'pt-BR', extra: portfolio },
 ];
 
 const browser = await chromium.launch();

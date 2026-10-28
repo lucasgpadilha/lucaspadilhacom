@@ -1,0 +1,11 @@
+---
+/** Inline arrow icon: text glyphs like ↗ are missing from the web font's subset. */
+interface Props { dir?: 'right' | 'down' | 'up-right'; size?: number }
+const { dir = 'right', size = 16 } = Astro.props;
+const rotation = { right: 0, down: 90, 'up-right': -45 }[dir];
+---
+<span class="arrow" aria-hidden="true"><svg width={size} height={size} viewBox="0 0 16 16" focusable="false" style={`transform: rotate(${rotation}deg)`}><path d="M2 8h11M8.5 3.5 13 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" /></svg></span>
+
+<style>
+  .arrow { display: inline-flex; vertical-align: -0.12em; transition: transform 0.2s var(--ease-out); }
+</style>

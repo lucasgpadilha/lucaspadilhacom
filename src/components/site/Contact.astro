@@ -1,0 +1,39 @@
+---
+import Arrow from './Arrow.astro';
+import { email, sections } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = sections.contact;
+---
+<section id="contact" class="section" aria-labelledby="contact-title">
+  <div class="wrap">
+    <header class="section-head" data-reveal>
+      <p class="label">{t(s.label, locale)}</p>
+      <div class="head-copy">
+        <h2 id="contact-title">{t(s.title, locale)}</h2>
+        <p class="lede">{t(s.body, locale)}</p>
+      </div>
+    </header>
+    <div class="cta" data-reveal>
+      <a class="mail" href={`mailto:${email}`}>{email}</a>
+      <ul role="list" class="links">
+        <li><a href="https://github.com/lucasgpadilha">GitHub <Arrow dir="up-right" size={14} /></a></li>
+        <li><a href="https://www.linkedin.com/in/lucasgpadilha/">LinkedIn <Arrow dir="up-right" size={14} /></a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .head-copy { display: grid; gap: 1.25rem; }
+  .cta { display: grid; gap: 1.5rem; }
+  @media (min-width: 960px) { .cta { margin-left: calc(25% + 0.25rem); } }
+  .mail {
+    font-size: clamp(1.25rem, 0.6rem + 3.6vw, 3.5rem); font-weight: 640; letter-spacing: -0.03em; line-height: 1.1;
+    overflow-wrap: anywhere; text-decoration-thickness: 2px; text-underline-offset: 0.15em;
+  }
+  .links { display: flex; gap: 0.5rem 1.5rem; flex-wrap: wrap; }
+  .links a { display: inline-flex; min-height: 44px; align-items: center; font-weight: 600; }
+</style>

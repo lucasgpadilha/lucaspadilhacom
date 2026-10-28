@@ -1,9 +1,16 @@
 ---
+import Arrow from './Arrow.astro';
 import Base from '../../layouts/Base.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import Receipt from './Receipt.astro';
-import { hero, meta, nav, sections } from '../../data/home';
+import Work from './Work.astro';
+import Shipping from './Shipping.astro';
+import Stack from './Stack.astro';
+import SitesTeaser from './SitesTeaser.astro';
+import Trajectory from './Trajectory.astro';
+import Contact from './Contact.astro';
+import { hero, meta, nav } from '../../data/home';
 import { homePath, t, type Locale } from '../../lib/locale';
 
 interface Props { locale: Locale }
@@ -46,8 +53,8 @@ const jsonLd = {
           <h1 id="hero-title">{t(hero.title, locale)}</h1>
           <p class="lede">{t(hero.lede, locale)}</p>
           <div class="actions">
-            <a class="btn" href="#work">{t(hero.primary, locale)} <span class="arrow" aria-hidden="true">↓</span></a>
-            <a class="btn btn--ghost" href="/sites/">{t(hero.secondary, locale)} <span class="arrow" aria-hidden="true">→</span></a>
+            <a class="btn" href="#work">{t(hero.primary, locale)} <Arrow dir="down" /></a>
+            <a class="btn btn--ghost" href="/sites/">{t(hero.secondary, locale)} <Arrow /></a>
           </div>
         </div>
         <div class="receipt-col">
@@ -56,14 +63,12 @@ const jsonLd = {
       </div>
     </section>
 
-    <section id="work" class="section" aria-labelledby="work-title">
-      <div class="wrap">
-        <header class="section-head" data-reveal>
-          <p class="label">{t(sections.work.label, locale)}</p>
-          <h2 id="work-title">{t(sections.work.title, locale)}</h2>
-        </header>
-      </div>
-    </section>
+    <Work locale={locale} />
+    <Shipping locale={locale} />
+    <Stack locale={locale} />
+    <SitesTeaser locale={locale} />
+    <Trajectory locale={locale} />
+    <Contact locale={locale} />
   </main>
   <Footer locale={locale} />
 </Base>

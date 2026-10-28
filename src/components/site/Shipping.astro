@@ -1,0 +1,90 @@
+---
+import Arrow from './Arrow.astro';
+import { sections } from '../../data/home';
+import { getBuildInfo } from '../../lib/build-info';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = sections.shipping;
+const build = getBuildInfo();
+const workflow = 'https://github.com/lucasgpadilha/lucaspadilhacom/blob/main/.github/workflows/deploy.yml';
+---
+<section id="shipping" class="section" aria-labelledby="shipping-title">
+  <div class="wrap">
+    <header class="section-head" data-reveal>
+      <p class="label">{t(s.label, locale)}</p>
+      <div class="head-copy">
+        <h2 id="shipping-title">{t(s.title, locale)}</h2>
+        <p class="lede">{t(s.intro, locale)}</p>
+      </div>
+    </header>
+
+    <ol class="track" role="list" data-reveal>
+      {s.steps.map((step, index) => (
+        <li class:list={['station', { last: index === s.steps.length - 1 }]}>
+          <span class="dot" aria-hidden="true"></span>
+          <span class="index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3>{t(step.title, locale)}</h3>
+          <p>{t(step.body, locale)}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="below">
+      <p class="links" data-reveal>
+        <a href={workflow}>{t(s.workflow, locale)} <Arrow dir="up-right" size={14} /></a>
+        {build.runUrl && <a href={build.runUrl}>{locale === 'pt' ? 'Run que gerou esta página' : 'The run that built this page'} <Arrow dir="up-right" size={14} /></a>}
+      </p>
+      <aside class="ai" aria-labelledby="ai-title" data-reveal>
+        <h3 id="ai-title">{t(s.aiTitle, locale)}</h3>
+        <p>{t(s.aiBody, locale)}</p>
+        <ol role="list">
+          {t(s.aiGates, locale).map((gate) => <li>{gate}</li>)}
+        </ol>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .head-copy { display: grid; gap: 1.25rem; }
+  .track { display: grid; gap: 0; position: relative; }
+  .station { position: relative; display: grid; gap: 0.35rem; padding: 0 0 2rem 2.25rem; }
+  .station::before {
+    content: ''; position: absolute; left: 6px; top: 10px; bottom: -10px; width: 1px; background: var(--line-strong);
+  }
+  .station.last::before { display: none; }
+  .dot {
+    position: absolute; left: 0; top: 4px; width: 13px; height: 13px;
+    border: 1.5px solid var(--ink); background: var(--paper); border-radius: 50%;
+  }
+  .last .dot { background: var(--signal); border-color: var(--signal); }
+  .index { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-2); }
+  .station h3 { font-size: var(--step-1); }
+  .station p { color: var(--ink-2); font-size: var(--step--1); max-width: 30ch; }
+  @media (min-width: 900px) {
+    .track { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.5rem; }
+    .station { padding: 2.25rem 0 0; }
+    .station::before { left: 13px; right: -1.5rem; top: 6px; bottom: auto; width: auto; height: 1px; }
+    .dot { top: 0; }
+  }
+  .below { display: grid; gap: 2rem; margin-top: 2.5rem; }
+  .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; align-self: start; }
+  .links a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+  .ai {
+    display: grid; gap: 1rem; padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  }
+  .ai h3 { font-size: var(--step-2); }
+  .ai p { color: var(--ink-2); }
+  .ai ol { display: grid; gap: 0.6rem; counter-reset: gate; }
+  .ai li { counter-increment: gate; display: grid; grid-template-columns: 2.25rem 1fr; align-items: baseline; font-weight: 560; }
+  .ai li::before { content: counter(gate, decimal-leading-zero); font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-2); font-weight: 500; }
+  @media (min-width: 960px) {
+    .below { grid-template-columns: 3fr 9fr; }
+    .ai { grid-template-columns: 1fr 1fr; column-gap: 2.5rem; }
+    .ai h3, .ai p { grid-column: 1; }
+    .ai ol { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  }
+</style>
