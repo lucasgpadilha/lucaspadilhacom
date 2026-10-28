@@ -33,15 +33,20 @@ export const nav: Localized<{ href: string; label: string }[]> = {
 
 export const hero = {
   lines: {
-    en: ['Infrastructure that holds up in production.', 'Websites that bring in customers.'],
-    pt: ['Infraestrutura que aguenta produção.', 'Sites que trazem cliente.'],
+    en: ['From commit to cluster,', 'with no manual steps.'],
+    pt: ['Do commit ao cluster,', 'sem passo manual.'],
   } satisfies Localized<string[]>,
   lede: {
-    en: 'I’m Lucas Padilha, a DevOps and cloud engineer in Brazil. I move workloads to Kubernetes, cut cloud bills and automate the work nobody should do twice. I also build fast websites for small businesses.',
-    pt: 'Sou Lucas Padilha, engenheiro DevOps e de cloud. Levo workloads para Kubernetes, corto a conta de nuvem e automatizo o trabalho que ninguém deveria fazer duas vezes. Também faço sites rápidos para pequenos negócios.',
+    en: 'I’m Lucas Padilha, a DevOps and cloud engineer. I move systems to Kubernetes on OCI, describe the infrastructure in Terraform, ship through GitOps with Argo CD and cut what the cloud overcharges.',
+    pt: 'Sou Lucas Padilha, engenheiro DevOps e de cloud. Levo sistemas para Kubernetes na OCI, descrevo a infraestrutura em Terraform, entrego por GitOps com Argo CD e corto o que a nuvem cobra a mais.',
   } satisfies L,
-  primary: { en: 'See the infrastructure work', pt: 'Ver o trabalho de infra' } satisfies L,
+  proof: {
+    en: 'Latest project: about 250 services moved from VMs to OKE in three weeks, and 26–30% compute savings mapped.',
+    pt: 'Último projeto: cerca de 250 serviços saíram de VMs para o OKE em três semanas, com 26–30% de economia em compute mapeada.',
+  } satisfies L,
+  primary: { en: 'See the work', pt: 'Ver o trabalho' } satisfies L,
   secondary: { en: 'I need a website', pt: 'Quero um site' } satisfies L,
+  sites: { en: 'Need a website for your business? See the offer', pt: 'Precisa de um site para o seu negócio? Ver a oferta' } satisfies L,
 };
 
 export interface MigrationStep {
@@ -228,3 +233,49 @@ export const contact = {
 };
 
 export const email = 'ceo@lucaspadilha.com';
+
+export const deploy = {
+  figure: {
+    en: 'An automated deploy, from commit to the cluster, with a security gate on the way',
+    pt: 'Um deploy automatizado, do commit ao cluster, com um portão de segurança no caminho',
+  } satisfies L,
+  stages: [
+    { key: 'commit', name: { en: 'Commit', pt: 'Commit' }, tools: { en: 'git push to main', pt: 'git push na main' } },
+    {
+      key: 'ci',
+      name: { en: 'CI', pt: 'CI' },
+      tools: { en: 'GitHub Actions on runners inside the cluster', pt: 'GitHub Actions em runners no cluster' },
+      proof: { en: '111 test files · 4 IaC suites', pt: '111 arquivos de teste · 4 suítes de IaC' },
+    },
+    {
+      key: 'policy',
+      name: { en: 'Policy and secrets', pt: 'Política e segredos' },
+      tools: { en: 'Kyverno · External Secrets from Vault', pt: 'Kyverno · External Secrets do Vault' },
+    },
+    { key: 'image', name: { en: 'Image', pt: 'Imagem' }, tools: { en: 'OCIR registry', pt: 'registry OCIR' } },
+    {
+      key: 'sync',
+      name: { en: 'GitOps', pt: 'GitOps' },
+      tools: { en: 'Argo CD · Image Updater · sync windows', pt: 'Argo CD · Image Updater · sync windows' },
+      proof: { en: '73 applications', pt: '73 aplicações' },
+    },
+    {
+      key: 'prod',
+      name: { en: 'Production', pt: 'Produção' },
+      tools: { en: 'OKE · rolling update', pt: 'OKE · rolling update' },
+      proof: { en: '258 workloads', pt: '258 workloads' },
+    },
+  ] satisfies { key: string; name: L; tools: L; proof?: L }[],
+  status: {
+    clean: { en: 'Synced · Healthy', pt: 'Synced · Healthy' },
+    blocked: {
+      en: 'Stopped by Kyverno: the container ran as root. Nothing reached the cluster.',
+      pt: 'Barrado pelo Kyverno: o container rodava como root. Nada chegou ao cluster.',
+    },
+  } satisfies Record<string, L>,
+  controls: {
+    label: { en: 'Deploy simulation', pt: 'Simulação de deploy' },
+    clean: { en: 'Run the deploy', pt: 'Rodar o deploy' },
+    blocked: { en: 'Try a policy violation', pt: 'Tentar uma violação de política' },
+  } satisfies Record<string, L>,
+};

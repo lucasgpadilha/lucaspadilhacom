@@ -1,0 +1,51 @@
+---
+// One capability per chapter: a short claim, the drawing that proves it, the tools it
+// used and a few numbers set small. `flip` puts the drawing on the left on wide screens.
+interface Fact { value: string; text: string }
+interface Props {
+  id: string;
+  title: string;
+  lede: string;
+  tools?: string[];
+  facts?: Fact[];
+  flip?: boolean;
+  toolsLabel: string;
+}
+const { id, title, lede, tools = [], facts = [], flip = false, toolsLabel } = Astro.props;
+---
+<section id={id} class:list={['chapter', 'zone-night', { flip }]} aria-labelledby={`${id}-title`}>
+  <div class="wrap grid">
+    <div class="text">
+      <h2 id={`${id}-title`}>{title}</h2>
+      <p class="lede">{lede}</p>
+      <slot name="body" />
+      {facts.length > 0 && (
+        <ul class="facts" role="list">
+          {facts.map((fact) => <li><b>{fact.value}</b> {fact.text}</li>)}
+        </ul>
+      )}
+      {tools.length > 0 && (
+        <p class="tools"><span class="visually-hidden">{toolsLabel}: </span>{tools.join(' · ')}</p>
+      )}
+    </div>
+    <div class="figure">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .chapter { padding-block: clamp(3.5rem, 2.5rem + 3vw, 6rem); border-top: 1px solid var(--line); }
+  .grid { display: grid; gap: 2rem; grid-template-areas: 'text' 'figure'; }
+  .text { grid-area: text; display: grid; gap: 1rem; align-content: start; }
+  .figure { grid-area: figure; min-width: 0; }
+  h2 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem); letter-spacing: -0.03em; max-width: 18ch; }
+  .lede { font-size: var(--step-1); color: var(--ink); max-width: 44ch; }
+  .facts { display: grid; gap: 0.5rem; padding-top: 0.25rem; font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
+  .facts b { font-family: var(--font-mono); font-weight: 600; color: var(--signal); margin-right: 0.15em; }
+  .tools { font-size: 0.8125rem; color: var(--ink-2); padding-top: 0.75rem; border-top: 1px solid var(--line); max-width: 46ch; }
+  @media (min-width: 1080px) {
+    .grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-areas: 'text figure'; column-gap: 3.5rem; align-items: center; }
+    .flip .grid { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); grid-template-areas: 'figure text'; }
+  }
+</style>

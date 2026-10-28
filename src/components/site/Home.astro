@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
-import Receipt from './Receipt.astro';
+import DeployScene from './DeployScene.astro';
 import Arrow from './Arrow.astro';
 import Migration from './Migration.astro';
 import Feats from './Feats.astro';
@@ -40,6 +40,7 @@ const jsonLd = {
   ogImage={pt ? '/og/home-pt.jpg' : '/og/home-en.jpg'}
   jsonLd={jsonLd}
   langScript={pt ? 'pt' : 'root'}
+  theme="night"
 >
   <Header
     locale={locale}
@@ -49,20 +50,21 @@ const jsonLd = {
     cta={{ href: '/sites/', label: t(hero.secondary, locale) }}
   />
   <main id="main" tabindex="-1">
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero zone-night" aria-labelledby="hero-title">
       <div class="wrap grid">
-        <div class="copy">
-          <h1 id="hero-title">
-            {t(hero.lines, locale).map((line, i) => <span class:list={['line', { second: i === 1 }]}>{i === 1 ? <span class="mark">{line}</span> : line}</span>)}
-          </h1>
-          <p class="lede">{t(hero.lede, locale)}</p>
-          <div class="actions">
-            <a class="btn" href="#infra">{t(hero.primary, locale)} <Arrow dir="down" /></a>
-            <a class="btn btn--ghost" href="/sites/" hreflang="pt-BR">{t(hero.secondary, locale)} <Arrow /></a>
-          </div>
+        <h1 id="hero-title">
+          {t(hero.lines, locale).map((line) => <span class="line">{line}</span>)}
+        </h1>
+        <div class="scene">
+          <DeployScene locale={locale} />
         </div>
-        <div class="receipt-col">
-          <Receipt locale={locale} variant="home" />
+        <div class="copy">
+          <p class="lede">{t(hero.lede, locale)}</p>
+          <p class="proof">{t(hero.proof, locale)}</p>
+          <div class="actions">
+            <a class="btn btn--light" href="#kubernetes">{t(hero.primary, locale)} <Arrow dir="down" /></a>
+            <a class="sites-link" href="/sites/" hreflang="pt-BR">{t(hero.sites, locale)} <Arrow /></a>
+          </div>
         </div>
       </div>
     </section>
@@ -78,26 +80,29 @@ const jsonLd = {
 </Base>
 
 <style>
-  .hero { padding-block: clamp(3rem, 2rem + 6vw, 8rem) clamp(4rem, 2rem + 6vw, 8rem); }
-  .grid { display: grid; gap: clamp(3rem, 2rem + 4vw, 5rem); align-items: end; }
-  .copy { display: grid; gap: 1.75rem; }
-  h1 { font-size: clamp(2.5rem, 1.2rem + 5.4vw, 6rem); font-weight: 690; letter-spacing: -0.04em; line-height: 0.95; max-width: 14ch; }
+  .hero { padding-block: clamp(1.75rem, 1rem + 2.5vw, 3rem) clamp(2.5rem, 1.5rem + 3vw, 4rem); overflow: hidden; }
+  .grid { display: grid; gap: 1.5rem; grid-template-areas: 'title' 'scene' 'copy'; }
+  h1 { grid-area: title; font-size: clamp(2.25rem, 1.5rem + 3.2vw, 4.25rem); font-weight: 680; letter-spacing: -0.035em; line-height: 0.98; }
   h1 .line { display: block; }
-  h1 .line + .line { color: var(--ink-2); }
-  /* The second promise gets a signal stroke drawn once under it; the text is visible from frame one. */
-  .mark {
-    background: linear-gradient(var(--signal), var(--signal)) no-repeat 0 92% / 100% 0.09em;
-    -webkit-box-decoration-break: clone; box-decoration-break: clone;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .mark { animation: stroke 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
-    @keyframes stroke { from { background-size: 0% 0.09em; } }
-  }
-  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-  .receipt-col { max-width: 380px; width: 100%; justify-self: center; }
+  h1 .line + .line { color: var(--signal); }
+  .scene { grid-area: scene; }
+  .copy { grid-area: copy; display: grid; gap: 1rem; align-content: start; }
+  .lede { font-size: var(--step-1); max-width: 42ch; color: var(--ink); }
+  .proof { font-size: var(--step--1); color: var(--ink-2); max-width: 48ch; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; margin-top: 0.5rem; }
+  .btn--light { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .sites-link { display: inline-flex; align-items: center; gap: 0.45em; min-height: 44px; font-size: 0.9375rem; color: var(--ink-2); }
+  .sites-link:hover { color: var(--ink); }
   @media (min-width: 1080px) {
-    .grid { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); }
-    .receipt-col { justify-self: end; }
+    .grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-rows: auto 1fr;
+      grid-template-areas: 'title scene' 'copy scene';
+      column-gap: 3rem; row-gap: 1.75rem;
+      min-height: calc(100svh - 64px - 6rem);
+      align-content: center;
+    }
+    h1 { align-self: end; }
+    .scene { align-self: center; }
   }
-  @media (max-width: 420px) { .actions .btn { flex: 1 1 100%; } }
 </style>

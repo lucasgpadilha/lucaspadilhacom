@@ -22,13 +22,15 @@ interface Props {
    * "root" sends Portuguese visitors from / to /pt/; "pt" honours ?lang=en on /pt/.
    */
   langScript?: 'root' | 'pt';
+  /** Theme of the first screen; the home opens at night. */
+  theme?: 'paper' | 'night';
 }
 
-const { title, description, path, locale, alternates, ogImage, noindex = false, jsonLd, langScript } = Astro.props;
+const { title, description, path, locale, alternates, ogImage, noindex = false, jsonLd, langScript, theme } = Astro.props;
 const canonical = absolute(path);
 ---
 <!doctype html>
-<html lang={htmlLang(locale)}>
+<html lang={htmlLang(locale)} data-theme={theme}>
   <head>
     <meta charset="utf-8" />
     {langScript && (
