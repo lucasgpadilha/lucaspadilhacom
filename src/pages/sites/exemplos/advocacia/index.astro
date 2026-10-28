@@ -74,11 +74,17 @@ import Rodape from '../../../../components/demos/advocacia/Rodape.astro';
   if (host && hero) {
     const scene = mountScene(host, () => import('../../../../components/demos/advocacia/scene'), { pointer: true });
     // As the hero scrolls away the ink thins and draws back toward the corner.
+    // Each new value costs a frame, so only real changes are sent.
     const ink = { p: 0 };
+    let sent = 0;
     gsap.to(ink, {
       p: 1,
       ease: 'none',
-      onUpdate: () => scene.setProgress(ink.p),
+      onUpdate: () => {
+        if (Math.abs(ink.p - sent) < 1e-4) return;
+        sent = ink.p;
+        scene.setProgress(ink.p);
+      },
       scrollTrigger: { trigger: hero, start: 0, end: 'center top', scrub: 0.6 },
     });
   }

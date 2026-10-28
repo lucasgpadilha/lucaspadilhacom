@@ -13,6 +13,8 @@
  * Motion: a bounded intro (the bloom, INTRO_MS), then only input. The pointer pulls the warp toward
  * the cursor with a damped ease that always settles POINTER_MS after the last move; scroll thins
  * the ink and draws it back toward the corner. With no input the frame is identical forever.
+ * On software rasterisers (no GPU) the bloom starts finished and the pointer pull is not eased,
+ * since each frame there costs the main thread a readback; redundant frames are never drawn.
  */
 import type { SceneContext, SceneInstance } from '../../../lib/three/mount';
 
@@ -69,18 +71,18 @@ float noise(vec2 p) {
   float d = dot(grad(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
-float fbm(vec2 p, int oct) {
+${[2, 3, 4].map((n) => `float fbm${n}(vec2 p) {
   float s = 0.0, a = 0.5;
-  for (int i = 0; i < 6; i++) {
-    if (i >= oct) break;
+  for (int i = 0; i < ${n}; i++) {
     s += a * noise(p);
     p = ROT * p * 2.03 + vec2(17.13, 9.71);
     a *= 0.5;
   }
   return s;
-}
+}`).join('\n')}
 
 void main() {
+  if (uBloom <= 0.0) { outColor = vec4(0.0); return; }
   vec2 css = vec2(gl_FragCoord.x, uView.y - gl_FragCoord.y) / uScale;
   vec2 u = (css - uStage.xy) / uStage.z;
   // Cheap bound: distance to the plume's axis, from its origin to where it comes to rest.
@@ -101,11 +103,11 @@ void main() {
 
   // Big forms first: a slow, low-frequency warp bends the cloud into a few lobes.
   vec2 p = uu * 0.9 + vec2(3.1, 7.7);
-  vec2 q = vec2(fbm(p, 3), fbm(p + vec2(5.2, 1.3), 3));
-  vec2 s = vec2(fbm(p + 2.6 * q + vec2(1.7, 9.2) + phase + unfurl * 0.5, 4),
-                fbm(p + 2.6 * q + vec2(8.3, 2.8) - phase - unfurl * 0.35, 4));
+  vec2 q = vec2(fbm3(p), fbm3(p + vec2(5.2, 1.3)));
+  vec2 s = vec2(fbm4(p + 2.6 * q + vec2(1.7, 9.2) + phase + unfurl * 0.5),
+                fbm4(p + 2.6 * q + vec2(8.3, 2.8) - phase - unfurl * 0.35));
   // Flow field: few octaves and a large warp, so filaments come out long, smooth and curling.
-  float n = fbm(p * 1.5 + 3.6 * s + vec2(4.4, 0.6) + f * 0.3, 4);
+  float n = fbm4(p * 1.5 + 3.6 * s + vec2(4.4, 0.6) + f * 0.3);
 
   // The bloom is a plume: its head travels from the origin (behind the headline) to its resting
   // place, and the stem it leaves behind points back at the words.
@@ -126,14 +128,14 @@ void main() {
   mat2 along = mat2(cos(ang), sin(ang), -sin(ang), cos(ang));
   float hair = pow(clamp(1.0 - abs(noise(along * u * vec2(9.0, 64.0) + 3.0 * s)), 0.0, 1.0), 8.0)
              + 0.7 * pow(clamp(1.0 - abs(noise(along * u * vec2(6.0, 38.0) + 7.0)), 0.0, 1.0), 8.0);
-  float fine = fbm(u * 12.0 + s * 3.0, 2);
+  float fine = fbm2(u * 12.0 + s * 3.0);
   float front = d + 0.12 * n + 0.05 * fine - 0.09 * hair * smoothstep(0.55, 0.95, d) + 0.3 * f;
 
   // Tone: water-side and ink-side of the flow field, thin tendrils along its zero line, a deep
   // heart, and a soft veil that the fibres feather out.
   float body = 1.0 - smoothstep(0.2, 0.95, front);
   float vol = smoothstep(0.0, 0.14, n);
-  float micro = fbm(p * 3.2 + 4.0 * s + 2.0, 3);
+  float micro = fbm3(p * 3.2 + 4.0 * s + 2.0);
   float tend = exp(-n * n * 140.0);
   float reach = 1.0 - smoothstep(0.75, 1.12, front);
   float veil = 1.0 - smoothstep(0.8, 1.0, front);
@@ -176,32 +178,57 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 const bloomEase = (t: number) => 1 - Math.pow(1 - t, 3.4);
 
-function compile(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
-  const shader = gl.createShader(type);
-  if (!shader) throw new Error('ink: no shader');
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(`ink: ${gl.getShaderInfoLog(shader)}`);
-  return shader;
+function shader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
+  const sh = gl.createShader(type);
+  if (!sh) throw new Error('ink: no shader');
+  gl.shaderSource(sh, source);
+  gl.compileShader(sh);
+  return sh;
 }
 
-export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInstance {
-  const gl = canvas.getContext('webgl2', {
-    alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power',
-  });
-  if (!gl) throw new Error('ink: WebGL2 unavailable');
-
-  const vs = compile(gl, gl.VERTEX_SHADER, VERT);
-  const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+/** Link without blocking the main thread where the driver can compile in parallel. */
+async function link(gl: WebGL2RenderingContext): Promise<WebGLProgram> {
+  const vs = shader(gl, gl.VERTEX_SHADER, VERT);
+  const fs = shader(gl, gl.FRAGMENT_SHADER, FRAG);
   const program = gl.createProgram();
   if (!program) throw new Error('ink: no program');
   gl.attachShader(program, vs);
   gl.attachShader(program, fs);
   gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`ink: ${gl.getProgramInfoLog(program)}`);
+  const parallel = gl.getExtension('KHR_parallel_shader_compile') as { COMPLETION_STATUS_KHR: number } | null;
+  if (parallel) {
+    while (!gl.getProgramParameter(program, parallel.COMPLETION_STATUS_KHR)) {
+      await new Promise((resolve) => setTimeout(resolve, 16));
+    }
+  }
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    const log = gl.getShaderInfoLog(fs) || gl.getShaderInfoLog(vs) || gl.getProgramInfoLog(program);
+    throw new Error(`ink: ${log}`);
+  }
   gl.deleteShader(vs);
   gl.deleteShader(fs);
+  return program;
+}
+
+/** Software rasterisers (no GPU) cannot animate this shader smoothly: show its finished frame. */
+function softwareRenderer(gl: WebGL2RenderingContext): boolean {
+  const info = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || '');
+  return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+}
+
+export async function create(canvas: HTMLCanvasElement, _ctx: SceneContext): Promise<SceneInstance> {
+  const gl = canvas.getContext('webgl2', {
+    alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power',
+  });
+  if (!gl) throw new Error('ink: WebGL2 unavailable');
+
+  const program = await link(gl);
   const vao = gl.createVertexArray();
+  const software = softwareRenderer(gl);
+  // Start once the webfonts have set the headline, so the first frame is measured on the final
+  // layout and the bloom opens beside the real type (never waits more than 1.5 s).
+  await Promise.race([document.fonts?.ready, new Promise((resolve) => setTimeout(resolve, 1500))]);
 
   const uniform = (name: string) => gl.getUniformLocation(program, name);
   const loc = {
@@ -233,12 +260,14 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       origin[0] = parseFloat(style.getPropertyValue('--ink-ox')) || -0.6;
       origin[1] = parseFloat(style.getPropertyValue('--ink-oy')) || 0.6;
     }
-    calmN = 0;
+    const next = new Float32Array(MAX_CALM * 4);
+    const nextCap = new Float32Array(MAX_CALM);
+    let n = 0;
     const push = (r: DOMRect | { left: number; top: number; width: number; height: number }, limit: number) => {
-      if (calmN >= MAX_CALM || r.width <= 0 || r.height <= 0) return;
-      calm.set([r.left - box.left, r.top - box.top, r.width, r.height], calmN * 4);
-      cap[calmN] = limit;
-      calmN += 1;
+      if (n >= MAX_CALM || r.width <= 0 || r.height <= 0) return;
+      next.set([r.left - box.left, r.top - box.top, r.width, r.height].map(Math.round), n * 4);
+      nextCap[n] = limit;
+      n += 1;
     };
     host.querySelectorAll<HTMLElement>('[data-ink-calm]').forEach((el) => {
       const limit = parseFloat(el.dataset.inkCalm || '0') || 0;
@@ -264,19 +293,28 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       range.detach();
       for (const l of lines) push({ left: l.left, top: l.top, width: l.right - l.left, height: l.bottom - l.top }, limit);
     });
+    // Text metrics drift by a pixel while fonts and the reveal settle; that should not cost a
+    // redraw, since the clear zone's edge is ~20px soft.
+    const moved = n !== calmN || next.some((v, i) => Math.abs(v - calm[i]) > 2) || nextCap.some((v, i) => v !== cap[i]);
+    if (moved) {
+      calm.set(next);
+      cap.set(nextCap);
+      calmN = n;
+    }
   };
 
   // Intro and damped pointer, both on the wall clock so slow frames cannot stretch them. Where the
   // GPU cannot keep up (software rendering, old phones) both finish at once instead of stuttering.
-  let introStart: number | null = null;
+  let introStart: number | null = software ? performance.now() - INTRO_MS : null;
   let lastTick = 0;
   let slowFrames = 0;
-  let bloom = 0;
+  let bloom = software ? 1 : 0;
   let fade = 0;
   const ptr = { x: 0, y: 0, w: 0 };
   let from = { ...ptr };
   let to = { ...ptr };
   let ptrStart = -Infinity;
+  let drawn = '';
 
   const pointerAt = (now: number) => {
     const k = easeOut(clamp01((now - ptrStart) / POINTER_MS));
@@ -290,8 +328,14 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
     resize(w, h, dpr) {
       width = Math.max(1, w);
       height = Math.max(1, h);
-      canvas.width = Math.max(1, Math.round(width * dpr));
-      canvas.height = Math.max(1, Math.round(height * dpr));
+      const bw = Math.max(1, Math.round(width * dpr));
+      const bh = Math.max(1, Math.round(height * dpr));
+      // Assigning a size clears the canvas, even an unchanged one.
+      if (canvas.width !== bw || canvas.height !== bh) {
+        canvas.width = bw;
+        canvas.height = bh;
+        drawn = '';
+      }
       measure();
     },
     setProgress(progress) {
@@ -314,7 +358,7 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       // Entering from nowhere: fade the pull in where the cursor is instead of sweeping across.
       from = ptr.w < 0.02 ? { x: target.x, y: target.y, w: ptr.w } : { ...ptr };
       to = target;
-      ptrStart = now;
+      ptrStart = software ? now - POINTER_MS : now;
     },
     tick() {
       const now = performance.now();
@@ -333,6 +377,10 @@ export function create(canvas: HTMLCanvasElement, _ctx: SceneContext): SceneInst
       return more;
     },
     render() {
+      // The runtime asks for frames on any input; redraw only when the picture would change.
+      const key = [canvas.width, canvas.height, width, ...stage, ...origin, bloom, fade, ptr.x, ptr.y, ptr.w, calmN, ...calm, ...cap].join();
+      if (key === drawn) return;
+      drawn = key;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.useProgram(program);
       gl.bindVertexArray(vao);
