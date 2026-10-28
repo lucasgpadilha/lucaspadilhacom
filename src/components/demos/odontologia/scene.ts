@@ -73,16 +73,16 @@ const CROOKED: Record<string, number[]> = {
   '-1:1': [-0.04, -0.36, -0.04, -26, 5, -4],
   '-1:2': [-0.12, 0.42, 0.15, 12, -10, 7],
   '-1:3': [0.02, -0.08, 0, 34, 0, 0],
-  '-1:4': [0.06, 0.06, -0.02, -16, 7, 0],
-  '-1:5': [0, 0, 0, 7, 10, 0],
-  '-1:6': [0.05, 0, 0, -6, 4, 0],
+  '-1:4': [0.06, 0.14, -0.02, -24, 7, 0],
+  '-1:5': [0.04, -0.08, 0, 15, 11, 0],
+  '-1:6': [0.1, 0.06, 0, -12, 6, 0],
   '1:0': [0.14, 0.08, 0.02, -5, -8, 7],
   '1:1': [-0.02, 0.24, 0, 22, 3, 5],
   '1:2': [0.06, 0.12, 0, -16, 6, 0],
   '1:3': [0.02, 0.16, 0, -28, 0, 3],
-  '1:4': [0.02, -0.2, -0.04, 13, 0, 0],
-  '1:5': [0, 0, 0, -9, -4, 6],
-  '1:6': [0.04, 0, 0, 6, -6, 0],
+  '1:4': [0.02, -0.2, -0.04, 20, 0, 0],
+  '1:5': [0.03, 0.1, 0, -15, -6, 6],
+  '1:6': [0.08, -0.06, 0, 11, -6, 0],
 };
 
 const ARCH_C = 0.56; // z = -C·x²
@@ -292,7 +292,7 @@ export function create(canvas: HTMLCanvasElement, ctx: SceneContext): SceneInsta
   const room = studio();
   const envTarget = pmrem.fromScene(room, 0.035);
   scene.environment = envTarget.texture;
-  scene.environmentIntensity = 0.95;
+  scene.environmentIntensity = 1.05;
   room.traverse((o) => {
     const mesh = o as Mesh;
     if (mesh.isMesh) {
@@ -327,7 +327,7 @@ export function create(canvas: HTMLCanvasElement, ctx: SceneContext): SceneInsta
   const enamel = new MeshPhysicalMaterial({
     color: 0xffffff,
     vertexColors: true,
-    roughness: 0.4,
+    roughness: 0.33,
     metalness: 0,
     clearcoat: 0.65,
     clearcoatRoughness: 0.2,
@@ -423,12 +423,13 @@ export function create(canvas: HTMLCanvasElement, ctx: SceneContext): SceneInsta
   const deg = Math.PI / 180;
 
   function layout() {
-    const align = clamp01((progress - 0.04) / 0.76);
+    // the crooked arch holds while the first beat reads, then aligns over the middle of the story
+    const align = clamp01((progress - 0.12) / 0.72);
     const warm = smooth(0.68, 0.98, progress);
     for (let i = 0; i < teeth.length; i++) {
       const tooth = teeth[i];
-      const delay = tooth.rank * 0.065 + (tooth.side > 0 ? 0.025 : 0);
-      const local = easeInOut(clamp01((align - delay) / 0.58));
+      const delay = tooth.rank * 0.075 + (tooth.side > 0 ? 0.03 : 0);
+      const local = easeInOut(clamp01((align - delay) / 0.52));
       const left = 1 - local; // how crooked it still is
       const [dt, dn, dy, yaw, tip, tilt] = tooth.crooked;
       // the intro sets each tooth down, from the midline outward
@@ -473,7 +474,7 @@ export function create(canvas: HTMLCanvasElement, ctx: SceneContext): SceneInsta
   const probe: Vector3[] = [];
   for (const tooth of teeth) {
     for (const k of [-1, 1]) {
-      const reach = tooth.b + 0.42;
+      const reach = tooth.b + Math.abs(tooth.crooked[1]) + 0.1; // room for its own crooked offset
       probe.push(tooth.base.clone().addScaledVector(tooth.normal, k * reach).setY(0));
       probe.push(tooth.base.clone().addScaledVector(tooth.normal, k * reach).setY(tooth.h + 0.18));
     }
@@ -487,6 +488,8 @@ export function create(canvas: HTMLCanvasElement, ctx: SceneContext): SceneInsta
     const elevation = mix(ELEVATION.tall, ELEVATION.wide, smooth(0.75, 1.2, camera.aspect));
     const dir = new Vector3(0, Math.sin(elevation), Math.cos(elevation));
     const fill = width < 560 ? 0.92 : 0.86;
+    // sit a little above centre, so the dawn glow has room to rise beneath the arch (more on tall canvases)
+    const lift = mix(0.16, 0.05, smooth(0.75, 1.2, camera.aspect));
     const measure = (distance: number) => {
       camera.position.copy(target).addScaledVector(dir, distance);
       camera.lookAt(target);
@@ -504,11 +507,11 @@ export function create(canvas: HTMLCanvasElement, ctx: SceneContext): SceneInsta
     for (let i = 0; i < 28; i++) {
       const mid = (lo + hi) / 2;
       const b = measure(mid);
-      if ((b.x1 - b.x0) / 2 <= fill && (b.y1 - b.y0) / 2 <= fill) hi = mid;
+      if ((b.x1 - b.x0) / 2 <= fill && (b.y1 - b.y0) / 2 <= fill - lift) hi = mid;
       else lo = mid;
     }
     const b = measure(hi);
-    fitShift = { x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 };
+    fitShift = { x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 - lift };
     applyShift();
   }
   function applyShift() {

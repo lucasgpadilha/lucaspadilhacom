@@ -36,7 +36,7 @@ const beats = [
           </ol>
           <p class="arco__note">Ilustração do processo. Indicação, etapas e duração dependem da avaliação de cada caso.</p>
         </div>
-        <div class="arco__scene" data-arco-scene>
+        <div class="arco__scene" data-arco-scene data-scene="pending">
           <div class="arco__glow" aria-hidden="true"></div>
           <div class="arco__fallback" data-fallback>
             <img
@@ -82,9 +82,10 @@ const beats = [
   /* the aurora light: the logo's four coral tones as a soft dawn rising from the panel's bottom edge
      once the arch is aligned (--sun: 0 → 1, set by the scroll; 1 when static) */
   .arco__glow {
-    position: absolute; left: -15%; right: -15%; bottom: 0; height: 74%;
-    /* coral → blush → warm white → mint: the warm white bridge keeps coral from going grey on mint */
-    background: radial-gradient(46% 100% at 50% 100%,
+    position: absolute; left: -30%; right: -30%; bottom: 0; height: min(74%, 92vw);
+    /* coral → blush → warm white → mint: the warm white bridge keeps coral from going grey on mint;
+       the ellipse ends inside its box, so no edge ever shows */
+    background: radial-gradient(38% 100% at 50% 100%,
       rgb(245 166 143 / 0.62), rgb(249 203 187 / 0.55) 26%, rgb(252 231 223 / 0.5) 48%,
       rgb(251 250 247 / 0.42) 68%, rgb(251 250 247 / 0) 100%);
     opacity: var(--sun, 1);
@@ -103,6 +104,8 @@ const beats = [
   }
   :global(.motion) .arco:not([data-story='off']) :is(.arco__wrap, .arco__panel) { height: 100%; }
   :global(.motion) .arco:not([data-story='off']) .arco__scene { flex: 1; height: auto; min-height: 0; }
+  /* while the scene loads, the story starts from an empty panel (the teeth are set down by the intro) */
+  :global(.motion) .arco:not([data-story='off']) [data-scene='pending'] .arco__fallback { visibility: hidden; }
 
   /* progress: one segment per beat, filled by --f (0…1) */
   :global(.motion) .arco:not([data-story='off']) :is(.beat__title, .beat)::before,
@@ -147,7 +150,8 @@ const beats = [
     .arco__copy { grid-column: 1 / 6; grid-row: 1; align-self: center; padding: 56px 0 56px 56px; }
     .arco__scene { grid-column: 6 / 13; grid-row: 1; height: auto; min-height: 520px; }
     .beats { gap: 0; margin-top: 36px; }
-    .beat { padding: 14px 0 14px 24px; }
+    .beat { padding: 14px 0; }
+    :global(.motion) .arco:not([data-story='off']) .beat { padding-left: 24px; }
     .beat__text { max-width: 38ch; }
     :global(.motion) .arco:not([data-story='off']) .arco__scene { min-height: 0; }
     :global(.motion) .arco:not([data-story='off']) :is(.beat__title, .beat__text) { transition: color 0.3s ease; }

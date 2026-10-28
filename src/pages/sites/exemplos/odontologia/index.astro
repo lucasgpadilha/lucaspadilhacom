@@ -63,7 +63,8 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   import { SplitText } from 'gsap/SplitText';
-  import { mountScene } from '../../../../lib/three/mount';
+  import { mountScene, type SceneHandle } from '../../../../lib/three/mount';
+  import { wantsStatic } from '../../../../lib/motion';
 
   gsap.registerPlugin(ScrollTrigger, SplitText);
   const root = document.documentElement;
@@ -90,13 +91,15 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
   const section = document.querySelector<HTMLElement>('[data-arco]');
   const host = section?.querySelector<HTMLElement>('[data-arco-scene]');
   if (section && host) {
-    const handle = mountScene(host, () => import('../../../../components/demos/odontologia/scene'), { pointer: true });
+    let handle: SceneHandle | null = null;
+    let progress = 0;
     const beats = [...section.querySelectorAll<HTMLElement>('.beat')];
     const bar = () => document.querySelector<HTMLElement>('.demo-banner')?.offsetHeight ?? 44;
     root.style.setProperty('--bar', `${bar()}px`);
     let active = -1;
     const show = (p: number) => {
-      handle.setProgress(p);
+      progress = p;
+      handle?.setProgress(p);
       // the sun rises over the last third, as the arch settles (same curve as the scene's warm light)
       const warm = Math.min(1, Math.max(0, (p - 0.68) / 0.3));
       section.style.setProperty('--sun', (1 - (1 - warm * warm * (3 - 2 * warm)) ** 3).toFixed(4));
@@ -118,8 +121,10 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
       ScrollTrigger.refresh();
     };
 
-    if (host.dataset.scene === 'fallback' || !moving) {
+    if (!moving || wantsStatic()) {
+      // no scroll story: the runtime shows the static render (or, if WebGL is still welcome, the aligned arch)
       section.dataset.story = 'off';
+      mountScene(host, () => import('../../../../components/demos/odontologia/scene')).setProgress(1);
     } else {
       show(0);
       const state = { p: 0 };
@@ -143,6 +148,16 @@ import Footer from '../../../../components/demos/odontologia/Footer.astro';
           section.style.removeProperty('--sun');
         }
       }).observe(host, { attributes: true, attributeFilter: ['data-scene'] });
+      // Let the headline reveal play alone: the scene loads after it, or as soon as the visitor scrolls.
+      let mounted = false;
+      const mount = () => {
+        if (mounted) return;
+        mounted = true;
+        handle = mountScene(host, () => import('../../../../components/demos/odontologia/scene'), { pointer: true });
+        handle.setProgress(progress);
+      };
+      addEventListener('scroll', mount, { once: true, passive: true });
+      setTimeout(mount, 1600);
     }
   }
 </script>
