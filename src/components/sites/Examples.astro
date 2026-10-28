@@ -1,0 +1,58 @@
+---
+import BrowserFrame from './BrowserFrame.astro';
+import Arrow from '../site/Arrow.astro';
+import { demos } from '../../data/sites';
+---
+<section id="exemplos" class="section" aria-labelledby="exemplos-title">
+  <div class="wrap">
+    <header class="section-head" data-reveal>
+      <p class="label">01 — Exemplos</p>
+      <div class="head-copy">
+        <h2 id="exemplos-title">Três negócios, três personalidades</h2>
+        <p class="lede">Sites conceito de empresas fictícias. Abra no celular: é lá que o seu cliente vai ver.</p>
+      </div>
+    </header>
+    <ol class="list" role="list">
+      {demos.map((demo, index) => (
+        <li class="row" data-reveal>
+          <a class="shot" href={`/sites/exemplos/${demo.slug}/`}>
+            <BrowserFrame
+              url={`lucaspadilha.com/sites/exemplos/${demo.slug}`}
+              src={`/sites/thumbs/${demo.slug}-1280.webp`}
+              srcset={`/sites/thumbs/${demo.slug}-640.webp 640w, /sites/thumbs/${demo.slug}-1280.webp 1280w`}
+              alt={`Abrir o site conceito ${demo.name}`}
+            />
+          </a>
+          <div class="copy">
+            <p class="label">{String(index + 1).padStart(2, '0')} · {demo.niche}</p>
+            <h3>{demo.name}</h3>
+            <p class="summary">{demo.summary}</p>
+            <ul role="list">
+              {demo.shows.map((item) => <li>{item}</li>)}
+            </ul>
+            <a class="btn btn--ghost" href={`/sites/exemplos/${demo.slug}/`}>Abrir o site <Arrow dir="up-right" size={14} /></a>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .head-copy { display: grid; gap: 1.25rem; }
+  .list { display: grid; gap: clamp(3.5rem, 2rem + 5vw, 6.5rem); }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.75rem; align-items: center; }
+  .shot { display: block; text-decoration: none; transition: transform 0.4s var(--ease-out); }
+  .shot:hover { transform: translateY(-4px); }
+  .copy { display: grid; gap: 0.9rem; justify-items: start; }
+  h3 { font-size: var(--step-3); }
+  .summary { font-size: var(--step-1); color: var(--ink-2); max-width: 32ch; line-height: 1.4; }
+  .copy ul { display: grid; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .copy li { display: grid; grid-template-columns: 1.1rem 1fr; }
+  .copy li::before { content: ''; width: 7px; height: 7px; margin-top: 0.55em; border-radius: 50%; background: var(--signal); }
+  @media (min-width: 1000px) {
+    .row { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 3.5rem; }
+    .row:nth-child(even) .shot { order: 2; }
+  }
+  @media (prefers-reduced-motion: reduce) { .shot, .shot:hover { transition: none; transform: none; } }
+</style>

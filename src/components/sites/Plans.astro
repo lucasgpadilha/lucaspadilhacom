@@ -1,0 +1,54 @@
+---
+import { contactHref, plans } from '../../data/sites';
+---
+<section id="planos" class="section" aria-labelledby="planos-title">
+  <div class="wrap">
+    <header class="section-head" data-reveal>
+      <p class="label">04 — Planos</p>
+      <div class="head-copy">
+        <h2 id="planos-title">Preço claro, sem surpresa</h2>
+        <p class="lede">Valores de referência. A proposta final, por escrito, depende do que o seu negócio precisa.</p>
+      </div>
+    </header>
+    <ul class="plans" role="list">
+      {plans.map((plan) => (
+        <li class:list={['plan', { featured: plan.featured }]} data-reveal>
+          <h3>{plan.name}</h3>
+          <p class="price">{plan.from && <span class="from">{plan.from}</span>}{plan.price}</p>
+          <p class="cadence">{plan.cadence}</p>
+          <ul role="list" class="items">
+            {plan.items.map((item) => <li>{item}</li>)}
+          </ul>
+          <a
+            class:list={['btn', plan.featured ? 'btn--signal' : 'btn--ghost']}
+            href={contactHref(`Olá, Lucas! Tenho interesse no plano "${plan.name}".\n\nNome do negócio:\nCidade:\n`)}
+            data-contact
+          >Quero este</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .head-copy { display: grid; gap: 1.25rem; }
+  .plans { display: grid; gap: 16px; }
+  .plan {
+    display: flex; flex-direction: column; gap: 0.5rem; padding: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  }
+  .plan h3 { font-size: var(--step-1); }
+  .price { display: grid; font-size: var(--step-3); font-weight: 680; letter-spacing: -0.03em; line-height: 1.05; margin-top: 0.75rem; }
+  .from { font-size: var(--step--1); font-weight: 500; letter-spacing: 0; color: var(--ink-2); margin-bottom: 0.2rem; }
+  .featured .from { color: color-mix(in srgb, var(--paper) 70%, transparent); }
+  .cadence { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.06em; }
+  .items { display: grid; gap: 0.55rem; margin: 1.25rem 0 1.75rem; padding-top: 1.25rem; border-top: 1px dashed var(--line-strong); }
+  .items li { display: grid; grid-template-columns: 1.25rem 1fr; }
+  .items li::before { content: ''; width: 10px; height: 5px; margin-top: 0.5em; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); }
+  .plan .btn { margin-top: auto; }
+  .featured { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .featured .cadence { color: color-mix(in srgb, var(--paper) 70%, transparent); }
+  .featured .items { border-top-color: color-mix(in srgb, var(--paper) 30%, transparent); }
+  .featured .items li::before { border-color: var(--signal); }
+  @media (min-width: 900px) { .plans { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; } }
+</style>

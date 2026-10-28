@@ -1,0 +1,40 @@
+---
+import { steps } from '../../data/sites';
+---
+<section id="como-funciona" class="section" aria-labelledby="como-funciona-title">
+  <div class="wrap">
+    <header class="section-head" data-reveal>
+      <p class="label">03 — Como funciona</p>
+      <div class="head-copy">
+        <h2 id="como-funciona-title">Você vê antes de fechar</h2>
+        <p class="lede">Nada de comprar no escuro. Primeiro a prévia, depois a decisão.</p>
+      </div>
+    </header>
+    <ol class="steps" role="list" data-reveal>
+      {steps.map((step, index) => (
+        <li class:list={{ key: index === 1 }}>
+          <span class="n" aria-hidden="true">{index + 1}</span>
+          <h3>{step.title}</h3>
+          <p>{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .head-copy { display: grid; gap: 1.25rem; }
+  .steps { display: grid; gap: 12px; }
+  .steps li { display: grid; gap: 0.5rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .n {
+    display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+    border: 1.5px solid var(--ink); font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 600;
+  }
+  .steps h3 { font-size: var(--step-1); margin-top: 0.5rem; }
+  .steps p { color: var(--ink-2); font-size: var(--step--1); }
+  .steps li.key { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .steps li.key .n { background: var(--signal); border-color: var(--signal); color: var(--on-signal); }
+  .steps li.key p { color: color-mix(in srgb, var(--paper) 75%, transparent); }
+  @media (min-width: 720px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1100px) { .steps { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+</style>
