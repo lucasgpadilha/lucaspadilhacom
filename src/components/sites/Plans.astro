@@ -4,12 +4,9 @@ import { contactChannel, contactHref, plans } from '../../data/sites';
 <section id="planos" class="section" aria-labelledby="planos-title">
   <div class="wrap">
     <header class="section-head" data-reveal>
-      <p class="label">04 — Planos</p>
-      <div class="head-copy">
         <h2 id="planos-title">Preço claro, sem surpresa</h2>
         <p class="lede">Valores de referência. A proposta final, por escrito, depende do que o seu negócio precisa.</p>
-      </div>
-    </header>
+      </header>
     <ul class="plans" role="list">
       {plans.map((plan) => (
         <li class:list={['plan', { featured: plan.featured }]} data-reveal>

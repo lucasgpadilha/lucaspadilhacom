@@ -1,0 +1,44 @@
+---
+import Arrow from './Arrow.astro';
+import { side } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<section id="side" class="section side" aria-labelledby="side-title">
+  <div class="wrap">
+    <header class="section-head">
+      <h2 id="side-title">{t(side.title, locale)}</h2>
+    </header>
+    <ul class="list" role="list">
+      {side.items.map((item) => (
+        <li>
+          <a href={item.href}>
+            <span class="name">{item.name}</span>
+            <span class="body">{t(item.body, locale)}</span>
+            <Arrow dir="up-right" size={16} />
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .side .section-head h2 { font-size: var(--step-3); }
+  .list { border-top: 1px solid var(--line-strong); }
+  .list a {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 1rem; row-gap: 0.2rem;
+    padding: 1.1rem 0; border-bottom: 1px solid var(--line); text-decoration: none; min-height: 64px; align-items: center;
+  }
+  .name { font-weight: 640; font-size: var(--step-1); }
+  .body { grid-column: 1; color: var(--ink-2); font-size: var(--step--1); }
+  .list a :global(.arrow) { grid-column: 2; grid-row: 1 / span 2; }
+  .list a:hover .name { text-decoration: underline; text-decoration-color: var(--signal); text-underline-offset: 0.2em; }
+  @media (min-width: 900px) {
+    .list a { grid-template-columns: minmax(0, 3fr) minmax(0, 8fr) auto; }
+    .body { grid-column: 2; grid-row: 1; }
+    .list a :global(.arrow) { grid-column: 3; grid-row: 1; }
+  }
+</style>

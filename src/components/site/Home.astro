@@ -1,16 +1,17 @@
 ---
-import Arrow from './Arrow.astro';
 import Base from '../../layouts/Base.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import Receipt from './Receipt.astro';
-import Work from './Work.astro';
-import Shipping from './Shipping.astro';
+import Arrow from './Arrow.astro';
+import Migration from './Migration.astro';
+import Feats from './Feats.astro';
+import HowIWork from './HowIWork.astro';
 import Stack from './Stack.astro';
-import SitesTeaser from './SitesTeaser.astro';
-import Trajectory from './Trajectory.astro';
+import SitesMarketing from './SitesMarketing.astro';
+import SideProjects from './SideProjects.astro';
 import Contact from './Contact.astro';
-import { hero, meta, nav } from '../../data/home';
+import { email, hero, meta, nav } from '../../data/home';
 import { homePath, t, type Locale } from '../../lib/locale';
 
 interface Props { locale: Locale }
@@ -23,8 +24,10 @@ const jsonLd = {
   '@type': 'Person',
   name: 'Lucas Padilha',
   url: 'https://lucaspadilha.com/',
-  jobTitle: pt ? 'Engenheiro DevOps e desenvolvedor web' : 'DevOps engineer and web developer',
-  address: { '@type': 'PostalAddress', addressCountry: 'BR' },
+  email,
+  jobTitle: pt ? 'Engenheiro DevOps e de cloud' : 'DevOps and cloud engineer',
+  address: { '@type': 'PostalAddress', addressLocality: 'Ponta Grossa', addressRegion: 'PR', addressCountry: 'BR' },
+  knowsAbout: ['Kubernetes', 'OCI', 'Terraform', 'Argo CD', 'Ansible', 'FinOps', 'Web development', 'Digital marketing'],
   sameAs: ['https://github.com/lucasgpadilha', 'https://www.linkedin.com/in/lucasgpadilha/'],
 };
 ---
@@ -49,12 +52,13 @@ const jsonLd = {
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap grid">
         <div class="copy">
-          <p class="label">{t(hero.kicker, locale)}</p>
-          <h1 id="hero-title">{t(hero.title, locale)}</h1>
+          <h1 id="hero-title" data-split>
+            {t(hero.lines, locale).map((line) => <span class="line">{line}</span>)}
+          </h1>
           <p class="lede">{t(hero.lede, locale)}</p>
           <div class="actions">
-            <a class="btn" href="#work">{t(hero.primary, locale)} <Arrow dir="down" /></a>
-            <a class="btn btn--ghost" href="/sites/">{t(hero.secondary, locale)} <Arrow /></a>
+            <a class="btn" href="#infra">{t(hero.primary, locale)} <Arrow dir="down" /></a>
+            <a class="btn btn--ghost" href="/sites/" hreflang="pt-BR">{t(hero.secondary, locale)} <Arrow /></a>
           </div>
         </div>
         <div class="receipt-col">
@@ -62,29 +66,29 @@ const jsonLd = {
         </div>
       </div>
     </section>
-
-    <Work locale={locale} />
-    <Shipping locale={locale} />
+    <Migration locale={locale} />
+    <Feats locale={locale} />
+    <HowIWork locale={locale} />
     <Stack locale={locale} />
-    <SitesTeaser locale={locale} />
-    <Trajectory locale={locale} />
+    <SitesMarketing locale={locale} />
+    <SideProjects locale={locale} />
     <Contact locale={locale} />
   </main>
   <Footer locale={locale} />
 </Base>
 
 <style>
-  .hero { padding-block: clamp(3rem, 2rem + 6vw, 7.5rem) clamp(3.5rem, 2rem + 5vw, 7rem); }
-  .grid { display: grid; gap: clamp(3rem, 2rem + 4vw, 5rem); align-items: center; }
-  .copy { display: grid; gap: 1.5rem; }
-  h1 { font-size: var(--step-4); font-weight: 680; max-width: 15ch; letter-spacing: -0.035em; line-height: 0.98; }
-  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
-  .receipt-col { max-width: 400px; width: 100%; justify-self: center; }
-  @media (min-width: 960px) {
-    .grid { grid-template-columns: minmax(0, 7.5fr) minmax(0, 4.5fr); }
+  .hero { padding-block: clamp(3rem, 2rem + 6vw, 8rem) clamp(4rem, 2rem + 6vw, 8rem); }
+  .grid { display: grid; gap: clamp(3rem, 2rem + 4vw, 5rem); align-items: end; }
+  .copy { display: grid; gap: 1.75rem; }
+  h1 { font-size: clamp(2.5rem, 1.2rem + 5.4vw, 6rem); font-weight: 690; letter-spacing: -0.04em; line-height: 0.95; max-width: 14ch; }
+  h1 .line { display: block; }
+  h1 .line + .line { color: var(--ink-2); }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .receipt-col { max-width: 380px; width: 100%; justify-self: center; }
+  @media (min-width: 1080px) {
+    .grid { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); }
     .receipt-col { justify-self: end; }
   }
-  @media (max-width: 420px) {
-    .actions .btn { flex: 1 1 100%; }
-  }
+  @media (max-width: 420px) { .actions .btn { flex: 1 1 100%; } }
 </style>

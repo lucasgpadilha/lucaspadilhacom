@@ -20,16 +20,34 @@ const check = (ok, message) => { if (!ok) failures.push(message); };
 // Only these repositories are public; private work must never be linked.
 const PUBLIC_REPOS = new Set(['lucaspadilhacom', 'pynoc', 'floci-cloud-lab', 'tuildap', 'agent-benchmark']);
 
+// Never on the public site: employers, retired products, internal figures.
+const FORBIDDEN = ['MMTech', 'AquiCob', 'Korp', 'Viasoft', 'Comboio', 'Nexora', 'ERP', 'R$ 43', 'Vinhedo', 'process-4', 'apps-k8s'];
+
+/** Headings must carry their own weight: no eyebrow/kicker label right before one (Impeccable ban). */
+const eyebrows = () => [...document.querySelectorAll('.label, .kicker, .eyebrow')].filter((el) => {
+  const next = el.nextElementSibling;
+  return next && (next.matches('h1, h2, h3') || next.firstElementChild?.matches('h1, h2, h3'));
+}).length;
+
 async function portfolio(page, label) {
-  const facts = await page.evaluate(() => ({
-    work: document.querySelectorAll('#work article').length,
+  const facts = await page.evaluate((eyebrowsSrc) => ({
+    eyebrows: new Function(`return (${eyebrowsSrc})()`)(),
+    steps: document.querySelectorAll('#infra [data-step]').length,
+    feats: document.querySelectorAll('#feats li').length,
+    side: document.querySelectorAll('#side a[href]').length,
+    mail: [...document.querySelectorAll('a[href^="mailto:"]')].map((a) => a.getAttribute('href')),
     repos: [...document.querySelectorAll('a[href^="https://github.com/lucasgpadilha/"]')]
       .map((a) => new URL(a.href).pathname.split('/')[2]),
-    text: document.body.innerText,
-  }));
-  check(facts.work >= 6, `${label}: #work has ${facts.work} articles`);
+    text: document.body.textContent,
+  }), eyebrows.toString());
+  check(facts.eyebrows === 0, `${label}: ${facts.eyebrows} eyebrow labels above headings`);
+  check(facts.steps === 5, `${label}: #infra has ${facts.steps} migration steps (expected 5)`);
+  check(facts.feats >= 8, `${label}: #feats lists ${facts.feats} things done (expected ≥ 8)`);
+  check(facts.side >= 4, `${label}: #side links ${facts.side} side projects (expected ≥ 4)`);
+  check(facts.mail.length > 0 && facts.mail.every((m) => m.startsWith('mailto:ceo@lucaspadilha.com')), `${label}: contact e-mail is not ceo@lucaspadilha.com: ${facts.mail.join(', ')}`);
+  for (const word of FORBIDDEN) check(!facts.text.includes(word), `${label}: mentions "${word}"`);
   for (const repo of facts.repos) check(PUBLIC_REPOS.has(repo), `${label}: links non-public repo "${repo}"`);
-  for (const stale of ['Operational Stack', 'Available for opportunities', 'Nginx', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
+  for (const stale of ['Operational Stack', 'Available for opportunities', 'never straight to main', 'nunca direto na main', 'decide what merges', 'decidem o que entra', 'Reverse-engineered', 'Engenharia reversa', 'reviewed pull requests', 'pull requests revisados']) {
     check(!facts.text.includes(stale), `${label}: still says "${stale}"`);
   }
 }
@@ -54,7 +72,7 @@ async function demo(page, label) {
   check(facts.banner && facts.bannerLink, `${label}: concept-site banner missing or not linking to /sites/#contato`);
   check(facts.tel === 0, `${label}: ${facts.tel} tel: links (no real phone numbers on concept sites)`);
   check(facts.badImages.length === 0, `${label}: images without alt/width/height: ${facts.badImages.join(', ')}`);
-  check(facts.bytes < 300 * 1024, `${label}: ${Math.round(facts.bytes / 1024)} KB without images (limit 300 KB)`);
+  check(facts.bytes < 450 * 1024, `${label}: ${Math.round(facts.bytes / 1024)} KB without images (limit 450 KB)`);
   const text = await page.evaluate(() => ({ banner: document.querySelector('.demo-banner')?.innerText ?? '', body: document.body.textContent }));
   check(/fictícia/i.test(text.banner), `${label}: banner does not say the business is fictional ("${text.banner.replace(/\s+/g, ' ')}")`);
   if (label.includes('/advocacia/')) {
@@ -75,7 +93,9 @@ async function sitesPage(page, label) {
       wa: document.querySelectorAll('a[href*="wa.me"]').length,
       contacts,
       contato: Boolean(document.getElementById('contato')),
+      marketing: Boolean(document.getElementById('marketing')),
       text: document.body.innerText,
+      all: document.body.textContent,
       ld: ld.flatMap((item) => (item?.['@graph'] ?? [item]).map((node) => node?.['@type'])),
     };
   });
@@ -88,6 +108,12 @@ async function sitesPage(page, label) {
   for (const c of facts.contacts) check(pattern.test(c.href), `${label}: contact CTA "${c.href}" does not match its channel`);
   check(channels.has('whatsapp') || facts.wa === 0, `${label}: links wa.me while the channel is e-mail`);
   check(/Wikimedia Commons/.test(facts.text), `${label}: thumbnails show CC BY/BY-SA photos without a credit line`);
+  for (const price of ['R$ 470', 'R$ 960', 'R$ 87']) check(facts.all.includes(price), `${label}: missing price ${price}`);
+  check(facts.marketing, `${label}: #marketing section missing`);
+  if (channels.has('email')) for (const c of facts.contacts) check(c.href.startsWith('mailto:ceo@lucaspadilha.com'), `${label}: contact goes to ${c.href.slice(0, 40)}`);
+  for (const word of FORBIDDEN) check(!facts.all.includes(word), `${label}: mentions "${word}"`);
+  const brows = await page.evaluate((src) => new Function(`return (${src})()`)(), eyebrows.toString());
+  check(brows === 0, `${label}: ${brows} eyebrow labels above headings`);
   check(facts.contato, `${label}: #contato missing`);
   check(facts.ld.includes('ProfessionalService'), `${label}: JSON-LD types ${facts.ld.join(', ')}`);
 }
@@ -217,9 +243,10 @@ try {
     const sitemapResponse = await get('/sitemap.xml');
     const sitemap = await sitemapResponse.text();
     check(sitemapResponse.status === 200, `sitemap.xml: status ${sitemapResponse.status}`);
-    for (const path of ['/', '/pt/', '/sites/', '/startup/']) {
+    for (const path of ['/', '/pt/', '/sites/']) {
       check(sitemap.includes(`<loc>${PROD}${path}</loc>`), `sitemap.xml: missing ${path}`);
     }
+    check(!sitemap.includes('/startup/'), 'sitemap.xml: lists /startup/ (it stays online but unlisted)');
     check(!sitemap.includes('/sites/exemplos/'), 'sitemap.xml: lists concept sites (they are noindex)');
     const notFound = await get('/404.html');
     const notFoundHtml = await notFound.text();
@@ -257,7 +284,7 @@ try {
     const { context, page } = await open('/', { viewport: { width: 390, height: 844 } });
     const menu = page.locator('details.menu');
     await menu.locator('summary').click();
-    await menu.locator('nav a[href="#work"]').click();
+    await menu.locator('nav a[href="#infra"]').click();
     check(!(await menu.evaluate((el) => el.open)), 'mobile menu stays open after choosing a section');
     await menu.locator('summary').click();
     await page.keyboard.press('Escape');

@@ -1,0 +1,69 @@
+---
+import Arrow from './Arrow.astro';
+import { websites } from '../../data/home';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const demos = [
+  { slug: 'advocacia', name: 'Lacerda & Viana', niche: { en: 'Law firm', pt: 'Advocacia' } },
+  { slug: 'odontologia', name: 'Aurora Odontologia', niche: { en: 'Dental clinic', pt: 'Clínica odontológica' } },
+  { slug: 'cafe', name: 'Casa Jabuticaba', niche: { en: 'Café and bakery', pt: 'Café e padaria' } },
+];
+---
+<section id="websites" class="websites" aria-labelledby="websites-title">
+  <div class="wrap">
+    <header class="section-head">
+      <h2 id="websites-title">{t(websites.title, locale)}</h2>
+    </header>
+    <div class="cols">
+      <div class="col" data-reveal>
+        <h3>{t(websites.sitesTitle, locale)}</h3>
+        <p>{t(websites.sitesBody, locale)}</p>
+        <ul class="demos" role="list">
+          {demos.map((demo) => (
+            <li>
+              <a href={`/sites/exemplos/${demo.slug}/`} hreflang="pt-BR">
+                <img src={`/sites/thumbs/${demo.slug}-640.webp`} width="640" height="400" alt="" loading="lazy" decoding="async" />
+                <span class="name">{demo.name}</span>
+                <span class="niche">{t(demo.niche, locale)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a class="btn" href="/sites/" hreflang="pt-BR">{t(websites.sitesCta, locale)} <Arrow /></a>
+      </div>
+      <div class="col" data-reveal>
+        <h3>{t(websites.marketingTitle, locale)}</h3>
+        <p>{t(websites.marketingBody, locale)}</p>
+        <a class="link" href="/sites/#marketing" hreflang="pt-BR">{locale === 'pt' ? 'Como funciona' : 'How it works (in Portuguese)'} <Arrow size={14} /></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .websites { background: var(--signal); color: var(--on-signal); padding-block: clamp(4.5rem, 3rem + 6vw, 8rem); }
+  .websites :global(h2) { color: var(--on-signal); }
+  .cols { display: grid; gap: 3.5rem; }
+  .col { display: grid; gap: 1rem; align-content: start; justify-items: start; }
+  h3 { font-size: var(--step-2); }
+  p { font-size: var(--step-1); line-height: 1.45; max-width: 44ch; }
+  .demos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; margin: 0.75rem 0 0.5rem; }
+  .demos a { display: grid; gap: 0.35rem; text-decoration: none; color: inherit; }
+  .demos img {
+    width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top;
+    border-radius: 4px; outline: 1px solid color-mix(in srgb, var(--on-signal) 25%, transparent);
+    transition: transform 0.35s var(--ease-out);
+  }
+  .demos a:hover img { transform: translateY(-3px); }
+  .name { font-weight: 650; font-size: var(--step--1); line-height: 1.2; }
+  .niche { font-size: 0.75rem; }
+  .btn { background: var(--on-signal); border-color: var(--on-signal); color: #fbfaf6; }
+  .btn:hover { background: #fbfaf6; border-color: #fbfaf6; color: var(--on-signal); }
+  .link { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px; font-weight: 650; text-decoration-color: currentColor; }
+  a:focus-visible { outline-color: var(--on-signal); }
+  @media (max-width: 520px) { .demos { grid-template-columns: minmax(0, 1fr); } .demos a { grid-template-columns: 40% 1fr; column-gap: 0.75rem; align-items: center; } .demos img { grid-row: span 2; } }
+  @media (min-width: 960px) { .cols { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 4rem; } }
+  @media (prefers-reduced-motion: reduce) { .demos img { transition: none; } }
+</style>

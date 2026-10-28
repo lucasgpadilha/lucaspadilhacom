@@ -1,39 +1,42 @@
 ---
 import Arrow from './Arrow.astro';
-import { email, sections } from '../../data/home';
+import { about, contact, email } from '../../data/home';
 import { t, type Locale } from '../../lib/locale';
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
-const s = sections.contact;
 ---
 <section id="contact" class="section" aria-labelledby="contact-title">
   <div class="wrap">
-    <header class="section-head" data-reveal>
-      <p class="label">{t(s.label, locale)}</p>
-      <div class="head-copy">
-        <h2 id="contact-title">{t(s.title, locale)}</h2>
-        <p class="lede">{t(s.body, locale)}</p>
-      </div>
+    <header class="section-head">
+      <h2 id="contact-title">{t(contact.title, locale)}</h2>
+      <p class="lede">{t(contact.body, locale)}</p>
     </header>
-    <div class="cta" data-reveal>
+    <div class="cta">
       <a class="mail" href={`mailto:${email}`}>{email}</a>
       <ul role="list" class="links">
-        <li><a href="https://github.com/lucasgpadilha">GitHub <Arrow dir="up-right" size={14} /></a></li>
         <li><a href="https://www.linkedin.com/in/lucasgpadilha/">LinkedIn <Arrow dir="up-right" size={14} /></a></li>
+        <li><a href="https://github.com/lucasgpadilha">GitHub <Arrow dir="up-right" size={14} /></a></li>
       </ul>
     </div>
+    <dl class="about">
+      <div><dt>{locale === 'pt' ? 'Formação' : 'Education'}</dt><dd>{t(about.education, locale)}</dd></div>
+      <div><dt>{locale === 'pt' ? 'Idiomas' : 'Languages'}</dt><dd>{t(about.languages, locale)}</dd></div>
+      <div><dt>{locale === 'pt' ? 'Base' : 'Based in'}</dt><dd>{t(about.place, locale)}</dd></div>
+    </dl>
   </div>
 </section>
 
 <style>
-  .head-copy { display: grid; gap: 1.25rem; }
-  .cta { display: grid; gap: 1.5rem; }
-  @media (min-width: 960px) { .cta { margin-left: calc(25% + 0.25rem); } }
+  .cta { display: grid; gap: 1.25rem; }
   .mail {
-    font-size: clamp(1.25rem, 0.6rem + 3.6vw, 3.5rem); font-weight: 640; letter-spacing: -0.03em; line-height: 1.1;
-    overflow-wrap: anywhere; text-decoration-thickness: 2px; text-underline-offset: 0.15em;
+    font-size: clamp(1.4rem, 0.6rem + 4vw, 4rem); font-weight: 650; letter-spacing: -0.035em; line-height: 1.05;
+    overflow-wrap: anywhere; text-decoration-thickness: 2px; text-underline-offset: 0.14em;
   }
   .links { display: flex; gap: 0.5rem 1.5rem; flex-wrap: wrap; }
-  .links a { display: inline-flex; min-height: 44px; align-items: center; font-weight: 600; }
+  .links a { display: inline-flex; gap: 0.35rem; min-height: 44px; align-items: center; font-weight: 600; }
+  .about { display: grid; gap: 1rem; margin-top: clamp(3rem, 2rem + 3vw, 5rem); padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: var(--step--1); }
+  .about dt { color: var(--ink-2); }
+  .about dd { margin: 0.15rem 0 0; }
+  @media (min-width: 900px) { .about { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; } }
 </style>

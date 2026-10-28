@@ -2,297 +2,229 @@ import type { Localized } from '../lib/locale';
 
 type L = Localized<string>;
 
+// Public site rule: say what was done, never where. No employer names, no internal
+// hostnames, repositories, bill amounts or incident dates — only relative numbers.
+
 export const meta = {
   title: {
-    en: 'Lucas Padilha — software, websites and the infrastructure behind them',
-    pt: 'Lucas Padilha — software, sites e a infraestrutura por trás deles',
+    en: 'Lucas Padilha — DevOps and cloud engineer, websites for businesses',
+    pt: 'Lucas Padilha — engenheiro DevOps e cloud, sites para negócios',
   } satisfies L,
   description: {
-    en: 'Full-stack and DevOps engineer in Brazil. I build products, websites and the infrastructure that keeps them online, and I operate what I ship.',
-    pt: 'Engenheiro full-stack e DevOps no Brasil. Construo produtos, sites e a infraestrutura que os mantém no ar, e opero o que entrego.',
+    en: 'I move workloads to Kubernetes, cut cloud bills and automate infrastructure. I also build fast websites and run digital marketing for small businesses.',
+    pt: 'Levo workloads para Kubernetes, corto a conta de nuvem e automatizo infraestrutura. Também faço sites rápidos e marketing digital para pequenos negócios.',
   } satisfies L,
 };
 
 export const nav: Localized<{ href: string; label: string }[]> = {
   en: [
-    { href: '#work', label: 'Work' },
-    { href: '#shipping', label: 'How I ship' },
-    { href: '/sites/', label: 'Websites' },
+    { href: '#infra', label: 'Infrastructure' },
+    { href: '#feats', label: 'Track record' },
+    { href: '#websites', label: 'Websites' },
     { href: '#contact', label: 'Contact' },
   ],
   pt: [
-    { href: '#work', label: 'Trabalho' },
-    { href: '#shipping', label: 'Como entrego' },
-    { href: '/sites/', label: 'Sites' },
+    { href: '#infra', label: 'Infraestrutura' },
+    { href: '#feats', label: 'Histórico' },
+    { href: '#websites', label: 'Sites' },
     { href: '#contact', label: 'Contato' },
   ],
 };
 
 export const hero = {
-  kicker: { en: 'Full-stack · DevOps · Web — Brazil', pt: 'Full-stack · DevOps · Web — Brasil' } satisfies L,
-  title: {
-    en: 'I build software, websites and the infrastructure that keeps them online.',
-    pt: 'Construo software, sites e a infraestrutura que os mantém no ar.',
-  } satisfies L,
+  lines: {
+    en: ['Infrastructure that holds up in production.', 'Websites that bring in customers.'],
+    pt: ['Infraestrutura que aguenta produção.', 'Sites que trazem cliente.'],
+  } satisfies Localized<string[]>,
   lede: {
-    en: 'TypeScript products on PostgreSQL, deployed and operated on Linux with Docker, Caddy and GitHub Actions. I ship them, run them and answer for them when something breaks.',
-    pt: 'Produtos em TypeScript sobre PostgreSQL, publicados e operados em Linux com Docker, Caddy e GitHub Actions. Eu entrego, opero e respondo por eles quando algo quebra.',
+    en: 'I’m Lucas Padilha, a DevOps and cloud engineer in Brazil. I move workloads to Kubernetes, cut cloud bills and automate the work nobody should do twice. I also build fast websites for small businesses.',
+    pt: 'Sou Lucas Padilha, engenheiro DevOps e de cloud. Levo workloads para Kubernetes, corto a conta de nuvem e automatizo o trabalho que ninguém deveria fazer duas vezes. Também faço sites rápidos para pequenos negócios.',
   } satisfies L,
-  primary: { en: 'See the work', pt: 'Ver o trabalho' } satisfies L,
-  secondary: { en: 'I need a website', pt: 'Preciso de um site' } satisfies L,
+  primary: { en: 'See the infrastructure work', pt: 'Ver o trabalho de infra' } satisfies L,
+  secondary: { en: 'I need a website', pt: 'Quero um site' } satisfies L,
 };
 
-export interface Project {
-  slug: string;
-  kind: L;
+export interface MigrationStep {
+  key: 'vms' | 'migrate' | 'off' | 'finops' | 'network';
   title: L;
-  pitch: L;
-  role: L;
-  evidence: Localized<string[]>;
-  stack: string[];
-  link: { href: string; label: L } | null;
-  /** Shown instead of a link for private work. */
-  note?: L;
-  stats?: Localized<{ value: string; label: string }[]>;
-  image?: { src: string; srcset: string; width: number; height: number; alt: L };
-  layout: 'feature' | 'tall' | 'std' | 'half';
+  body: L;
 }
 
-export const projects: Project[] = [
-  {
-    slug: 'erp',
-    layout: 'feature',
-    kind: { en: 'Case study · client work', pt: 'Estudo de caso · cliente' },
-    title: { en: 'Legacy ERP to multi-tenant SaaS', pt: 'De ERP legado a SaaS multi-tenant' },
-    pitch: {
-      en: 'A Brazilian services company ran its whole operation on a desktop VB6/Access system. I rebuilt it as a multi-tenant web SaaS, migrated the live data and cut over with about 80 seconds of downtime.',
-      pt: 'Uma empresa de serviços brasileira rodava a operação inteira num sistema desktop em VB6/Access. Reconstruí como um SaaS web multi-tenant, migrei os dados reais e fiz a virada com cerca de 80 segundos de indisponibilidade.',
-    },
-    role: { en: 'Sole engineer, working with AI agents', pt: 'Engenheiro único, trabalhando com agentes de IA' },
-    stats: {
-      en: [
-        { value: '~80 s', label: 'production cutover' },
-        { value: '1,459', label: 'automated tests' },
-        { value: '85', label: 'merged pull requests' },
-      ],
-      pt: [
-        { value: '~80 s', label: 'virada em produção' },
-        { value: '1.459', label: 'testes automatizados' },
-        { value: '85', label: 'pull requests integrados' },
-      ],
-    },
-    evidence: {
-      en: [
-        'Mapped the legacy data and wrote an idempotent, reconciled import',
-        'PostgreSQL row-level security per tenant, least-privilege roles',
-        'Nightly backups with restore drills, smoke tests and a rollback plan',
-      ],
-      pt: [
-        'Mapeamento dos dados legados e importação idempotente com reconciliação',
-        'Row-level security no PostgreSQL por cliente e papéis com privilégio mínimo',
-        'Backups diários com teste de restauração, smoke tests e plano de rollback',
-      ],
-    },
-    stack: ['Next.js', 'TypeScript', 'PostgreSQL', 'Drizzle', 'BullMQ', 'Docker', 'GitHub Actions'],
-    link: null,
-    note: { en: 'Private client project · in production since Oct 2026', pt: 'Projeto privado de cliente · em produção desde out/2026' },
-  },
-  {
-    slug: 'comboio',
-    layout: 'tall',
-    kind: { en: 'Product · Nexora Games', pt: 'Produto · Nexora Games' },
-    title: { en: 'Comboio Bruto', pt: 'Comboio Bruto' },
-    pitch: {
-      en: 'A truck-convoy game for TikTok LIVE. Viewers join the road from the chat, vote on events and keep their progress between streams.',
-      pt: 'Um jogo de comboio de caminhões para TikTok LIVE. O público entra na estrada pelo chat, vota nos eventos e mantém o progresso entre lives.',
-    },
-    role: { en: 'Founder and developer', pt: 'Fundador e desenvolvedor' },
-    evidence: {
-      en: ['Godot 4 game, TypeScript bridge, SQLite progression', 'Tested in a real livestream', 'CI on Ubuntu and Windows with headless Godot'],
-      pt: ['Jogo em Godot 4, ponte em TypeScript, progresso em SQLite', 'Testado em uma live real', 'CI em Ubuntu e Windows com Godot headless'],
-    },
-    stack: ['Godot', 'GDScript', 'TypeScript', 'SQLite', 'Svelte'],
-    link: { href: '/startup/', label: { en: 'Studio page', pt: 'Página do estúdio' } },
-    image: {
-      src: '/startup/serra-720.webp',
-      srcset: '/startup/serra-360.webp 360w, /startup/serra-720.webp 720w',
-      width: 720,
-      height: 1280,
-      alt: {
-        en: 'Comboio Bruto prototype: trucks on a winding mountain road with the chat invitation on screen.',
-        pt: 'Protótipo do Comboio Bruto: caminhões numa estrada de serra com o convite do chat na tela.',
+export const migration = {
+  title: { en: 'From five VMs to one cluster', pt: 'De cinco VMs a um cluster' } satisfies L,
+  intro: {
+    en: 'A recent platform migration, told by its numbers. Keep scrolling to run it.',
+    pt: 'Uma migração de plataforma recente, contada pelos números. Continue rolando para rodar.',
+  } satisfies L,
+  counter: { en: 'workloads on Kubernetes', pt: 'workloads no Kubernetes' } satisfies L,
+  steps: [
+    {
+      key: 'vms',
+      title: { en: 'About 250 services on five VMs', pt: 'Cerca de 250 serviços em cinco VMs' },
+      body: {
+        en: 'Docker Compose stacks spread over five virtual machines: hard to scale, harder to patch and impossible to see as a whole.',
+        pt: 'Stacks de Docker Compose espalhadas em cinco máquinas virtuais: difíceis de escalar, mais difíceis de atualizar e impossíveis de enxergar como um todo.',
       },
     },
-  },
-  {
-    slug: 'pynoc',
-    layout: 'std',
-    kind: { en: 'Open source · SRE', pt: 'Open source · SRE' },
-    title: { en: 'PyNOC', pt: 'PyNOC' },
-    pitch: {
-      en: 'A self-hosted NOC layer that turns noisy Zabbix alerts into deduplicated, auditable incidents in Discord.',
-      pt: 'Uma camada de NOC self-hosted que transforma alertas ruidosos do Zabbix em incidentes deduplicados e auditáveis no Discord.',
-    },
-    role: { en: 'Author', pt: 'Autor' },
-    evidence: {
-      en: ['349 pytest tests', 'Optional LLM behind a data-masking policy, with a deterministic fallback'],
-      pt: ['349 testes com pytest', 'LLM opcional atrás de uma política de mascaramento, com fallback determinístico'],
-    },
-    stack: ['Python', 'FastAPI', 'RabbitMQ', 'PostgreSQL', 'React'],
-    link: { href: 'https://github.com/lucasgpadilha/pynoc', label: { en: 'Repository', pt: 'Repositório' } },
-  },
-  {
-    slug: 'milkontrol',
-    layout: 'std',
-    kind: { en: 'Product · live', pt: 'Produto · no ar' },
-    title: { en: 'MilKontrol', pt: 'MilKontrol' },
-    pitch: {
-      en: 'Dairy-farm management: herd, milk production, breeding, the milk tank and medication withdrawal periods.',
-      pt: 'Gestão de fazenda leiteira: rebanho, produção de leite, reprodução, tanque e carência de medicamentos.',
-    },
-    role: { en: 'Built and operates it', pt: 'Construí e opero' },
-    evidence: {
-      en: ['61 API routes on Prisma and PostgreSQL', 'Deployed and run with PM2 behind Caddy'],
-      pt: ['61 rotas de API com Prisma e PostgreSQL', 'Publicado e operado com PM2 atrás do Caddy'],
-    },
-    stack: ['Next.js', 'Prisma', 'PostgreSQL', 'Auth.js'],
-    link: { href: 'https://milkontrol.cloud/', label: { en: 'Live product', pt: 'Produto no ar' } },
-  },
-  {
-    slug: 'floci',
-    layout: 'half',
-    kind: { en: 'Lab · cloud', pt: 'Lab · cloud' },
-    title: { en: 'Floci Cloud Lab', pt: 'Floci Cloud Lab' },
-    pitch: {
-      en: 'A zero-cost AWS lab: S3, DynamoDB, Lambda and API Gateway provisioned with Terraform and tested against a local AWS emulator. Emulated, not production.',
-      pt: 'Laboratório AWS sem custo: S3, DynamoDB, Lambda e API Gateway provisionados com Terraform e testados contra um emulador local. Emulado, não é produção.',
-    },
-    role: { en: 'Author', pt: 'Autor' },
-    evidence: {
-      en: ['111 tests and 18 Terraform files', 'Runbooks and architecture decision records'],
-      pt: ['111 testes e 18 arquivos Terraform', 'Runbooks e registros de decisão de arquitetura'],
-    },
-    stack: ['Terraform', 'Python', 'boto3', 'pytest', 'Docker'],
-    link: { href: 'https://github.com/lucasgpadilha/floci-cloud-lab', label: { en: 'Repository', pt: 'Repositório' } },
-  },
-  {
-    slug: 'tuildap',
-    layout: 'half',
-    kind: { en: 'Open source · tooling', pt: 'Open source · ferramenta' },
-    title: { en: 'tuildap', pt: 'tuildap' },
-    pitch: {
-      en: 'A read-only terminal UI in Go for browsing LDAP, Active Directory and FreeIPA directories, with mouse support.',
-      pt: 'Uma interface de terminal em Go, somente leitura, para navegar em diretórios LDAP, Active Directory e FreeIPA, com suporte a mouse.',
-    },
-    role: { en: 'Author', pt: 'Autor' },
-    evidence: {
-      en: ['About 7,000 lines of Go', 'CI with gofmt, vet and staticcheck'],
-      pt: ['Cerca de 7.000 linhas de Go', 'CI com gofmt, vet e staticcheck'],
-    },
-    stack: ['Go', 'Bubble Tea', 'go-ldap'],
-    link: { href: 'https://github.com/lucasgpadilha/tuildap', label: { en: 'Repository', pt: 'Repositório' } },
-  },
-];
-
-export const sections = {
-  work: {
-    label: { en: '01 — Work', pt: '01 — Trabalho' } satisfies L,
-    title: { en: 'Things I built and run', pt: 'O que construí e opero' } satisfies L,
-    intro: {
-      en: 'Products in production, a game tested live and open-source tools. Private client work is described without names or data.',
-      pt: 'Produtos em produção, um jogo testado ao vivo e ferramentas open source. Trabalho privado de cliente aparece sem nomes nem dados.',
-    } satisfies L,
-  },
-  shipping: {
-    label: { en: '02 — How I ship', pt: '02 — Como entrego' } satisfies L,
-    title: { en: 'This site is its own example', pt: 'Este site é o próprio exemplo' } satisfies L,
-    intro: {
-      en: 'Every push to main runs the same short pipeline. The receipt at the top of the page shows the build that produced what you are reading.',
-      pt: 'Todo push na main passa pelo mesmo pipeline curto. O recibo no topo da página mostra o build que gerou o que você está lendo.',
-    } satisfies L,
-    steps: [
-      { key: 'push', title: { en: 'Push', pt: 'Push' }, body: { en: 'Pull requests and pushes to main run the same checks.', pt: 'Pull requests e pushes na main passam pelas mesmas checagens.' } },
-      { key: 'build', title: { en: 'Build', pt: 'Build' }, body: { en: 'npm ci and a static Astro build on GitHub Actions.', pt: 'npm ci e build estático do Astro no GitHub Actions.' } },
-      { key: 'check', title: { en: 'Check', pt: 'Checagem' }, body: { en: 'Playwright and axe run against a production preview.', pt: 'Playwright e axe rodam contra um preview de produção.' } },
-      { key: 'deploy', title: { en: 'Deploy', pt: 'Deploy' }, body: { en: 'Static files go to the server over SCP.', pt: 'Os arquivos estáticos vão ao servidor por SCP.' } },
-      { key: 'health', title: { en: 'Healthcheck', pt: 'Healthcheck' }, body: { en: 'The live URLs must answer 200, or the run fails.', pt: 'As URLs no ar precisam responder 200, ou o run falha.' } },
-    ] satisfies { key: string; title: L; body: L }[],
-    workflow: { en: 'Read the workflow', pt: 'Ver o workflow' } satisfies L,
-    aiTitle: { en: 'AI agents, with gates', pt: 'Agentes de IA, com portões' } satisfies L,
-    aiBody: {
-      en: 'I build with AI coding agents and treat them like a fast team that needs review. That is how a 481-commit ERP migration shipped in nine days without skipping tests.',
-      pt: 'Desenvolvo com agentes de IA e trato eles como um time rápido que precisa de revisão. Foi assim que uma migração de ERP com 481 commits saiu em nove dias sem pular testes.',
-    } satisfies L,
-    aiGates: {
-      en: ['A written spec and plan before any code', 'Tests and CI decide what ships', 'I review and own every change'],
-      pt: ['Spec e plano escritos antes de qualquer código', 'Testes e CI decidem o que vai ao ar', 'Eu reviso e respondo por toda mudança'],
-    } satisfies Localized<string[]>,
-  },
-  stack: {
-    label: { en: '03 — Stack', pt: '03 — Stack' } satisfies L,
-    title: { en: 'Tools, with the evidence', pt: 'Ferramentas, com a evidência' } satisfies L,
-    intro: {
-      en: 'Only what shows up in real repositories. The level says how far I have taken each one.',
-      pt: 'Só o que aparece em repositórios reais. O nível diz até onde levei cada uma.',
-    } satisfies L,
-    levels: {
-      core: { en: 'Core — daily, in production', pt: 'Core — diário, em produção' },
-      'hands-on': { en: 'Hands-on — used in real projects', pt: 'Hands-on — usado em projetos reais' },
-      exposure: { en: 'Explored — labs and study', pt: 'Explorado — labs e estudo' },
-    } satisfies Record<string, L>,
-    more: { en: 'Also explored', pt: 'Também explorei' } satisfies L,
-  },
-  sites: {
-    label: { en: '04 — Websites', pt: '04 — Sites' } satisfies L,
-    title: { en: 'Websites for businesses', pt: 'Sites para negócios' } satisfies L,
-    body: {
-      en: 'I also build websites for small businesses: fast, easy to find on Google, with WhatsApp one tap away. You see a working preview before you commit.',
-      pt: 'Também faço sites para pequenos negócios: rápidos, fáceis de achar no Google e com o WhatsApp a um toque. Você vê uma prévia funcionando antes de fechar.',
-    } satisfies L,
-    cta: { en: 'See the examples (in Portuguese)', pt: 'Ver os exemplos' } satisfies L,
-  },
-  path: {
-    label: { en: '05 — Path', pt: '05 — Trajetória' } satisfies L,
-    title: { en: 'How I got here', pt: 'Como cheguei aqui' } satisfies L,
-    items: [
-      {
-        when: { en: '2025', pt: '2025' },
-        text: {
-          en: 'Back to building, at university: Systems Analysis and Development at UTFPR. Java networking, Node without frameworks, a first client CRM and plenty of automation experiments.',
-          pt: 'De volta a construir, na faculdade: Análise e Desenvolvimento de Sistemas na UTFPR. Redes em Java, Node sem framework, o primeiro CRM para cliente e muitos experimentos de automação.',
-        },
+    {
+      key: 'migrate',
+      title: { en: 'Moved in phases to Kubernetes', pt: 'Migrados em fases para Kubernetes' },
+      body: {
+        en: 'Each service was read from the key-value store, registered behind the load balancer and only then stopped on Docker, all through GitOps with Argo CD. The managed cluster went from 10 to 258 workloads in three weeks.',
+        pt: 'Cada serviço foi lido do key-value store, registrado atrás do load balancer e só então parado no Docker, tudo por GitOps com Argo CD. O cluster gerenciado foi de 10 para 258 workloads em três semanas.',
       },
-      {
-        when: { en: '2026 · H1', pt: '2026 · 1º sem.' },
-        text: {
-          en: 'Products and a deliberate move into DevOps: MilKontrol goes live, public labs for AWS, Go tooling and SRE, and this site gets its own pipeline.',
-          pt: 'Produtos e uma virada deliberada para DevOps: o MilKontrol entra no ar, labs públicos de AWS, ferramentas em Go e SRE, e este site ganha pipeline próprio.',
-        },
+    },
+    {
+      key: 'off',
+      title: { en: 'Five VMs switched off', pt: 'Cinco VMs desligadas' },
+      body: {
+        en: 'When a VM had nothing left, it was emptied and shut down. Today 73 Argo CD applications describe everything that runs.',
+        pt: 'Quando uma VM ficava sem nada, era esvaziada e desligada. Hoje 73 aplicações no Argo CD descrevem tudo o que roda.',
       },
-      {
-        when: { en: '2026 · Sep', pt: '2026 · set' },
-        text: {
-          en: 'Comboio Bruto: a Godot game for TikTok LIVE, tested in a real livestream.',
-          pt: 'Comboio Bruto: um jogo em Godot para TikTok LIVE, testado numa live real.',
-        },
+    },
+    {
+      key: 'finops',
+      title: { en: 'Then the bill', pt: 'Depois, a conta' },
+      body: {
+        en: 'CPU requests were about 15 times the real p95 usage. Rightsizing nodes and requests mapped 26–30% of savings in compute; one legacy cluster now costs 63% less and one VM 84% less. Backups turned out to be almost 28% of the bill.',
+        pt: 'Os requests de CPU estavam cerca de 15 vezes acima do uso real no p95. O rightsizing de nós e requests mapeou 26–30% de economia em compute; um cluster legado passou a custar 63% menos e uma VM, 84% menos. Os backups eram quase 28% da conta.',
       },
-      {
-        when: { en: '2026 · Oct', pt: '2026 · out' },
-        text: {
-          en: 'A legacy ERP migrated to a multi-tenant SaaS and put into production. The Nexora Games studio page. This site, version 2.',
-          pt: 'Um ERP legado migrado para SaaS multi-tenant e colocado em produção. A página do estúdio Nexora Games. Este site, versão 2.',
-        },
+    },
+    {
+      key: 'network',
+      title: { en: 'Network and security as code', pt: 'Rede e segurança como código' },
+      body: {
+        en: 'VCN, DRG, NSGs, NAT with a reserved IP, WAF, public and internal NLBs and NetworkPolicies per tenant, all in Terraform with automated static validation.',
+        pt: 'VCN, DRG, NSGs, NAT com IP reservado, WAF, NLB público e interno e NetworkPolicies por tenant, tudo em Terraform com validação estática automatizada.',
       },
-    ] satisfies { when: L; text: L }[],
-  },
-  contact: {
-    label: { en: '06 — Contact', pt: '06 — Contato' } satisfies L,
-    title: { en: 'Let’s talk', pt: 'Vamos conversar' } satisfies L,
-    body: {
-      en: 'Hiring for full-stack, platform or DevOps work, or need a system built and run? Email is the fastest way to reach me.',
-      pt: 'Contratando para full-stack, plataforma ou DevOps, ou precisa de um sistema construído e operado? E-mail é o jeito mais rápido de falar comigo.',
-    } satisfies L,
-  },
+    },
+  ] satisfies MigrationStep[],
 };
 
-export const email = 'lucasgpadilhatec@gmail.com';
+export const feats = {
+  title: { en: 'Other things I’ve shipped', pt: 'Outras entregas' } satisfies L,
+  items: [
+    {
+      title: { en: '1,100+ Linux hosts standardized', pt: 'Mais de 1.100 hosts Linux padronizados' },
+      body: { en: 'AWX, Uyuni, FOG and FreeIPA against configuration drift.', pt: 'AWX, Uyuni, FOG e FreeIPA contra divergência de configuração.' },
+    },
+    {
+      title: { en: '230+ branches provisioned automatically', pt: 'Mais de 230 filiais provisionadas automaticamente' },
+      body: { en: 'The same setup every time, from the first machine to the last.', pt: 'A mesma configuração sempre, da primeira máquina à última.' },
+    },
+    {
+      title: { en: '300+ access points in production', pt: 'Mais de 300 access points em produção' },
+      body: { en: 'Each one onboarded into Zabbix through its API.', pt: 'Cada um cadastrado no Zabbix pela API.' },
+    },
+    {
+      title: { en: 'FreeIPA integrated with Active Directory', pt: 'FreeIPA integrado ao Active Directory' },
+      body: { en: 'One identity across Linux and Windows.', pt: 'Uma identidade só entre Linux e Windows.' },
+    },
+    {
+      title: { en: 'Kubernetes on day 0 and day 2', pt: 'Kubernetes do dia 0 ao dia 2' },
+      body: { en: 'OKE and Rancher: provisioning, cluster import, upgrades, ingress and certificates.', pt: 'OKE e Rancher: provisionamento, importação de clusters, upgrades, ingress e certificados.' },
+    },
+    {
+      title: { en: 'Platform services kept healthy', pt: 'Serviços de plataforma saudáveis' },
+      body: { en: 'Harbor, Traefik, cert-manager, Vault/Infisical and HAProxy.', pt: 'Harbor, Traefik, cert-manager, Vault/Infisical e HAProxy.' },
+    },
+    {
+      title: { en: 'CI runners inside the cluster', pt: 'Runners de CI dentro do cluster' },
+      body: { en: 'Self-hosted GitHub Actions runners on Kubernetes; GitLab CI and Jenkins pipelines tuned.', pt: 'Runners self-hosted do GitHub Actions no Kubernetes; pipelines de GitLab CI e Jenkins otimizados.' },
+    },
+    {
+      title: { en: 'Stateful services migrated', pt: 'Serviços com estado migrados' },
+      body: { en: 'Kafka, MongoDB, MinIO, Consul and more, moved into the cluster.', pt: 'Kafka, MongoDB, MinIO, Consul e outros, levados para o cluster.' },
+    },
+    {
+      title: { en: '87% of telemetry traffic off the public path', pt: '87% da telemetria fora da rota pública' },
+      body: { en: 'About 380 thousand events a day rerouted from NAT, public load balancer and WAF to an internal path.', pt: 'Cerca de 380 mil envios por dia tirados da NAT, do load balancer público e do WAF para uma rota interna.' },
+    },
+    {
+      title: { en: 'SQL Server 2022 to 2025', pt: 'SQL Server 2022 para 2025' },
+      body: { en: 'Migration with runbook, inventory and login control.', pt: 'Migração com runbook, inventário e controle de logins.' },
+    },
+    {
+      title: { en: 'Day-to-day automation in AWX', pt: 'Automação do dia a dia no AWX' },
+      body: { en: 'Service sync with Argo CD and temporary SQL access that even works on Windows Server 2012.', pt: 'Sincronização de serviços com o Argo CD e acesso temporário a SQL que funciona até no Windows Server 2012.' },
+    },
+    {
+      title: { en: 'Python and n8n automations', pt: 'Automações em Python e n8n' },
+      body: { en: 'Health checks, auto-healing, alerts and a lot of repetitive work removed.', pt: 'Health checks, auto-healing, alertas e muito trabalho repetitivo eliminado.' },
+    },
+  ] satisfies { title: L; body: L }[],
+};
+
+export const howIWork = {
+  title: { en: 'How I work', pt: 'Como eu trabalho' } satisfies L,
+  items: [
+    {
+      title: { en: 'Write it down', pt: 'Tudo por escrito' },
+      body: {
+        en: 'Runbooks with rollback guards, architecture decision records, and a record and handoff for each of the 60-odd tickets I’ve led.',
+        pt: 'Runbooks com guarda de rollback, registros de decisão de arquitetura e um registro e um handoff para cada um dos cerca de 60 tickets que conduzi.',
+      },
+    },
+    {
+      title: { en: 'Teach the team and the agents', pt: 'Ensinar o time e os agentes' },
+      body: {
+        en: 'Lessons become AGENTS.md files and skills that people and AI coding agents follow, so the same mistake is not made twice.',
+        pt: 'Os aprendizados viram arquivos AGENTS.md e skills que pessoas e agentes de IA seguem, para o mesmo erro não acontecer duas vezes.',
+      },
+    },
+    {
+      title: { en: 'Rules for production', pt: 'Regras para produção' },
+      body: {
+        en: 'Secrets never leak. Only a reviewed plan gets applied. Production is read without adding load.',
+        pt: 'Segredo nunca vaza. Só se aplica plan conferido. Produção é lida sem gerar carga.',
+      },
+    },
+  ] satisfies { title: L; body: L }[],
+};
+
+export const websites = {
+  title: { en: 'Websites and digital marketing', pt: 'Sites e marketing digital' } satisfies L,
+  sitesTitle: { en: 'Websites', pt: 'Sites' } satisfies L,
+  sitesBody: {
+    en: 'Fast websites for small businesses, built and hosted with the same care as production infrastructure. Three concept sites show the range.',
+    pt: 'Sites rápidos para pequenos negócios, feitos e hospedados com o mesmo cuidado de uma infraestrutura de produção. Três sites conceito mostram o alcance.',
+  } satisfies L,
+  sitesCta: { en: 'See the offer (in Portuguese)', pt: 'Ver a oferta' } satisfies L,
+  marketingTitle: { en: 'Digital marketing', pt: 'Marketing digital' } satisfies L,
+  marketingBody: {
+    en: 'Instagram and social media management, paid traffic on Meta, Google, TikTok and Kwai Ads, TikTok Shop, and content automation.',
+    pt: 'Gestão de Instagram e redes sociais, tráfego pago no Meta, Google, TikTok e Kwai Ads, TikTok Shop e automação de conteúdo.',
+  } satisfies L,
+};
+
+export const side = {
+  title: { en: 'Side projects', pt: 'Projetos paralelos' } satisfies L,
+  items: [
+    { name: 'PyNOC', href: 'https://github.com/lucasgpadilha/pynoc', body: { en: 'Self-hosted NOC that turns noisy Zabbix alerts into incidents in Discord.', pt: 'NOC self-hosted que transforma alertas do Zabbix em incidentes no Discord.' } },
+    { name: 'Floci Cloud Lab', href: 'https://github.com/lucasgpadilha/floci-cloud-lab', body: { en: 'AWS lab with Terraform and tests against a local emulator.', pt: 'Lab de AWS com Terraform e testes contra um emulador local.' } },
+    { name: 'tuildap', href: 'https://github.com/lucasgpadilha/tuildap', body: { en: 'Terminal UI in Go for LDAP, Active Directory and FreeIPA.', pt: 'Interface de terminal em Go para LDAP, Active Directory e FreeIPA.' } },
+    { name: 'MilKontrol', href: 'https://milkontrol.cloud/', body: { en: 'Dairy-farm management SaaS, live.', pt: 'SaaS de gestão de fazenda leiteira, no ar.' } },
+  ] satisfies { name: string; href: string; body: L }[],
+};
+
+export const about = {
+  education: {
+    en: 'Systems Analysis and Development (technologist degree), UTFPR, 2023–2026',
+    pt: 'Tecnólogo em Análise e Desenvolvimento de Sistemas, UTFPR, 2023–2026',
+  } satisfies L,
+  languages: {
+    en: 'Portuguese (native) · English (upper-intermediate)',
+    pt: 'Português (nativo) · Inglês (intermediário-avançado)',
+  } satisfies L,
+  place: { en: 'Ponta Grossa, Paraná, Brazil', pt: 'Ponta Grossa, Paraná' } satisfies L,
+};
+
+export const contact = {
+  title: { en: 'Let’s talk', pt: 'Vamos conversar' } satisfies L,
+  body: {
+    en: 'Hiring for DevOps, cloud or platform work, or need a website for your business? Email is the fastest way.',
+    pt: 'Contratando para DevOps, cloud ou plataforma, ou precisa de um site para o seu negócio? E-mail é o caminho mais rápido.',
+  } satisfies L,
+};
+
+export const email = 'ceo@lucaspadilha.com';

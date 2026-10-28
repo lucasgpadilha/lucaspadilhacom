@@ -145,14 +145,30 @@ a:hover { text-decoration-color: var(--signal); text-decoration-thickness: 2px; 
 
 .section-head {
   display: grid;
-  gap: 1rem;
-  margin-bottom: clamp(2.25rem, 1.5rem + 3vw, 4rem);
+  gap: 1.25rem;
+  margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
 }
-.section-head h2 { font-size: var(--step-3); max-width: 18ch; }
+.section-head h2 { font-size: var(--step-4); max-width: 15ch; }
 @media (min-width: 960px) {
-  .section-head { grid-template-columns: 3fr 9fr; align-items: start; }
-  .section-head .label { padding-top: 0.6rem; }
+  .section-head { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: 3rem; align-items: end; }
+  .section-head .lede { padding-bottom: 0.4rem; }
 }
+
+/* The night chapter: dark even without JS; with JS the whole page follows (html[data-theme=night]). */
+.zone-night, html[data-theme='night'] {
+  --paper: #0d0d0c;
+  --surface: #161614;
+  --ink: #ece9e1;
+  --ink-2: #a8a59c;
+  --line: #2a2926;
+  --line-strong: #46443e;
+  --signal: #ff6b35;
+  --on-signal: #1c0b02;
+}
+.zone-night { background: var(--paper); color: var(--ink); }
+html[data-theme='night'] { color-scheme: dark; }
+body { transition: background-color 0.5s var(--ease-out), color 0.5s var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { body { transition: none; } }
 
 .skip-link {
   position: absolute;

@@ -6,12 +6,9 @@ import { demos } from '../../data/sites';
 <section id="exemplos" class="section" aria-labelledby="exemplos-title">
   <div class="wrap">
     <header class="section-head" data-reveal>
-      <p class="label">01 — Exemplos</p>
-      <div class="head-copy">
         <h2 id="exemplos-title">Três negócios, três personalidades</h2>
         <p class="lede">Sites conceito de empresas fictícias. Abra no celular: é lá que o seu cliente vai ver.</p>
-      </div>
-    </header>
+      </header>
     <ol class="list" role="list">
       {demos.map((demo, index) => (
         <li class="row" data-reveal>
@@ -24,8 +21,8 @@ import { demos } from '../../data/sites';
             />
           </a>
           <div class="copy">
-            <p class="label">{String(index + 1).padStart(2, '0')} · {demo.niche}</p>
             <h3>{demo.name}</h3>
+            <p class="niche">{demo.niche}</p>
             <p class="summary">{demo.summary}</p>
             <ul role="list">
               {demo.shows.map((item) => <li>{item}</li>)}
@@ -48,6 +45,7 @@ import { demos } from '../../data/sites';
   .shot:hover { transform: translateY(-4px); }
   .copy { display: grid; gap: 0.9rem; justify-items: start; }
   h3 { font-size: var(--step-3); }
+  .niche { color: var(--ink-2); margin-top: -0.4rem; }
   .summary { font-size: var(--step-1); color: var(--ink-2); max-width: 32ch; line-height: 1.4; }
   .copy ul { display: grid; gap: 0.4rem; margin-bottom: 0.5rem; }
   .copy li { display: grid; grid-template-columns: 1.1rem 1fr; }
