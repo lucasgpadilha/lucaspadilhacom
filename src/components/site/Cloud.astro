@@ -1,0 +1,27 @@
+---
+// Chapter: the OCI network and clusters as code, and the telemetry route that moved
+// inside the network. The drawing sits on the left on wide screens.
+import Chapter from './Chapter.astro';
+import CloudScene from './CloudScene.astro';
+import { cloud } from '../../data/cloud';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Chapter
+  id="cloud"
+  title={t(cloud.title, locale)}
+  lede={t(cloud.lede, locale)}
+  toolsLabel={t(cloud.toolsLabel, locale)}
+  tools={t(cloud.tools, locale)}
+  facts={cloud.facts.map((fact) => ({ value: fact.value, text: t(fact.text, locale) }))}
+  flip
+>
+  <p slot="body" class="body">{t(cloud.body, locale)}</p>
+  <CloudScene locale={locale} />
+</Chapter>
+
+<style>
+  .body { font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
+</style>
