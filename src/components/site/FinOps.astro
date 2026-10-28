@@ -1,0 +1,23 @@
+---
+import Chapter from './Chapter.astro';
+import FinOpsScene from './FinOpsScene.astro';
+import { finops } from '../../data/finops';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Chapter
+  id="finops"
+  title={t(finops.title, locale)}
+  lede={t(finops.lede, locale)}
+  tools={t(finops.tools, locale)}
+  toolsLabel={t(finops.toolsLabel, locale)}
+>
+  <p slot="body" class="body">{t(finops.body, locale)}</p>
+  <FinOpsScene locale={locale} />
+</Chapter>
+
+<style>
+  .body { font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
+</style>
