@@ -1,6 +1,7 @@
 ---
-// Chapter: the OCI network and clusters as code, and the telemetry route that moved
-// inside the network. The drawing sits on the left on wide screens.
+// Chapter: the landing zone and its hub-and-spoke network as code, the telemetry route
+// that moved inside the network, and the same design named on each cloud. The drawing
+// sits on the left on wide screens.
 import Chapter from './Chapter.astro';
 import CloudScene from './CloudScene.astro';
 import { cloud } from '../../data/cloud';
@@ -8,10 +9,12 @@ import { t, type Locale } from '../../lib/locale';
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
+const eq = cloud.equivalence;
 ---
 <Chapter
   id="cloud"
   title={t(cloud.title, locale)}
+  pain={t(cloud.pain, locale)}
   lede={t(cloud.lede, locale)}
   toolsLabel={t(cloud.toolsLabel, locale)}
   tools={t(cloud.tools, locale)}
@@ -20,8 +23,52 @@ const { locale } = Astro.props;
 >
   <p slot="body" class="body">{t(cloud.body, locale)}</p>
   <CloudScene locale={locale} />
+  <div slot="after" class="equiv" role="region" aria-labelledby="cloud-equiv-title" tabindex="0">
+    <table>
+      <caption>
+        <span id="cloud-equiv-title" class="title">{t(eq.title, locale)}</span>
+        <span class="intro">{t(eq.intro, locale)}</span>
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col"><span class="visually-hidden">{t(eq.piece, locale)}</span></th>
+          {eq.clouds.map((name) => <th scope="col">{name}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {eq.rows.map((row) => (
+          <tr>
+            <th scope="row">{t(row.piece, locale)}</th>
+            {row.names.map((name) => <td>{name}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 </Chapter>
 
 <style>
   .body { font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
+
+  /* The equivalence sits under the drawing: a title, one line, then a small table that
+     names the same piece on each cloud. Hairlines only; resource names in mono. If a
+     phone is ever too narrow for it, it scrolls inside this box, never the page. */
+  .equiv { max-width: 44rem; overflow-x: auto; overscroll-behavior-x: contain; }
+  .equiv:focus-visible { outline-offset: 4px; }
+  table { border-collapse: collapse; font-size: 0.8125rem; line-height: 1.35; }
+  caption { padding-bottom: 0.9rem; text-align: left; }
+  .title { display: block; font-size: 1rem; font-weight: 620; color: var(--ink); }
+  .intro { display: block; margin-top: 0.35rem; font-size: var(--step--1); line-height: 1.5; color: var(--ink-2); max-width: 64ch; }
+  th, td { padding: 0.5rem 2.25rem 0.5rem 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--line); }
+  tr > :last-child { padding-right: 0; }
+  thead th { padding-top: 0; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em; color: var(--ink-2); border-bottom-color: var(--line-strong); }
+  tbody th { font-weight: 500; color: var(--ink-2); }
+  td { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink); }
+  @media (min-width: 700px) {
+    td { white-space: nowrap; }
+  }
+  @media (max-width: 699px) {
+    table { width: 100%; }
+    th, td { padding-right: 0.75rem; }
+  }
 </style>
