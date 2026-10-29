@@ -4,6 +4,7 @@ import Header from './Header.astro';
 import Footer from './Footer.astro';
 import Scenario from './Scenario.astro';
 import Cloud from './Cloud.astro';
+import Platform from './Platform.astro';
 import Kubernetes from './Kubernetes.astro';
 import Delivery from './Delivery.astro';
 import FinOps from './FinOps.astro';
@@ -53,7 +54,7 @@ const jsonLd = {
       <Scenario locale={locale} />
     </section>
     <Cloud locale={locale} />
-    {/* PLATFORM */}
+    <Platform locale={locale} />
     <Kubernetes locale={locale} />
     <Delivery locale={locale} />
     <FinOps locale={locale} />
