@@ -1,0 +1,46 @@
+---
+import Chapter from './Chapter.astro';
+import MigrationScene from './MigrationScene.astro';
+import { kubernetes as k } from '../../data/kubernetes';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Chapter
+  id="kubernetes"
+  title={t(k.title, locale)}
+  pain={t(k.pain, locale)}
+  lede={t(k.lede, locale)}
+  tools={k.tools}
+  toolsLabel={t(k.toolsLabel, locale)}
+  facts={k.facts.map((fact) => ({ value: fact.value, text: t(fact.text, locale) }))}
+>
+  <MigrationScene locale={locale} />
+  <div slot="after" class="method">
+    <h3>{t(k.methodTitle, locale)}</h3>
+    <ol role="list">
+      {k.method.map((step) => (
+        <li data-step><b>{t(step.title, locale)}</b><span>{t(step.body, locale)}</span></li>
+      ))}
+    </ol>
+  </div>
+</Chapter>
+
+<style>
+  /* The method reads left to right like the run in the drawing; a hairline joins the steps. */
+  .method { display: grid; gap: 1rem; }
+  .method h3 { font-size: 1rem; font-weight: 620; }
+  .method ol { display: grid; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+  .method li { position: relative; display: grid; gap: 0.3rem; align-content: start; padding: 1rem 1rem 0.25rem 0; font-size: 0.875rem; line-height: 1.45; color: var(--ink-2); }
+  .method li::before { content: ''; position: absolute; left: 0; top: -4px; width: 7px; height: 7px; background: var(--signal); }
+  .method b { color: var(--ink); font-weight: 620; font-size: 0.9375rem; }
+  @media (max-width: 699px) {
+    .method ol { border-top: 0; border-left: 1px solid var(--line-strong); padding-left: 1rem; gap: 0.25rem; }
+    .method li { padding: 0.35rem 0; }
+    .method li::before { left: calc(-1rem - 4px); top: 0.75rem; }
+  }
+  @media (min-width: 700px) {
+    .method ol { grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: 1.25rem; }
+  }
+</style>

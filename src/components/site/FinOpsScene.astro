@@ -323,28 +323,28 @@ const r = finops.results;
     .is-armed { --play: paused; }
     .is-armed.is-playing { --play: running; }
 
-    .is-armed :is(.row, .used) { animation: land 0.35s var(--ease-out) var(--at) both var(--play); }
+    .is-armed :is(.row, .used) { animation: fo-land 0.35s var(--ease-out) var(--at) both var(--play); }
     /* Used cubes and the partial cube's cap both start as plain requested cubes. */
-    .is-armed .cell .t { animation: dark-t 0.25s ease var(--heat) both var(--play); }
-    .is-armed .cell .l { animation: dark-l 0.25s ease var(--heat) both var(--play); }
-    .is-armed .cell .r { animation: dark-r 0.25s ease var(--heat) both var(--play); }
-    .is-armed .cell .cap .t { animation: dark-t 0.45s ease var(--flat) both var(--play); }
-    .is-armed .cell .cap .l { animation: dark-l 0.45s ease var(--flat) both var(--play); }
-    .is-armed .cell .cap .r { animation: dark-r 0.45s ease var(--flat) both var(--play); }
-    .is-armed .side { animation: gone 0.45s ease var(--flat) both var(--play); }
-    .is-armed .lid { animation: lay 0.5s cubic-bezier(0.5, 0, 0.6, 1) var(--flat) both var(--play); }
-    .is-armed .pin { animation: fade 0.3s ease var(--at) both var(--play); }
+    .is-armed .cell .t { animation: fo-dark-t 0.25s ease var(--heat) both var(--play); }
+    .is-armed .cell .l { animation: fo-dark-l 0.25s ease var(--heat) both var(--play); }
+    .is-armed .cell .r { animation: fo-dark-r 0.25s ease var(--heat) both var(--play); }
+    .is-armed .cell .cap .t { animation: fo-dark-t 0.45s ease var(--flat) both var(--play); }
+    .is-armed .cell .cap .l { animation: fo-dark-l 0.45s ease var(--flat) both var(--play); }
+    .is-armed .cell .cap .r { animation: fo-dark-r 0.45s ease var(--flat) both var(--play); }
+    .is-armed .side { animation: fo-gone 0.45s ease var(--flat) both var(--play); }
+    .is-armed .lid { animation: fo-lay 0.5s cubic-bezier(0.5, 0, 0.6, 1) var(--flat) both var(--play); }
+    .is-armed .pin { animation: fo-fade 0.3s ease var(--at) both var(--play); }
 
-    .is-armed .fill { animation: grow 0.7s var(--ease-out) var(--at) both var(--play); }
-    .is-armed .range { animation: fade 0.25s ease calc(var(--at) + 0.6s) both var(--play); }
+    .is-armed .fill { animation: fo-grow 0.7s var(--ease-out) var(--at) both var(--play); }
+    .is-armed .range { animation: fo-fade 0.25s ease calc(var(--at) + 0.6s) both var(--play); }
   }
 
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes gone { from { opacity: 1; } }
-  @keyframes land { from { opacity: 0; transform: translateY(-10px); } }
-  @keyframes dark-t { from { fill: var(--face-t); stroke: var(--edge); } }
-  @keyframes dark-l { from { fill: var(--face-l); stroke: var(--edge); } }
-  @keyframes dark-r { from { fill: var(--face-r); stroke: var(--edge); } }
-  @keyframes lay { from { transform: translateY(0); fill: var(--face-t); stroke: var(--edge); } }
-  @keyframes grow { from { transform: scaleX(0); } }
+  @keyframes fo-fade { from { opacity: 0; } }
+  @keyframes fo-gone { from { opacity: 1; } }
+  @keyframes fo-land { from { opacity: 0; transform: translateY(-10px); } }
+  @keyframes fo-dark-t { from { fill: var(--face-t); stroke: var(--edge); } }
+  @keyframes fo-dark-l { from { fill: var(--face-l); stroke: var(--edge); } }
+  @keyframes fo-dark-r { from { fill: var(--face-r); stroke: var(--edge); } }
+  @keyframes fo-lay { from { transform: translateY(0); fill: var(--face-t); stroke: var(--edge); } }
+  @keyframes fo-grow { from { transform: scaleX(0); } }
 </style>

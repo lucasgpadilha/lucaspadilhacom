@@ -109,7 +109,7 @@ const doneAt = T.pods + T.podStep * pods.length;
 const stageDone = { commit: T.commit + 0.2, ci: T.jobs[2] + 0.2, policy: T.gate + 0.4, image: T.image + 0.3, sync: T.sync + 0.42, prod: doneAt };
 const s = (n: number) => `${n.toFixed(2)}s`;
 ---
-<figure class="deploy is-clean is-boot" data-deploy aria-label={t(deploy.figure, locale)} style={`--done:${s(doneAt)}`}>
+<figure class="deploy is-clean" data-deploy aria-label={t(deploy.figure, locale)} style={`--done:${s(doneAt)}`}>
   <div class="stage" style={`aspect-ratio:${box.w} / ${box.h};--ratio:${(box.w / box.h).toFixed(4)}`}>
     <svg viewBox={box.attr} aria-hidden="true" focusable="false">
       <defs>
@@ -205,20 +205,33 @@ const s = (n: number) => `${n.toFixed(2)}s`;
   </figcaption>
 </figure>
 
-<script>
-  // Replays the CSS run: drop the mode class, force a style flush, put the new one back.
-  for (const fig of document.querySelectorAll<HTMLElement>('[data-deploy]')) {
-    const buttons = [...fig.querySelectorAll<HTMLButtonElement>('[data-run]')];
-    for (const button of buttons) {
-      button.addEventListener('click', () => {
-        fig.classList.remove('is-boot', 'is-clean', 'is-blocked');
-        void fig.offsetWidth;
-        fig.classList.add(button.dataset.run === 'blocked' ? 'is-blocked' : 'is-clean');
-        // Replays, not toggles: the last run is marked for the eye; the status line announces it.
-        for (const other of buttons) other.toggleAttribute('data-active', other === button);
-      });
+<script is:inline>
+  // Armed before first paint (paused on its first frame), played once in view, replayed on demand.
+  (function () {
+    var fig = document.currentScript.previousElementSibling;
+    if (!fig || !fig.matches('[data-deploy]')) return;
+    var buttons = Array.prototype.slice.call(fig.querySelectorAll('[data-run]'));
+    var stage = fig.querySelector('.stage');
+    fig.classList.add('is-armed');
+    var play = function () { fig.classList.add('is-playing'); };
+    if ('IntersectionObserver' in window && stage) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (e) { return e.isIntersecting; })) { play(); io.disconnect(); }
+      }, { threshold: 0.35 });
+      io.observe(stage);
+    } else {
+      play();
     }
-  }
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        fig.classList.remove('is-clean', 'is-blocked', 'is-playing');
+        void fig.offsetWidth;
+        fig.classList.add(button.dataset.run === 'blocked' ? 'is-blocked' : 'is-clean', 'is-playing');
+        // Replays, not toggles: the last run is marked for the eye; the status line announces it.
+        buttons.forEach(function (other) { other.toggleAttribute('data-active', other === button); });
+      });
+    });
+  })();
 </script>
 
 <style>
@@ -322,40 +335,41 @@ const s = (n: number) => `${n.toFixed(2)}s`;
   .is-blocked .label-pin.policy strong { color: var(--alert); }
 
   @media (prefers-reduced-motion: no-preference) {
-    .is-boot .obj { animation: rise 0.5s var(--ease-out) calc(var(--i) * 0.04s) both; }
-    .is-boot .floor { animation: fade 0.6s ease both; }
+    .is-armed { --play: paused; }
+    .is-armed.is-playing { --play: running; }
 
-    .is-clean .pulse { animation: pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
-    .is-clean .commit .hot { animation: heat 0.3s ease var(--at) both; }
-    .is-clean .job { animation: heat-g 0.2s ease var(--at) both; }
-    .is-clean .scan { animation: scan 0.36s ease-in-out var(--at) both; }
-    .is-clean .mark.ok { animation: fade 0.2s ease var(--at) both; }
-    .is-clean .fresh { animation: drop 0.32s cubic-bezier(0.3, 1.25, 0.5, 1) var(--at) both; }
-    .is-clean .ring { animation: draw 0.4s ease-in-out var(--at) both; }
-    .is-clean .arrow { animation: fade 0.15s ease var(--at) both; }
-    .is-clean .pod { animation: roll 0.22s ease var(--at) both; }
-    .is-clean .label-pin { animation: lit 0.25s ease var(--at) both; }
-    .is-clean .status { animation: fade 0.25s ease var(--done) both; }
+    .is-armed.is-clean .pulse { animation: dp-pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both var(--play); }
+    .is-armed.is-clean .commit .hot { animation: dp-heat 0.3s ease var(--at) both var(--play); }
+    .is-armed.is-clean .job { animation: dp-heat-g 0.2s ease var(--at) both var(--play); }
+    .is-armed.is-clean .scan { animation: dp-scan 0.36s ease-in-out var(--at) both var(--play); }
+    .is-armed.is-clean .mark.ok { animation: dp-fade 0.2s ease var(--at) both var(--play); }
+    .is-armed.is-clean .fresh { animation: dp-drop 0.32s cubic-bezier(0.3, 1.25, 0.5, 1) var(--at) both var(--play); }
+    .is-armed.is-clean .ring { animation: dp-draw 0.4s ease-in-out var(--at) both var(--play); }
+    .is-armed.is-clean .arrow { animation: dp-fade 0.15s ease var(--at) both var(--play); }
+    .is-armed.is-clean .pod { animation: dp-roll 0.22s ease var(--at) both var(--play); }
+    /* Labels dim only while a run plays; waiting for the scroll, they stay fully legible. */
+    .is-armed.is-playing.is-clean .label-pin { animation: dp-lit 0.25s ease var(--at) both; }
+    .is-armed.is-clean .status { animation: dp-fade 0.25s ease var(--done) both var(--play); }
 
-    .is-blocked .pulse:is([data-link='0'], [data-link='1']) { animation: pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both; }
-    .is-blocked .commit .hot { animation: heat 0.3s ease var(--at) both; }
-    .is-blocked .job { animation: heat-g 0.2s ease var(--at) both; }
-    .is-blocked .scan { animation: scan-fail 0.36s ease-in-out var(--at) both; }
-    .is-blocked .plane { animation: alarm 0.5s ease var(--at) both; }
-    .is-blocked .mark.no { animation: fade 0.2s ease var(--at) both; }
-    .is-blocked .status { animation: fade 0.3s ease 2.3s both; }
+    .is-armed.is-blocked .pulse:is([data-link='0'], [data-link='1']) { animation: dp-pulse var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--at) both var(--play); }
+    .is-armed.is-blocked .commit .hot { animation: dp-heat 0.3s ease var(--at) both var(--play); }
+    .is-armed.is-blocked .job { animation: dp-heat-g 0.2s ease var(--at) both var(--play); }
+    .is-armed.is-blocked .scan { animation: dp-scan-fail 0.36s ease-in-out var(--at) both var(--play); }
+    .is-armed.is-blocked .plane { animation: dp-alarm 0.5s ease var(--at) both var(--play); }
+    .is-armed.is-blocked .mark.no { animation: dp-fade 0.2s ease var(--at) both var(--play); }
+    .is-armed.is-blocked .status { animation: dp-fade 0.3s ease 2.3s both var(--play); }
   }
 
-  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes pulse { from { stroke-dashoffset: 26; } to { stroke-dashoffset: -110; } }
-  @keyframes heat { from { fill: var(--face-t); stroke: var(--edge); } }
-  @keyframes heat-g { from { opacity: 0.25; filter: grayscale(1); } }
-  @keyframes scan { 0% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(-50px); } 100% { opacity: 0; transform: translateY(-50px); } }
-  @keyframes scan-fail { 0% { opacity: 1; transform: translateY(0); stroke: var(--signal); } 60% { opacity: 1; transform: translateY(-30px); stroke: var(--alert); } 100% { opacity: 0; transform: translateY(-30px); stroke: var(--alert); } }
-  @keyframes alarm { from { fill: color-mix(in srgb, var(--ink) 5%, transparent); } 30% { fill: color-mix(in srgb, var(--alert) 40%, transparent); } }
-  @keyframes drop { from { opacity: 0; transform: translateY(-18px); } }
-  @keyframes draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
-  @keyframes roll { from { opacity: 0.35; filter: grayscale(1) brightness(0.7); } }
-  @keyframes lit { from { opacity: 0.35; } }
+  @keyframes dp-rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes dp-fade { from { opacity: 0; } }
+  @keyframes dp-pulse { from { stroke-dashoffset: 26; } to { stroke-dashoffset: -110; } }
+  @keyframes dp-heat { from { fill: var(--face-t); stroke: var(--edge); } }
+  @keyframes dp-heat-g { from { opacity: 0.25; filter: grayscale(1); } }
+  @keyframes dp-scan { 0% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(-50px); } 100% { opacity: 0; transform: translateY(-50px); } }
+  @keyframes dp-scan-fail { 0% { opacity: 1; transform: translateY(0); stroke: var(--signal); } 60% { opacity: 1; transform: translateY(-30px); stroke: var(--alert); } 100% { opacity: 0; transform: translateY(-30px); stroke: var(--alert); } }
+  @keyframes dp-alarm { from { fill: color-mix(in srgb, var(--ink) 5%, transparent); } 30% { fill: color-mix(in srgb, var(--alert) 40%, transparent); } }
+  @keyframes dp-drop { from { opacity: 0; transform: translateY(-18px); } }
+  @keyframes dp-draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes dp-roll { from { opacity: 0.35; filter: grayscale(1) brightness(0.7); } }
+  @keyframes dp-lit { from { opacity: 0.55; } }
 </style>

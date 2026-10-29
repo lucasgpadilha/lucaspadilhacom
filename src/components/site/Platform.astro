@@ -1,0 +1,27 @@
+---
+// Chapter: the multi-cluster platform. The visitor's problem first (one cluster for
+// everything), then the design that removes it, then the numbers.
+import Chapter from './Chapter.astro';
+import PlatformScene from './PlatformScene.astro';
+import { platform } from '../../data/platform';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Chapter
+  id="platform"
+  title={t(platform.title, locale)}
+  pain={t(platform.pain, locale)}
+  lede={t(platform.lede, locale)}
+  tools={platform.tools}
+  toolsLabel={t(platform.toolsLabel, locale)}
+  facts={platform.facts.map((fact) => ({ value: fact.value, text: t(fact.text, locale) }))}
+>
+  <p slot="body" class="body">{t(platform.body, locale)}</p>
+  <PlatformScene locale={locale} />
+</Chapter>
+
+<style>
+  .body { font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
+</style>

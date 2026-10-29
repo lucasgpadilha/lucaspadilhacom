@@ -7,29 +7,29 @@ type L = Localized<string>;
 
 export const meta = {
   title: {
-    en: 'Lucas Padilha — DevOps and cloud engineer, websites for businesses',
-    pt: 'Lucas Padilha — engenheiro DevOps e cloud, sites para negócios',
+    en: 'Lucas Padilha — DevOps and platform engineer',
+    pt: 'Lucas Padilha — engenheiro DevOps e de plataforma',
   } satisfies L,
   description: {
-    en: 'DevOps and cloud engineer: Kubernetes on OCI, Terraform, GitOps with Argo CD, DevSecOps pipelines and FinOps. I also build fast websites and run digital marketing for small businesses.',
-    pt: 'Engenheiro DevOps e de cloud: Kubernetes na OCI, Terraform, GitOps com Argo CD, pipelines DevSecOps e FinOps. Também faço sites rápidos e marketing digital para pequenos negócios.',
+    en: 'DevOps and platform engineer: cloud architecture, multi-cluster Kubernetes, migrations, GitOps and DevSecOps delivery, observability and FinOps. Deepest on OCI; also AWS and Azure. I also build websites for small businesses.',
+    pt: 'Engenheiro DevOps e de plataforma: arquitetura de cloud, Kubernetes multicluster, migrações, entrega GitOps e DevSecOps, observabilidade e FinOps. Mais experiência em OCI; também AWS e Azure. Também faço sites para pequenos negócios.',
   } satisfies L,
 };
 
 export const nav: Localized<{ href: string; label: string }[]> = {
   en: [
-    { href: '#kubernetes', label: 'Kubernetes' },
-    { href: '#cloud', label: 'Cloud' },
+    { href: '#cloud', label: 'Architecture' },
+    { href: '#platform', label: 'Kubernetes' },
+    { href: '#delivery', label: 'Delivery' },
     { href: '#finops', label: 'FinOps' },
-    { href: '#ops', label: 'Operations' },
     { href: '#websites', label: 'Websites' },
     { href: '#contact', label: 'Contact' },
   ],
   pt: [
-    { href: '#kubernetes', label: 'Kubernetes' },
-    { href: '#cloud', label: 'Cloud' },
+    { href: '#cloud', label: 'Arquitetura' },
+    { href: '#platform', label: 'Kubernetes' },
+    { href: '#delivery', label: 'Entrega' },
     { href: '#finops', label: 'FinOps' },
-    { href: '#ops', label: 'Operação' },
     { href: '#websites', label: 'Sites' },
     { href: '#contact', label: 'Contato' },
   ],
@@ -41,8 +41,8 @@ export const hero = {
     pt: ['Do commit ao cluster,', 'sem passo manual.'],
   } satisfies Localized<string[]>,
   lede: {
-    en: 'I’m Lucas Padilha, a DevOps and cloud engineer. I move systems to Kubernetes on OCI, describe the infrastructure in Terraform, ship through GitOps with Argo CD and cut what the cloud overcharges.',
-    pt: 'Sou Lucas Padilha, engenheiro DevOps e de cloud. Levo sistemas para Kubernetes na OCI, descrevo a infraestrutura em Terraform, entrego por GitOps com Argo CD e corto o que a nuvem cobra a mais.',
+    en: 'I’m Lucas Padilha, a DevOps and cloud engineer with over four years in IT. I move systems to Kubernetes on OCI, describe the infrastructure in Terraform, ship through GitOps with Argo CD and cut what the cloud overcharges.',
+    pt: 'Sou Lucas Padilha, engenheiro DevOps e de cloud com mais de quatro anos em TI. Levo sistemas para Kubernetes na OCI, descrevo a infraestrutura em Terraform, entrego por GitOps com Argo CD e corto o que a nuvem cobra a mais.',
   } satisfies L,
   proof: {
     en: 'Latest project: about 250 services moved from VMs to OKE in three weeks, and 26–30% compute savings mapped.',
@@ -103,10 +103,10 @@ export const migration = {
 
 /** Square brackets mark the number in each line; the page sets it in the signal colour. */
 export const ops = {
-  title: { en: 'Operations at scale', pt: 'Operação em escala' } satisfies L,
+  title: { en: 'Automation and operations at scale', pt: 'Automação e operação em escala' } satisfies L,
   lede: {
-    en: 'Before the cluster, the groundwork: a Linux fleet, branches, network and identity, standardized and automated.',
-    pt: 'Antes do cluster, a base: frota Linux, filiais, rede e identidade padronizadas e automatizadas.',
+    en: 'The groundwork under any platform: Linux fleets, branches, network and identity, standardized and automated.',
+    pt: 'A base de qualquer plataforma: frota Linux, filiais, rede e identidade padronizadas e automatizadas.',
   } satisfies L,
   items: [
     {
@@ -195,6 +195,19 @@ export const contact = {
 
 export const email = 'ceo@lucaspadilha.com';
 
+/** The capabilities at a glance, right under the hero; each one links to its chapter. */
+export const capabilities = {
+  title: { en: 'What I do', pt: 'O que eu faço' } satisfies L,
+  items: [
+    { href: null, name: { en: 'DevSecOps and GitOps', pt: 'DevSecOps e GitOps' }, body: { en: 'Pipelines with tests, policies and secrets on the way; Argo CD delivers.', pt: 'Pipelines com testes, políticas e segredos no caminho; o Argo CD entrega.' } },
+    { href: '#kubernetes', name: { en: 'Kubernetes migration', pt: 'Migração para Kubernetes' }, body: { en: 'From Docker and VMs to the cluster, in phases, with a way back.', pt: 'Do Docker e das VMs para o cluster, em fases, com caminho de volta.' } },
+    { href: '#cloud', name: { en: 'Cloud on OCI', pt: 'Cloud na OCI' }, body: { en: 'Network, clusters and security in Terraform, reviewed before applying.', pt: 'Rede, clusters e segurança em Terraform, revisados antes do apply.' } },
+    { href: '#finops', name: { en: 'FinOps', pt: 'FinOps' }, body: { en: 'Where the bill goes, and what can come back.', pt: 'Para onde vai a fatura e o que pode voltar.' } },
+    { href: '#ops', name: { en: 'Automation', pt: 'Automação' }, body: { en: 'Fleets, branches and identity with AWX, Ansible, Python and n8n.', pt: 'Frotas, filiais e identidade com AWX, Ansible, Python e n8n.' } },
+    { href: '#websites', name: { en: 'Websites', pt: 'Sites' }, body: { en: 'Fast sites and marketing for small businesses.', pt: 'Sites rápidos e marketing para pequenos negócios.' } },
+  ] satisfies { href: string | null; name: L; body: L }[],
+};
+
 export const deploy = {
   figure: {
     en: 'An automated deploy, from commit to the cluster, with a security gate on the way',
@@ -213,7 +226,7 @@ export const deploy = {
       name: { en: 'Policy and secrets', pt: 'Política e segredos' },
       tools: { en: 'Kyverno · External Secrets from Vault', pt: 'Kyverno · External Secrets do Vault' },
     },
-    { key: 'image', name: { en: 'Image', pt: 'Imagem' }, tools: { en: 'OCIR registry', pt: 'registry OCIR' } },
+    { key: 'image', name: { en: 'Image', pt: 'Imagem' }, tools: { en: 'registry: OCIR or Harbor', pt: 'registry: OCIR ou Harbor' } },
     {
       key: 'sync',
       name: { en: 'GitOps', pt: 'GitOps' },
@@ -223,7 +236,7 @@ export const deploy = {
     {
       key: 'prod',
       name: { en: 'Production', pt: 'Produção' },
-      tools: { en: 'OKE · rolling update', pt: 'OKE · rolling update' },
+      tools: { en: 'Kubernetes · rolling update', pt: 'Kubernetes · rolling update' },
       proof: { en: '258 workloads', pt: '258 workloads' },
     },
   ] satisfies { key: string; name: L; tools: L; proof?: L }[],

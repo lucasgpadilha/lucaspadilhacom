@@ -48,9 +48,10 @@ for (const [path, file] of [['/', 'home-en.jpg'], ['/pt/', 'home-pt.jpg']]) {
   await hero.goto(base + path, { waitUntil: 'networkidle' });
   // Title and drawing only: the copy, the run controls and the nav are for visitors, not for a card.
   await hero.addStyleTag({ content: `
-    .hero .copy, .deploy .bar, .site-header nav, .site-header .tools { display: none !important; }
-    .hero .grid { grid-template-areas: 'title scene' !important; grid-template-rows: 1fr !important; align-items: center; }
-    .hero h1 { align-self: center !important; }` });
+    .hero .copy, .hero .legend, .site-header nav, .site-header .tools { display: none !important; }
+    .hero .grid { grid-template-areas: 'title explorer' !important; grid-template-rows: 1fr !important; align-items: center; }
+    .hero h1 { align-self: center !important; }
+    .hero .stage { width: min(100%, calc(420px * var(--ratio))) !important; margin-inline: auto 3rem !important; }` });
   await hero.evaluate(() => document.fonts.ready);
   await hero.waitForTimeout(300);
   await hero.screenshot({ path: out + file, type: 'jpeg', quality: 86 });

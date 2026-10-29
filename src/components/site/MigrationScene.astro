@@ -1,0 +1,299 @@
+---
+// The migration as a mechanism, not a story: in each phase Argo CD brings a node pool's
+// services up on the cluster, the load balancer moves to them, and only then the Docker
+// containers on that VM stop and the VM goes dark. "Simulate a rollback" replays the last
+// phase with a failed health check: traffic goes back to Docker and nothing is switched off.
+// Built at build time; the runs are CSS, armed paused before first paint and played once
+// the drawing scrolls into view. Without JS or with reduced motion the end state shows.
+import { Iso, percent, type P3 } from '../../lib/iso';
+import { kubernetes as k } from '../../data/kubernetes';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+
+const iso = new Iso(22);
+
+// Docker VMs run down the left, the cluster sits to the right, the load balancer in
+// front between them and Argo CD behind (world units on the floor).
+const vmAt = [[-7.2, -2.6], [-7.2, 0.8], [-7.2, 4.2]] as const;
+const lbAt = [-1.6, 3.4] as const;
+const argoAt = [-1.2, -6.4] as const;
+const [cx, cy] = [4.6, -2.2];
+
+type Faces = ReturnType<Iso['box']>;
+const faces = (b: Faces) => [['l', b.left], ['r', b.right], ['t', b.top]] as const;
+
+// Floor wires first, so every object sits on top of them.
+const wireToVm = vmAt.map(([x, y]) => iso.line([[lbAt[0] - 1.1, lbAt[1], 0], [x + 1.75, lbAt[1], 0], [x + 1.75, y, 0]]));
+const wireToCluster = iso.line([[lbAt[0] + 1.1, lbAt[1], 0], [cx, lbAt[1], 0], [cx, cy + 3.25, 0]]);
+const wireArgo = iso.line([[argoAt[0] + 1.4, argoAt[1], 0], [cx - 1.2, argoAt[1], 0], [cx - 1.2, cy - 3.25, 0]]);
+
+// Painter's order, back to front: Argo CD, the cluster, the VMs from the back, the load balancer.
+const plinth = iso.boxAt(...argoAt, 0, 2.6, 2.6, 0.3);
+const ring = iso.circle(...argoAt, 0.3, 0.88, 64);
+const arrow = iso.poly([
+  [argoAt[0] + 0.88, argoAt[1] - 0.3, 0.3],
+  [argoAt[0] + 1.16, argoAt[1] + 0.1, 0.3],
+  [argoAt[0] + 0.6, argoAt[1] + 0.1, 0.3],
+]);
+
+const platform = iso.boxAt(cx, cy, 0, 7.2, 6.4, 0.42);
+const poolX = [-2.3, 0, 2.3];
+const pools = poolX.map((dx) => iso.boxAt(cx + dx, cy, 0.42, 1.8, 5, 0.32));
+// One node pool per phase, six pods each, back rows first.
+const pods = poolX.map((dx) =>
+  [-1.5, 0, 1.5].flatMap((dy) => [-0.4, 0.4].map((ddx) => iso.boxAt(cx + dx + ddx, cy + dy, 0.74, 0.52, 0.52, 0.46))),
+);
+
+const vms = vmAt.map(([x, y]) => ({
+  slab: iso.boxAt(x, y, 0, 3.4, 2.5, 0.4),
+  // Six containers on each VM: the cube that keeps running sits over the stopped one.
+  boxes: [-0.55, 0.55].flatMap((dy) => [-1.05, 0, 1.05].map((dx) => iso.boxAt(x + dx, y + dy, 0.4, 0.6, 0.6, 0.5))),
+}));
+
+const lb = iso.boxAt(...lbAt, 0, 2.2, 1.8, 0.7);
+const lbTop = iso.line([[lbAt[0] - 0.6, lbAt[1], 0.7], [lbAt[0] + 0.6, lbAt[1], 0.7]]);
+
+const box = iso.viewBox(12);
+const floor = iso.grid(-11, 10, -11, 9, 1);
+
+const pin = (pt: P3) => percent(iso, box, pt);
+const labels = [
+  { key: 'docker', ...k.labels.docker, pos: pin([vmAt[2][0] + 1.7, vmAt[2][1] + 1.25, 0]) },
+  { key: 'lb', ...k.labels.lb, pos: pin([lbAt[0] + 1.1, lbAt[1] + 0.9, 0]) },
+  { key: 'argo', ...k.labels.argo, pos: pin([argoAt[0] - 1.3, argoAt[1] + 1.3, 0]) },
+  { key: 'oke', ...k.labels.oke, pos: pin([cx + 3.6, cy + 3.2, 0]) },
+];
+
+// The run, in seconds: three phases, each sync → pods → switch → stop → off.
+const PHASE = 1.25;
+const P = [0.35, 0.35 + PHASE, 0.35 + PHASE * 2];
+const at = (phase: number) => ({ sync: P[phase], pods: P[phase] + 0.3, cut: P[phase] + 0.62, stop: P[phase] + 0.82, off: P[phase] + 1.0 });
+const done = P[2] + 1.2;
+// The rollback replays phase 3 only: up, switch, health check fails, back to Docker.
+const R = { sync: 0.2, pods: 0.5, cut: 0.85, fail: 1.25, gone: 1.75, done: 2.2 };
+const s = (n: number) => `${n.toFixed(2)}s`;
+---
+<figure class="migrate is-clean" data-migrate aria-label={t(k.figure, locale)} style={`--done:${s(done)};--r-sync:${s(R.sync)};--r-cut:${s(R.cut)};--r-fail:${s(R.fail)};--r-gone:${s(R.gone)};--r-done:${s(R.done)}`}>
+  <div class="stage" style={`aspect-ratio:${box.w} / ${box.h};--ratio:${(box.w / box.h).toFixed(4)}`}>
+    <svg viewBox={box.attr} aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id="migrate-floor-fade" cx="50%" cy="52%" r="55%">
+          <stop offset="0.3" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </radialGradient>
+        <mask id="migrate-floor-mask"><rect x={box.x} y={box.y} width={box.w} height={box.h} fill="url(#migrate-floor-fade)" /></mask>
+      </defs>
+      <path class="floor" d={floor} mask="url(#migrate-floor-mask)" />
+
+      <path class="wire" d={wireArgo} />
+      {wireToVm.map((d, i) => (
+        <g class={`to-vm v${i}`} style={`--cut:${s(at(i).cut)}`}>
+          <path class="wire" d={d} /><path class="live" d={d} />
+        </g>
+      ))}
+      <g class="to-cluster" style={`--cut:${s(at(0).cut)}`}>
+        <path class="wire" d={wireToCluster} /><path class="live" d={wireToCluster} />
+      </g>
+
+      <g class="obj argo">
+        {faces(plinth).map(([cls, d]) => <path class={cls} d={d} />)}
+        <path class="ring" d={ring} pathLength="100" style={P.map((p, i) => `--s${i}:${s(p)}`).join(';')} />
+        <path class="arrow" d={arrow} />
+      </g>
+
+      <g class="obj cluster">
+        {faces(platform).map(([cls, d]) => <path class={cls} d={d} />)}
+        {pools.map((pool) => faces(pool).map(([cls, d]) => <path class={cls} d={d} />))}
+        {pods.map((pool, n) => pool.map((pod, i) => (
+          <g class={`pod n${n}`} style={`--in:${s(at(n).pods + i * 0.04)};--ri:${s(R.pods + i * 0.04)}`}>
+            {faces(pod).map(([cls, d]) => <path class={cls} d={d} />)}
+          </g>
+        )))}
+      </g>
+
+      {vms.map((vm, i) => (
+        <g class={`obj vm v${i}`} style={`--stop:${s(at(i).stop)};--off:${s(at(i).off)}`}>
+          {faces(vm.slab).map(([cls, d]) => <path class={cls} d={d} />)}
+          {vm.boxes.map((b, j) => (
+            <g class="ctr">
+              <g class="stopped">{faces(b).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+              <g class="run" style={`--j:${j}`}>{faces(b).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+            </g>
+          ))}
+        </g>
+      ))}
+
+      <g class="obj lb">
+        {faces(lb).map(([cls, d]) => <path class={cls} d={d} />)}
+        <path class="lb-mark" d={lbTop} />
+      </g>
+    </svg>
+
+    <ul class="labels" role="list" aria-hidden="true">
+      {labels.map((label) => (
+        <li class:list={['label-pin', label.key]} style={`--x:${label.pos.left};--y:${label.pos.top}`}>
+          <strong>{t(label.name, locale)}</strong>
+          <span>{t(label.detail, locale)}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <figcaption class="bar">
+    <span class="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="msg clean">{t(k.status.clean, locale)}</span>
+      <span class="msg rollback">{t(k.status.rollback, locale)}</span>
+    </span>
+    <span class="controls" role="group" aria-label={t(k.controls.label, locale)}>
+      <button type="button" data-mode="clean" data-active>{t(k.controls.clean, locale)}</button>
+      <button type="button" data-mode="rollback">{t(k.controls.rollback, locale)}</button>
+    </span>
+  </figcaption>
+</figure>
+<script is:inline>
+  // Armed before first paint (paused on the first frame), played once in view, replayed on demand.
+  (function () {
+    var fig = document.currentScript.previousElementSibling;
+    if (!fig || !fig.matches('[data-migrate]')) return;
+    var stage = fig.querySelector('.stage');
+    var buttons = Array.prototype.slice.call(fig.querySelectorAll('[data-mode]'));
+    fig.classList.add('is-armed');
+    var play = function () { fig.classList.add('is-playing'); };
+    if ('IntersectionObserver' in window && stage) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (e) { return e.isIntersecting; })) { play(); io.disconnect(); }
+      }, { threshold: 0.35 });
+      io.observe(stage);
+    } else {
+      play();
+    }
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        fig.classList.remove('is-clean', 'is-rollback', 'is-playing');
+        void fig.offsetWidth;
+        fig.classList.add(button.dataset.mode === 'rollback' ? 'is-rollback' : 'is-clean', 'is-playing');
+        buttons.forEach(function (other) { other.toggleAttribute('data-active', other === button); });
+      });
+    });
+  })();
+</script>
+
+<style>
+  .migrate {
+    --face-t: #23221f;
+    --face-l: #141412;
+    --face-r: #1a1917;
+    --edge: #5a574f;
+    --alert: #ff5c57;
+    margin: 0;
+    display: grid;
+    gap: 2.75rem;
+  }
+  .stage { position: relative; width: 100%; max-width: 640px; margin-inline: auto; }
+  @media (min-width: 1080px) {
+    .stage { width: min(calc(100% - 6rem), calc(min(520px, 64svh) * var(--ratio))); max-width: none; margin-inline: auto 0; }
+  }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+  .floor { fill: none; stroke: var(--line); stroke-width: 0.6; opacity: 0.7; }
+  .wire { fill: none; stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 4; }
+  .live { fill: none; stroke: var(--signal); stroke-width: 2; stroke-linejoin: round; }
+  /* Finished state is the default: traffic on the cluster, the VM wires dark. */
+  .to-vm .live { opacity: 0; }
+
+  .t, .l, .r { stroke: var(--edge); stroke-width: 0.8; stroke-linejoin: round; }
+  .t { fill: var(--face-t); }
+  .l { fill: var(--face-l); }
+  .r { fill: var(--face-r); }
+  .ring { fill: none; stroke: var(--signal); stroke-width: 2; }
+  .arrow { fill: var(--signal); }
+  .lb-mark { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; }
+
+  .pod .t { fill: var(--signal); stroke: #ffb08f; }
+  .pod .l { fill: #a8401a; stroke: #a8401a; }
+  .pod .r { fill: #cf4e1e; stroke: #cf4e1e; }
+  /* Running in Docker: light cubes; stopped: dark ones underneath. */
+  .run .t { fill: #d9d5cb; stroke: #d9d5cb; }
+  .run .l { fill: #8d897f; stroke: #8d897f; }
+  .run .r { fill: #b3afa5; stroke: #b3afa5; }
+  .vm .run { opacity: 0; }
+  .vm { opacity: 0.5; }
+
+  .labels { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .label-pin {
+    position: absolute; left: var(--x); top: var(--y); transform: translate(8px, 4px);
+    display: grid; gap: 1px; width: max-content; max-width: 22ch;
+    font-size: 0.75rem; line-height: 1.3; color: var(--ink-2);
+  }
+  .label-pin strong { color: var(--ink); font-size: 0.8125rem; font-weight: 620; }
+  .label-pin:is(.argo, .lb) { transform: translate(calc(-100% - 8px), -4px); text-align: right; }
+  .label-pin.docker { transform: translate(-50%, 10px); text-align: center; }
+  .label-pin.lb { transform: translate(-50%, 10px); text-align: center; }
+  .label-pin.oke { transform: translate(-50%, 10px); text-align: center; }
+
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
+  .status { display: inline-flex; align-items: center; gap: 0.55rem; min-height: 1.5rem; max-width: 44ch; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); flex: none; }
+  .msg.rollback { display: none; }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .controls button {
+    min-height: 40px; padding: 0 0.9rem; cursor: pointer;
+    background: transparent; color: var(--ink-2);
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    font-size: 0.8125rem; font-weight: 560;
+  }
+  .controls button:hover, .controls button[data-active] { color: var(--ink); border-color: var(--ink); }
+  :global(html:not(.js)) .controls { display: none; }
+
+  /* Rollback end state: phases 1 and 2 stay done, phase 3 is back on Docker. */
+  .is-rollback .to-vm.v2 .live { opacity: 1; }
+  .is-rollback .vm.v2 { opacity: 1; }
+  .is-rollback .vm.v2 .run { opacity: 1; }
+  .is-rollback .pod.n2 { opacity: 0; }
+  .is-rollback .dot { background: var(--alert); }
+  .is-rollback .msg.clean { display: none; }
+  .is-rollback .msg.rollback { display: inline; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .is-armed { --play: paused; }
+    .is-armed.is-playing { --play: running; }
+
+    .is-armed.is-clean .ring { animation: mg-draw 0.3s ease-in-out var(--s0) both var(--play), mg-draw 0.3s ease-in-out var(--s1) backwards var(--play), mg-draw 0.3s ease-in-out var(--s2) backwards var(--play); }
+    .is-armed.is-clean .pod { animation: mg-pod-in 0.3s cubic-bezier(0.3, 1.25, 0.5, 1) var(--in) both var(--play); }
+    .is-armed.is-clean .to-vm .live { animation: mg-off 0.2s ease var(--cut) both var(--play); }
+    .is-armed.is-clean .to-cluster .live { animation: mg-on 0.2s ease var(--cut) both var(--play); }
+    .is-armed.is-clean .vm .run { animation: mg-stop 0.25s ease calc(var(--stop) + var(--j) * 0.02s) both var(--play); }
+    .is-armed.is-clean .vm { animation: mg-dim 0.3s ease var(--off) both var(--play); }
+    .is-armed.is-clean .status { animation: mg-fade 0.25s ease var(--done) both var(--play); }
+
+    .is-armed.is-rollback .ring { animation: mg-draw 0.3s ease-in-out var(--r-sync) both var(--play); }
+    .is-armed.is-rollback .pod.n2 { animation: mg-pod-in 0.3s cubic-bezier(0.3, 1.25, 0.5, 1) var(--ri) both var(--play), mg-fail 0.3s ease var(--r-fail) forwards var(--play), mg-gone 0.25s ease var(--r-gone) forwards var(--play); }
+    .is-armed.is-rollback .to-vm.v2 .live { animation: mg-blip 0.85s linear var(--r-cut) both var(--play); }
+    .is-armed.is-rollback .status { animation: mg-fade 0.25s ease var(--r-done) both var(--play); }
+  }
+
+  @keyframes mg-fade { from { opacity: 0; } }
+  @keyframes mg-draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes mg-pod-in { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  @keyframes mg-off { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes mg-on { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mg-stop { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes mg-dim { from { opacity: 1; } to { opacity: 0.5; } }
+  @keyframes mg-fail { to { opacity: 1; filter: hue-rotate(-20deg) saturate(1.6) brightness(0.9); } }
+  @keyframes mg-gone { from { opacity: 1; filter: hue-rotate(-20deg) saturate(1.6) brightness(0.9); } to { opacity: 0; } }
+  @keyframes mg-blip { 0%, 5% { opacity: 1; } 15%, 80% { opacity: 0; } 92%, 100% { opacity: 1; } }
+
+  @media (max-width: 1079px) {
+    .label-pin { font-size: 0.6875rem; }
+    .label-pin span { display: none; }
+  }
+  @media (max-width: 699px) {
+    .label-pin.docker { transform: translate(-25%, 8px); }
+    .label-pin.lb { transform: translate(-35%, 8px); }
+  }
+  @media print {
+    .migrate * { animation: none !important; }
+  }
+</style>

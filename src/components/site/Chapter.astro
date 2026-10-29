@@ -5,18 +5,21 @@ interface Fact { value: string; text: string }
 interface Props {
   id: string;
   title: string;
+  /** The visitor's problem, in their own words: the first thing read after the title. */
+  pain?: string;
   lede: string;
   tools?: string[];
   facts?: Fact[];
   flip?: boolean;
   toolsLabel: string;
 }
-const { id, title, lede, tools = [], facts = [], flip = false, toolsLabel } = Astro.props;
+const { id, title, pain, lede, tools = [], facts = [], flip = false, toolsLabel } = Astro.props;
 ---
 <section id={id} class:list={['chapter', 'zone-night', { flip }]} aria-labelledby={`${id}-title`}>
   <div class="wrap grid">
     <div class="text">
       <h2 id={`${id}-title`}>{title}</h2>
+      {pain && <p class="pain">“{pain}”</p>}
       <p class="lede">{lede}</p>
       <slot name="body" />
       {facts.length > 0 && (
@@ -32,6 +35,7 @@ const { id, title, lede, tools = [], facts = [], flip = false, toolsLabel } = As
       <slot />
     </div>
   </div>
+  {Astro.slots.has('after') && <div class="wrap after"><slot name="after" /></div>}
 </section>
 
 <style>
@@ -40,9 +44,11 @@ const { id, title, lede, tools = [], facts = [], flip = false, toolsLabel } = As
   .text { grid-area: text; display: grid; gap: 1rem; align-content: start; }
   .figure { grid-area: figure; min-width: 0; }
   h2 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem); letter-spacing: -0.03em; max-width: 18ch; }
-  .lede { font-size: var(--step-1); color: var(--ink); max-width: 44ch; }
+  .pain { font-size: var(--step-1); line-height: 1.4; color: var(--signal); max-width: 40ch; font-weight: 520; }
+  .lede { font-size: var(--step-0); color: var(--ink); max-width: 46ch; }
   .facts { display: grid; gap: 0.5rem; padding-top: 0.25rem; font-size: var(--step--1); color: var(--ink-2); max-width: 46ch; }
   .facts b { font-family: var(--font-mono); font-weight: 600; color: var(--signal); margin-right: 0.15em; }
+  .after { margin-top: clamp(2rem, 1.5rem + 2vw, 3rem); }
   .tools { font-size: 0.8125rem; color: var(--ink-2); padding-top: 0.75rem; border-top: 1px solid var(--line); max-width: 46ch; }
   @media (min-width: 1080px) {
     .grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-areas: 'text figure'; column-gap: 3.5rem; align-items: center; }
