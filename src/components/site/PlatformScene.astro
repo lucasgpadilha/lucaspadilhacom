@@ -1,0 +1,583 @@
+---
+// The platform as a design: a management cluster (Argo CD, observability, CI runners on
+// a virtual node pool) and one cluster per environment. On entry the clusters rise,
+// Argo CD syncs each environment, pods land and telemetry flows back to MGMT.
+// The toggle replays the same bad deploy in dev against two designs: in one shared
+// cluster it starves the node it shares with prod and takes prod down too; with one
+// cluster per environment it stays in dev. Both drawings are built here and share the
+// stage; motion is CSS, armed paused before first paint and played in view. Without JS
+// or with reduced motion, the finished drawing is all there is.
+import { Iso, percent, type P3 } from '../../lib/iso';
+import { platform as pl } from '../../data/platform';
+import { t, type Locale } from '../../lib/locale';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const uid = (name: string) => `platform-${locale}-${name}`;
+
+const iso = new Iso(22);
+const r2 = (n: number) => Math.round(n * 100) / 100;
+const s = (n: number) => `${n.toFixed(2)}s`;
+type Faces = ReturnType<Iso['box']>;
+const faces = (b: Faces) => [['l', b.left], ['r', b.right], ['t', b.top]] as const;
+type Env = 'dev' | 'hml' | 'prod';
+const ENVS = ['dev', 'hml', 'prod'] as const;
+
+const Z0 = 0.42; // top of a cluster's base
+const NODE_H = 0.34;
+const PZ = Z0 + NODE_H; // pods stand on the nodes
+
+// The platform tools, drawn the same way in MGMT and in the shared cluster: Argo CD's
+// ring on a plinth, a small bar chart for observability, CI jobs on a dashed footprint
+// (a virtual node pool has no nodes of its own).
+function toolset(argo: readonly [number, number], obs: readonly [number, number], arc: readonly [number, number]) {
+  const ringZ = Z0 + 0.3;
+  return {
+    plinth: iso.boxAt(...argo, Z0, 2, 2, 0.3),
+    ring: iso.circle(...argo, ringZ, 0.68, 64),
+    arrow: iso.poly([
+      [argo[0] + 0.68, argo[1] - 0.3, ringZ],
+      [argo[0] + 0.96, argo[1] + 0.1, ringZ],
+      [argo[0] + 0.4, argo[1] + 0.1, ringZ],
+    ]),
+    obsBase: iso.boxAt(...obs, Z0, 1.9, 1.9, 0.2),
+    bars: ([[-0.55, 0.5], [0, 0.9], [0.55, 0.66]] as const).map(([dx, h]) => iso.boxAt(obs[0] + dx, obs[1], Z0 + 0.2, 0.4, 0.4, h)),
+    vnp: iso.rect(arc[0] - 1.1, arc[1] - 0.85, Z0, 2.2, 1.7),
+    jobs: [-0.5, 0, 0.5].map((dy) => iso.boxAt(arc[0], arc[1] + dy, Z0, 1.6, 0.32, 0.16)),
+  };
+}
+
+// ── MGMT, behind everything ──────────────────────────────────────────────────────────
+// World units on the floor. MGMT sits at the back; DEV runs off its left face (+y),
+// PROD off its right face (+x) and HML sits in front, between them.
+const M = 6.6;
+const H = M / 2;
+const mgmtBase = iso.boxAt(0, 0, 0, M, M, Z0);
+const argoAt = [1.2, 1.45] as const;
+const obsAt = [-1.5, -1.5] as const;
+const arcAt = [1.55, -2.0] as const;
+const mgmtTools = toolset(argoAt, obsAt, arcAt);
+// Room above MGMT for the observability label.
+iso.p([-H, -H, Z0 + 1.3]);
+
+// ── Clusters ─────────────────────────────────────────────────────────────────────────
+interface Spec { cx: number; cy: number; w: number; d: number; ny?: number; nodes: number[]; nodeD: number; rows: number[]; env: (n: number, r: number, c: number) => Env }
+const COLS = [-0.42, 0.42];
+function cluster(spec: Spec) {
+  const ny = spec.cy + (spec.ny ?? 0);
+  const base = iso.boxAt(spec.cx, spec.cy, 0, spec.w, spec.d, Z0);
+  const nodes = spec.nodes.map((dx) => iso.boxAt(spec.cx + dx, ny, Z0, 1.9, spec.nodeD, NODE_H));
+  const pods = spec.nodes.flatMap((dx, n) =>
+    spec.rows.flatMap((dy, r) =>
+      COLS.map((ddx, c) => {
+        const x = spec.cx + dx + ddx;
+        const y = ny + dy;
+        return { n, r, c, depth: x + y, env: spec.env(n, r, c), box: iso.boxAt(x, y, PZ, 0.54, 0.54, 0.48) };
+      }),
+    ),
+  );
+  // Back to front: painter's order inside the cluster, and the order pods land in.
+  pods.sort((a, b) => a.depth - b.depth);
+  return { spec, base, nodes, pods };
+}
+type Cluster = ReturnType<typeof cluster>;
+
+const dev = cluster({ cx: -0.6, cy: 10.6, w: 3.4, d: 3.6, nodes: [0], nodeD: 2.9, rows: [-0.68, 0.68], env: () => 'dev' });
+const hml = cluster({ cx: 7.5, cy: 7.5, w: 4.6, d: 3.8, nodes: [-1.15, 1.15], nodeD: 3.0, rows: [-0.7, 0.7], env: () => 'hml' });
+const prod = cluster({ cx: 12.6, cy: 0.4, w: 7.6, d: 5.6, nodes: [-2.45, 0, 2.45], nodeD: 4.7, rows: [-1.45, 0, 1.45], env: () => 'prod' });
+const envs = { dev, hml, prod } satisfies Record<Env, Cluster>;
+// Room under production's front corner for its label.
+iso.p([prod.spec.cx + prod.spec.w / 2, prod.spec.cy + prod.spec.d / 2, -0.7]);
+
+// ── Lanes: GitOps out of Argo CD, telemetry back into observability ──────────────────
+// Each lane starts on the MGMT deck, drops down its face and runs on the floor to the
+// cluster's back face (the cluster, drawn later, hides the end). One crossing is
+// unavoidable with two hubs and three clusters: staging's telemetry passes under dev's
+// sync line.
+const back = (cl: Cluster) => cl.spec.cy - cl.spec.d / 2;
+const left = (cl: Cluster) => cl.spec.cx - cl.spec.w / 2;
+const obsFront = obsAt[1] + 0.95;
+const obsRight = obsAt[0] + 0.95;
+const argoEdge = argoAt[0] + 1; // the plinth's +x side
+const lanes = {
+  sync: {
+    dev: [[0.3, argoAt[1] + 1, Z0], [0.3, H, Z0], [0.3, H, 0], [0.3, back(dev), 0]],
+    hml: [[argoEdge, 2.1, Z0], [H, 2.1, Z0], [H, 2.1, 0], [6.4, 2.1, 0], [6.4, back(hml), 0]],
+    prod: [[argoEdge, 0.9, Z0], [H, 0.9, Z0], [H, 0.9, 0], [left(prod), 0.9, 0]],
+  },
+  tele: {
+    dev: [[-2.0, back(dev), 0], [-2.0, H, 0], [-2.0, H, Z0], [-2.0, obsFront, Z0]],
+    hml: [[left(hml), 7.8, 0], [-0.9, 7.8, 0], [-0.9, H, 0], [-0.9, H, Z0], [-0.9, obsFront, Z0]],
+    prod: [[left(prod), -0.9, 0], [H, -0.9, 0], [H, -0.9, Z0], [obsRight, -0.9, Z0]],
+  },
+} satisfies Record<string, Record<Env, P3[]>>;
+
+const screenLength = (pts: readonly P3[]) =>
+  pts.slice(1).reduce((sum, pt, i) => {
+    const [ax, ay] = iso.at(pts[i]);
+    const [bx, by] = iso.at(pt);
+    return sum + Math.hypot(bx - ax, by - ay);
+  }, 0);
+// Telemetry is dashed and "draws back" by sliding its dash train in from the cluster
+// until it fills the lane: the pattern covers the lane, then a gap longer than the lane.
+const DASH = 3;
+const GAP = 3.5;
+const tele = (pts: readonly P3[]) => {
+  const len = screenLength(pts);
+  const n = Math.ceil(len / (DASH + GAP)) + 1;
+  const pattern = `${Array.from({ length: n }, () => `${DASH} ${GAP}`).join(' ')} 0 ${r2(len + 20)}`;
+  return { d: iso.line(pts), style: `stroke-dasharray:${pattern};--from:${r2(n * (DASH + GAP))}` };
+};
+
+// ── The shared cluster: everything on the same nodes ─────────────────────────────────
+// Placed after the split drawing so it sits in the middle of the same stage: the tools
+// along the back, three nodes with dev, staging and prod pods mixed the way a scheduler
+// would mix them.
+const split = iso.viewBox(0);
+const COS30 = Math.cos(Math.PI / 6);
+const sharedAt = (() => {
+  const u = iso.unit;
+  const a = (split.x + split.w / 2) / (COS30 * u); // x − y
+  const b = 2 * ((split.y + split.h / 2) / u - 0.35); // x + y: a little high, its label goes under it
+  return [r2((a + b) / 2), r2((b - a) / 2)] as const;
+})();
+const MIX: Env[][][] = [
+  [['prod', 'dev'], ['hml', 'prod'], ['prod', 'hml']],
+  [['hml', 'prod'], ['dev', 'prod'], ['prod', 'dev']],
+  [['prod', 'hml'], ['dev', 'prod'], ['prod', 'prod']],
+];
+const [sx, sy] = sharedAt;
+const sharedTools = toolset([sx - 2.75, sy - 2.95], [sx, sy - 2.95], [sx + 2.75, sy - 2.95]);
+const shared = cluster({ cx: sx, cy: sy, w: 9.2, d: 8.8, ny: 1.25, nodes: [-2.75, 0, 2.75], nodeD: 5.0, rows: [-1.6, 0, 1.6], env: (n, r, c) => MIX[n][r][c] });
+
+const vb = iso.viewBox(14);
+const floor = iso.grid(-8, 21, -8, 17, 1);
+const pin = (pt: P3) => percent(iso, vb, pt);
+
+// ── The runs, in seconds ─────────────────────────────────────────────────────────────
+// Entry: clusters rise, Argo CD syncs each environment, pods land, telemetry comes back.
+const T = {
+  rise: { mgmt: 0, dev: 0.12, hml: 0.2, prod: 0.28 },
+  ring: 0.5,
+  tools: 0.55,
+  sync: { dev: 0.95, hml: 1.05, prod: 1.15 },
+  pods: { dev: 1.38, hml: 1.5, prod: 1.62 },
+  podStep: 0.035,
+  tele: { dev: 2.35, hml: 2.5, prod: 2.6 },
+};
+const TELE_DUR = 0.75; // the .tele animation below
+const entryDone = T.tele.prod + TELE_DUR;
+
+// Shared run: the split drawing gathers into the middle and fades, the shared cluster
+// rises, its pods land, then the dev pod fails, starves its node, and the node next to it
+// goes down too: everything on a starved node fails, prod included. Failure delays are
+// relative to the first failing pod.
+const SH = { rise: 0.3, tools: 0.5, nodes: 0.55, pods: 0.7, podStep: 0.03 };
+const failing = (() => {
+  const out = new Map<number, number>();
+  const all = shared.pods.map((p, i) => ({ ...p, i }));
+  const first = all.find((p) => p.n === 1 && p.r === 1 && p.c === 0)!;
+  const dist = (p: { r: number; c: number }) => Math.abs(p.r - first.r) + Math.abs(p.c - first.c);
+  out.set(first.i, 0);
+  all.filter((p) => p.n === 1 && p.i !== first.i).sort((a, b) => dist(a) - dist(b)).forEach((p, k) => out.set(p.i, 0.45 + k * 0.08));
+  all.filter((p) => p.n === 2).sort((a, b) => a.c - b.c || a.r - b.r).forEach((p, k) => out.set(p.i, 1.05 + k * 0.07));
+  return out;
+})();
+// Isolated run: the same failure, inside DEV only.
+const devFailing = (() => {
+  const out = new Map<number, number>();
+  const first = dev.pods.findIndex((p) => p.r === 1 && p.c === 0);
+  out.set(first, 0);
+  dev.pods.forEach((_, i) => { if (i !== first) out.set(i, 0.45 + (out.size - 1) * 0.08); });
+  return out;
+})();
+
+// Where each split piece slides when the drawing gathers into the shared cluster.
+const sharedScreen = iso.at([sx, sy, 0.6]);
+const gather = (x: number, y: number) => {
+  const [px, py] = iso.at([x, y, 0.6]);
+  return `--gx:${r2((sharedScreen[0] - px) * 0.45)}px;--gy:${r2((sharedScreen[1] - py) * 0.45)}px`;
+};
+
+// ── Labels ───────────────────────────────────────────────────────────────────────────
+// Anchor in world space, the side the text sits on, and when it appears. `sm` moves a
+// label on phones (names only there).
+type Side = 'left' | 'right' | 'above' | 'below' | 'above-r' | 'center' | 'left-low' | 'left-under';
+type Label = { key: keyof typeof pl.labels; pt: P3; side: Side; at: number; mode: 'split' | 'shared'; sm?: { pt: P3; side: Side }; brief?: boolean };
+const front = (cl: Cluster): P3 => [cl.spec.cx + cl.spec.w / 2, cl.spec.cy + cl.spec.d / 2, 0];
+const labelSpecs: Label[] = [
+  { key: 'mgmt', pt: [-H, H, Z0], side: 'left', at: 0.3, mode: 'split' },
+  // Above MGMT's back corner, the highest point of the deck under the label.
+  { key: 'obs', pt: [-H, -H, Z0], side: 'above', at: T.tools + 0.2, mode: 'split' },
+  { key: 'arc', pt: [arcAt[0] + 0.65, -H, Z0], side: 'above-r', at: T.tools + 0.25, mode: 'split' },
+  // In the pocket on the floor under MGMT's front corner, between dev's sync line and
+  // staging; lower and further left on phones, where the name is larger than the pocket.
+  { key: 'argo', pt: [2.35, 4.65, 0], side: 'center', at: T.ring + 0.35, mode: 'split', brief: true, sm: { pt: [2.27, 5.73, 0], side: 'center' } },
+  { key: 'dev', pt: front(dev), side: 'below', at: T.pods.dev, mode: 'split' },
+  { key: 'hml', pt: front(hml), side: 'left-low', at: T.pods.hml, mode: 'split' },
+  { key: 'prod', pt: front(prod), side: 'left-low', at: T.pods.prod, mode: 'split' },
+  { key: 'shared', pt: front(shared), side: 'left-under', at: SH.rise, mode: 'shared', sm: { pt: front(shared), side: 'below' } },
+];
+const labels = labelSpecs.map((l) => {
+  const pos = pin(l.pt);
+  const sm = l.sm && pin(l.sm.pt);
+  return {
+    ...l,
+    name: pl.labels[l.key].name,
+    detail: pl.labels[l.key].detail,
+    style: [`--x:${pos.left}`, `--y:${pos.top}`, sm && `--xs:${sm.left}`, sm && `--ys:${sm.top}`, `--at:${s(l.at)}`].filter(Boolean).join(';'),
+    classes: [l.side, l.sm && `s-${l.sm.side}`, `only-${l.mode}`].filter(Boolean) as string[],
+  };
+});
+---
+<figure class="platform is-split" data-platform aria-label={t(pl.figure, locale)} style={`--entry:${s(entryDone)}`}>
+  <div class="stage" style={`aspect-ratio:${vb.w} / ${vb.h};--ratio:${(vb.w / vb.h).toFixed(4)}`}>
+    <svg viewBox={vb.attr} aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id={uid('floor-fade')} cx="50%" cy="54%" r="56%">
+          <stop offset="0.3" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </radialGradient>
+        <mask id={uid('floor-mask')}><rect x={vb.x} y={vb.y} width={vb.w} height={vb.h} fill={`url(#${uid('floor-fade')})`} /></mask>
+      </defs>
+      <path class="floor" d={floor} mask={`url(#${uid('floor-mask')})`} />
+
+      <g class="split">
+        <g class="obj" style={`--at:${s(T.rise.mgmt)};${gather(0, 0)}`}>
+          {faces(mgmtBase).map(([cls, d]) => <path class={cls} d={d} />)}
+        </g>
+
+        <g class="lanes" style={gather(0, 0)}>
+          {ENVS.map((env) => {
+            const lane = tele(lanes.tele[env]);
+            return <path class:list={['tele', env]} d={lane.d} style={`${lane.style};--at:${s(T.tele[env])}`} />;
+          })}
+          {ENVS.map((env) => (
+            <path class:list={['sync', env]} d={iso.line(lanes.sync[env])} pathLength="100" style={`--at:${s(T.sync[env])}`} />
+          ))}
+        </g>
+
+        <g class="obj" style={`--at:${s(T.rise.mgmt)};${gather(0, 0)}`}>
+          <g class="tool" style={`--at:${s(T.tools)}`}>
+            {faces(mgmtTools.obsBase).map(([cls, d]) => <path class={cls} d={d} />)}
+            {mgmtTools.bars.map((bar) => <g class="metric">{faces(bar).map(([cls, d]) => <path class={cls} d={d} />)}</g>)}
+          </g>
+          <path class="vnp tool" d={mgmtTools.vnp} style={`--at:${s(T.tools)}`} />
+          {mgmtTools.jobs.map((job, i) => (
+            <g class="job tool" style={`--at:${s(T.tools + 0.08 * (i + 1))}`}>{faces(job).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+          ))}
+          {faces(mgmtTools.plinth).map(([cls, d]) => <path class={cls} d={d} />)}
+          <path class="ring" d={mgmtTools.ring} pathLength="100" style={`--at:${s(T.ring)}`} />
+          <path class="arrow" d={mgmtTools.arrow} style={`--at:${s(T.ring + 0.35)}`} />
+        </g>
+
+        {ENVS.map((env) => {
+          const cl = envs[env];
+          return (
+            <g class:list={['obj', 'env', env]} style={`--at:${s(T.rise[env])};${gather(cl.spec.cx, cl.spec.cy)}`}>
+              {faces(cl.base).map(([cls, d]) => <path class={cls} d={d} />)}
+              {cl.nodes.map((node) => <g class:list={['node', { hot: env === 'dev' }]}>{faces(node).map(([cls, d]) => <path class={cls} d={d} />)}</g>)}
+              {cl.pods.map((p, i) => {
+                const f = env === 'dev' ? devFailing.get(i) : undefined;
+                return (
+                  <g class:list={['pod', p.env, { f: f !== undefined }]} style={`--in:${s(T.pods[env] + i * T.podStep)}${f !== undefined ? `;--f:${s(f)}` : ''}`}>
+                    {faces(p.box).map(([cls, d]) => <path class={cls} d={d} />)}
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })}
+      </g>
+
+      <g class="shared">
+        <g class="obj" style={`--at:${s(SH.rise)}`}>
+          {faces(shared.base).map(([cls, d]) => <path class={cls} d={d} />)}
+          <g class="tool" style={`--at:${s(SH.tools)}`}>
+            {faces(sharedTools.plinth).map(([cls, d]) => <path class={cls} d={d} />)}
+            <path class="ring" d={sharedTools.ring} />
+            <path class="arrow" d={sharedTools.arrow} />
+          </g>
+          <g class="tool" style={`--at:${s(SH.tools + 0.06)}`}>
+            {faces(sharedTools.obsBase).map(([cls, d]) => <path class={cls} d={d} />)}
+            {sharedTools.bars.map((bar) => <g class="metric">{faces(bar).map(([cls, d]) => <path class={cls} d={d} />)}</g>)}
+          </g>
+          <g class="tool" style={`--at:${s(SH.tools + 0.12)}`}>
+            <path class="vnp" d={sharedTools.vnp} />
+            {sharedTools.jobs.map((job) => <g class="job">{faces(job).map(([cls, d]) => <path class={cls} d={d} />)}</g>)}
+          </g>
+          {shared.nodes.map((node, n) => (
+            <g class:list={['node', 'tool', { hot: n > 0 }]} style={`--at:${s(SH.nodes + n * 0.06)};--hot:${s(n === 1 ? 0.3 : 0.9)}`}>{faces(node).map(([cls, d]) => <path class={cls} d={d} />)}</g>
+          ))}
+          {shared.pods.map((p, i) => {
+            const f = failing.get(i);
+            return (
+              <g class:list={['pod', p.env, { f: f !== undefined }]} style={`--in:${s(SH.pods + i * SH.podStep)}${f !== undefined ? `;--f:${s(f)}` : ''}`}>
+                {faces(p.box).map(([cls, d]) => <path class={cls} d={d} />)}
+              </g>
+            );
+          })}
+        </g>
+      </g>
+    </svg>
+
+    <ul class="labels" role="list" aria-hidden="true">
+      {labels.map((label) => (
+        <li class:list={['label-pin', label.key, ...label.classes]} style={label.style}>
+          <strong>{t(label.name, locale)}</strong>
+          {!label.brief && <span>{t(label.detail, locale)}</span>}
+          {label.key === 'shared' && (
+            <em class="key">{(['prod', 'hml', 'dev'] as const).map((env) => <i class={env}>{t(pl.legend[env], locale)}</i>)}</em>
+          )}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <figcaption class="bar">
+    <ul role="list" class="visually-hidden">
+      {(['mgmt', 'argo', 'obs', 'arc', 'dev', 'hml', 'prod'] as const).map((key) => <li>{t(pl.labels[key].name, locale)}: {t(pl.labels[key].detail, locale)}</li>)}
+    </ul>
+    <div class="caption">
+      <span class="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="msgs">
+          <span class="msg" aria-live="polite" data-split={t(pl.status.split, locale)} data-shared={t(pl.status.shared, locale)} data-isolated={t(pl.status.isolated, locale)}>{t(pl.status.split, locale)}</span>
+          {/* Every caption sits in the same cell, so the bar keeps the height of the longest and the buttons never move. */}
+          {(['split', 'shared', 'isolated'] as const).map((key) => <span class="sizer" aria-hidden="true">{t(pl.status[key], locale)}</span>)}
+        </span>
+      </span>
+    </div>
+    <div class="controls" role="group" aria-labelledby={uid('controls')}>
+      <span id={uid('controls')} class="controls-label">{t(pl.controls.label, locale)}</span>
+      <button type="button" data-design="shared" aria-pressed="false">{t(pl.controls.shared, locale)}</button>
+      <button type="button" data-design="isolated" aria-pressed="true">{t(pl.controls.split, locale)}</button>
+    </div>
+  </figcaption>
+</figure>
+<script is:inline>
+  // Armed before first paint (paused on the first frame), played once in view. Each
+  // button replays the same bad deploy against one design; `from-*` says which drawing
+  // was on the stage, so only that one gathers or spreads.
+  (function () {
+    var fig = document.currentScript.previousElementSibling;
+    if (!fig || !fig.matches('[data-platform]')) return;
+    var stage = fig.querySelector('.stage');
+    var msg = fig.querySelector('.msg');
+    var buttons = Array.prototype.slice.call(fig.querySelectorAll('[data-design]'));
+    var shown = 'split';
+    var play = function () { fig.classList.add('is-playing'); };
+
+    fig.classList.add('is-armed');
+    if ('IntersectionObserver' in window && stage) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (entry) { return entry.isIntersecting; })) { play(); io.disconnect(); }
+      }, { threshold: 0.35 });
+      io.observe(stage);
+    } else {
+      play();
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var mode = button.dataset.design === 'shared' ? 'shared' : 'isolated';
+        fig.classList.remove('is-split', 'is-shared', 'is-isolated', 'from-split', 'from-shared');
+        void fig.offsetWidth;
+        fig.classList.add('is-' + mode, 'from-' + shown);
+        shown = mode === 'shared' ? 'shared' : 'split';
+        play();
+        buttons.forEach(function (other) { other.setAttribute('aria-pressed', String(other === button)); });
+        if (msg) msg.textContent = msg.dataset[mode] || msg.textContent;
+      });
+    });
+  })();
+</script>
+
+<style>
+  .platform {
+    --face-t: #23221f;
+    --face-l: #141412;
+    --face-r: #1a1917;
+    --edge: #5a574f;
+    --alert: #ff5c57;
+    margin: 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+  /* The top margin is room for the observability label over MGMT's back corner. */
+  .stage { position: relative; width: 100%; max-width: 680px; margin: 10px auto 0; }
+  @media (min-width: 1080px) {
+    .stage { width: min(100%, calc(min(560px, 66svh) * var(--ratio))); max-width: none; margin: 10px 0 0 auto; }
+  }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+  .floor { fill: none; stroke: var(--line); stroke-width: 0.6; opacity: 0.7; }
+
+  .t, .l, .r { stroke: var(--edge); stroke-width: 0.8; stroke-linejoin: round; }
+  .t { fill: var(--face-t); }
+  .l { fill: var(--face-l); }
+  .r { fill: var(--face-r); }
+
+  .sync { fill: none; stroke: var(--signal); stroke-width: 2; stroke-linejoin: round; }
+  .tele { fill: none; stroke: #a8a59c; stroke-width: 1.3; stroke-linejoin: round; }
+  .ring { fill: none; stroke: var(--signal); stroke-width: 2; }
+  .arrow { fill: var(--signal); }
+  .vnp { fill: none; stroke: #8d897f; stroke-width: 1; stroke-dasharray: 3 3; }
+
+  /* Quiet light pieces: the observability bars and CI jobs. */
+  .metric .t, .job .t { fill: #d9d5cb; stroke: #d9d5cb; }
+  .metric .l, .job .l { fill: #8d897f; stroke: #8d897f; }
+  .metric .r, .job .r { fill: #b3afa5; stroke: #b3afa5; }
+
+  /* Pods by environment: prod in signal, staging mid, dev light. */
+  .pod.prod { --pt: var(--signal); --pe: #ffb08f; --pl: #a8401a; --pr: #cf4e1e; }
+  .pod.hml { --pt: #8d897f; --pe: #a29f97; --pl: #4f4c46; --pr: #6b6861; }
+  .pod.dev { --pt: #d9d5cb; --pe: #d9d5cb; --pl: #8d897f; --pr: #b3afa5; }
+  .pod .t { fill: var(--pt); stroke: var(--pe); }
+  .pod .l { fill: var(--pl); stroke: var(--pl); }
+  .pod .r { fill: var(--pr); stroke: var(--pr); }
+
+  /* Which drawing is on the stage. */
+  .shared { opacity: 0; }
+  .is-shared .split { opacity: 0; }
+  .is-shared .shared { opacity: 1; }
+
+  /* Failure end states: the pods go dark with red edges, the starved node is outlined. */
+  :is(.is-shared .shared, .is-isolated .split) .pod.f .t { fill: #4f2623; stroke: var(--alert); }
+  :is(.is-shared .shared, .is-isolated .split) .pod.f .l { fill: #2a1614; stroke: var(--alert); }
+  :is(.is-shared .shared, .is-isolated .split) .pod.f .r { fill: #3a1c1a; stroke: var(--alert); }
+  :is(.is-shared .shared, .is-isolated .split) .node.hot .t { stroke: var(--alert); stroke-width: 1.2; }
+
+  .labels { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .label-pin {
+    --gap: 10px;
+    position: absolute; left: var(--x); top: var(--y); transform: translate(var(--gap), -50%);
+    display: grid; gap: 1px; width: max-content; max-width: 24ch;
+    font-size: 0.75rem; line-height: 1.3; color: var(--ink-2);
+  }
+  .label-pin strong { color: var(--ink); font-size: 0.8125rem; font-weight: 620; }
+  .label-pin.prod span { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--signal); }
+  .label-pin.shared { max-width: 30ch; }
+  .label-pin.left { transform: translate(calc(-100% - var(--gap)), -50%); text-align: right; }
+  .label-pin.left-low { transform: translate(calc(-100% - var(--gap)), -20%); text-align: right; }
+  .label-pin.left-under { transform: translate(calc(-100% - var(--gap)), 6px); text-align: right; }
+  .label-pin.above { transform: translate(-50%, calc(-100% - 6px)); text-align: center; }
+  .label-pin.above-r { transform: translate(4px, calc(-100% - 4px)); }
+  .label-pin.below { transform: translate(-50%, 8px); text-align: center; }
+  .label-pin.center { transform: translate(-50%, -50%); text-align: center; }
+  .only-shared { opacity: 0; }
+  .is-shared .only-split { opacity: 0; }
+  .is-shared .only-shared { opacity: 1; }
+
+  /* The pod key for the shared cluster, where environments are mixed on the nodes. */
+  .key { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 3px; font-style: normal; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-2); }
+  .key i { display: inline-flex; align-items: center; gap: 0.35rem; font-style: normal; }
+  .key i::before { content: ''; width: 7px; height: 7px; background: var(--sw); }
+  .key .prod { --sw: var(--signal); }
+  .key .hml { --sw: #8d897f; }
+  .key .dev { --sw: #d9d5cb; }
+
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
+  .caption { display: flex; align-items: center; min-height: 1.5rem; flex: 1 1 20rem; max-width: 32rem; }
+  .msgs { display: grid; }
+  .msgs > * { grid-area: 1 / 1; }
+  .sizer { visibility: hidden; }
+  .status { display: inline-flex; align-items: baseline; gap: 0.55rem; font-size: 0.8125rem; color: var(--ink); line-height: 1.45; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); flex: none; transform: translateY(-1px); }
+  .is-shared .dot { background: var(--alert); }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+  .controls-label { font-size: 0.8125rem; color: var(--ink-2); margin-right: 0.25rem; }
+  .controls button {
+    min-height: 40px; padding: 0 0.9rem; cursor: pointer;
+    background: transparent; color: var(--ink-2);
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    font-size: 0.8125rem; font-weight: 560;
+  }
+  .controls button:hover { color: var(--ink); border-color: var(--ink); }
+  .controls button[aria-pressed='true'] { color: var(--ink); border-color: var(--ink); }
+  :global(html:not(.js)) .controls { display: none; }
+
+  /* Run timing per design; --t0 is when the failure starts, later when the other
+     drawing first has to leave the stage. */
+  .from-split.is-shared { --t0: 1.6s; }
+  .from-shared.is-shared { --t0: 0.25s; }
+  .from-split.is-isolated { --t0: 0.1s; }
+  .from-shared.is-isolated { --t0: 0.8s; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .platform.is-armed { --play: paused; }
+    .platform.is-armed.is-playing { --play: running; }
+
+    /* Entry: rise, ring, sync, pods, telemetry back, caption. */
+    .is-armed.is-split .split .obj { animation: pl-rise 0.45s var(--ease-out) var(--at) both var(--play); }
+    .is-armed.is-split .split .tool { animation: pl-drop 0.3s var(--ease-out) var(--at) both var(--play); }
+    .is-armed.is-split .split .ring { animation: pl-draw 0.4s ease-in-out var(--at) both var(--play); }
+    .is-armed.is-split .split .arrow { animation: pl-fade 0.15s ease var(--at) both var(--play); }
+    .is-armed.is-split .sync { animation: pl-draw 0.5s ease-in-out var(--at) both var(--play); }
+    .is-armed.is-split .tele { animation: pl-flow 0.75s cubic-bezier(0.3, 0, 0.6, 1) var(--at) both var(--play); }
+    .is-armed.is-split .split .pod { animation: pl-land 0.3s cubic-bezier(0.3, 1.25, 0.5, 1) var(--in) both var(--play); }
+    .is-armed.is-split .only-split { animation: pl-fade 0.3s ease var(--at) both var(--play); }
+    .is-armed.is-split .status { animation: pl-fade 0.3s ease var(--entry) both var(--play); }
+
+    /* Toward the shared cluster: the split drawing gathers into the middle and fades. */
+    .from-split.is-shared .split { animation: pl-out 0.5s ease-in both; }
+    .from-split.is-shared .split :is(.obj, .lanes) { animation: pl-gather 0.5s ease-in both; }
+    .from-split.is-shared .only-split { animation: pl-out 0.35s ease both; }
+    .from-split.is-shared .shared { animation: pl-in 0.35s ease 0.3s both; }
+    .from-split.is-shared .shared .obj { animation: pl-rise 0.45s var(--ease-out) var(--at) both; }
+    .from-split.is-shared .shared .tool { animation: pl-drop 0.3s var(--ease-out) var(--at) both; }
+    .from-split.is-shared .shared .pod { animation: pl-land 0.3s cubic-bezier(0.3, 1.25, 0.5, 1) var(--in) both; }
+    .from-split.is-shared .only-shared { animation: pl-fade 0.3s ease 0.5s both; }
+
+    /* Back to one cluster per environment: the shared cluster fades, the split drawing
+       spreads back out from the middle. */
+    .from-shared.is-isolated .shared { animation: pl-out 0.4s ease both; }
+    .from-shared.is-isolated .only-shared { animation: pl-out 0.3s ease both; }
+    .from-shared.is-isolated .split { animation: pl-in 0.4s ease 0.15s both; }
+    .from-shared.is-isolated .split :is(.obj, .lanes) { animation: pl-spread 0.55s var(--ease-out) 0.15s both; }
+    .from-shared.is-isolated .only-split { animation: pl-fade 0.3s ease 0.5s both; }
+
+    /* The bad deploy: Argo CD syncs dev again (isolated run), then the failure spreads. */
+    .is-isolated .sync.dev { animation: pl-draw 0.45s ease-in-out var(--t0) both; }
+    .is-isolated .split .pod.f :is(.t, .l, .r) { animation-delay: calc(var(--t0) + 0.55s + var(--f)); }
+    .is-shared .shared .pod.f :is(.t, .l, .r) { animation-delay: calc(var(--t0) + var(--f)); }
+    :is(.is-shared .shared, .is-isolated .split) .pod.f .t { animation-name: pl-was-t; }
+    :is(.is-shared .shared, .is-isolated .split) .pod.f .l { animation-name: pl-was-l; }
+    :is(.is-shared .shared, .is-isolated .split) .pod.f .r { animation-name: pl-was-r; }
+    :is(.is-shared .shared, .is-isolated .split) .pod.f :is(.t, .l, .r) { animation-duration: 0.25s; animation-timing-function: ease; animation-fill-mode: both; }
+    .is-isolated .split .node.hot .t { animation: pl-was-edge 0.25s ease calc(var(--t0) + 0.85s) both; }
+    .is-shared .shared .node.hot .t { animation: pl-was-edge 0.25s ease calc(var(--t0) + var(--hot)) both; }
+    .is-shared .status { animation: pl-fade 0.3s ease calc(var(--t0) + 1.6s) both; }
+    .is-isolated .status { animation: pl-fade 0.3s ease calc(var(--t0) + 1.35s) both; }
+  }
+
+  @keyframes pl-fade { from { opacity: 0; } }
+  @keyframes pl-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pl-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes pl-rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes pl-drop { from { opacity: 0; transform: translateY(-8px); } }
+  @keyframes pl-land { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  @keyframes pl-draw { from { stroke-dasharray: 0 100; } to { stroke-dasharray: 100 0; } }
+  @keyframes pl-flow { from { stroke-dashoffset: var(--from); } to { stroke-dashoffset: 0; } }
+  @keyframes pl-gather { to { transform: translate(var(--gx), var(--gy)); } }
+  @keyframes pl-spread { from { transform: translate(var(--gx), var(--gy)); } }
+  @keyframes pl-was-t { from { fill: var(--pt); stroke: var(--pe); } }
+  @keyframes pl-was-l { from { fill: var(--pl); stroke: var(--pl); } }
+  @keyframes pl-was-r { from { fill: var(--pr); stroke: var(--pr); } }
+  @keyframes pl-was-edge { from { stroke: var(--edge); stroke-width: 0.8; } }
+
+  @media (max-width: 1079px) {
+    .label-pin, .label-pin strong { font-size: 0.6875rem; }
+    .label-pin span { display: none; }
+  }
+  @media (max-width: 699px) {
+    .label-pin { left: var(--xs, var(--x)); top: var(--ys, var(--y)); }
+    .label-pin.s-below { transform: translate(-50%, 5px); text-align: center; }
+    .label-pin.s-center { transform: translate(-50%, -50%); text-align: center; }
+    .label-pin.s-below .key { justify-content: center; }
+    .key { gap: 0.6rem; }
+  }
+  @media print {
+    .platform * { animation: none !important; }
+  }
+</style>
