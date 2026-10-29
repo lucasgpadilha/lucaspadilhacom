@@ -93,8 +93,8 @@ export const cloud = {
       pt: '87% de cerca de 380 mil envios por dia saíam pela NAT, davam a volta pela internet e voltavam pelo WAF e pelo load balancer público.',
     },
     after: {
-      en: '87% of about 380 thousand sends a day took the round trip through the internet. Now they reach the collector through the DRG, inside the network.',
-      pt: '87% de cerca de 380 mil envios por dia faziam a volta pela internet. Agora chegam ao coletor pelo DRG, por dentro da rede.',
+      en: '87% of about 380 thousand sends a day took the round trip through the internet. Now they stay inside the network.',
+      pt: '87% de cerca de 380 mil envios por dia faziam a volta pela internet. Agora seguem por dentro da rede.',
     },
   } satisfies Record<string, L>,
 
